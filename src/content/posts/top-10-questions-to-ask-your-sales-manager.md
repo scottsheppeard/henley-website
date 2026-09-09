@@ -1,0 +1,89 @@
+---
+# Migrated from the 2026-09-09 WordPress capture by scripts/export-content.ts.
+# Rewrite the copy freely — but keep `path`, and carry the search intent of
+# `legacy.title` and `legacy.description` into whatever replaces them. Set
+# `status: reviewed` once a person has been through this file; a re-export
+# then leaves it alone.
+status: 'needs-review'
+path: '/top-10-questions-to-ask-your-sales-manager/'
+type: 'post'
+title: 'Top 10 Questions to ask your Sales Manager'
+description: null
+date: '2023-07-04'
+ogImage: '/wp-content/uploads/2023/04/Scroll-Group-8@2x.jpg'
+legacy:
+  title: 'Top 10 Questions to ask your Sales Manager | The Henley on Broadwater'
+  description: null
+  canonical: 'https://thehenley.com.au/top-10-questions-to-ask-your-sales-manager/'
+  lastmod: '2023-07-04T01:21:21+00:00'
+  shortlinkId: 537
+  capture: 'source/live-capture-2026-09-09/pages/top-10-questions-to-ask-your-sales-manager.html'
+  # The old page's heading outline, so a rewrite can see what it is replacing:
+  outline:
+    - 'H1 Top 10 Questions to ask your Sales Manager'
+    - 'H2 1. What are the benefits of living here?'
+    - 'H2 2. Can I easily access shops, cinemas, restaurants and recreational activities?'
+    - 'H2 3. Is this a secure complex?'
+    - 'H2 4. Can my family and friends visit me?'
+    - 'H2 5. Is there somewhere safe and accessible to park my car?'
+    - 'H2 6. Can I bring my pet to live with me?'
+    - 'H2 7. Will I be able to access care services if I need them?'
+    - 'H2 8. Who maintains the building and handles things such as leaking taps and lightbulbs that need changing?'
+    - 'H2 9. How much does this all cost?'
+    - 'H2 10. Can I sell my retirement living unit?'
+---
+# Top 10 Questions to ask your Sales Manager
+
+So you’ve found a unit in a retirement living complex that you love? Great!
+
+Before you go any further, though, to make the best decision for you, set up an appointment with a sales manager at the complex to discuss your future home, think about the key questions to which you need answers.
+
+In this quick guide, we explore 10 of the most important queries.
+
+## 1. What are the benefits of living here?
+
+When you ask this question, you are hoping to discover what makes this retirement living complex better than its competitors. What gives it the edge in an increasingly competitive market? You need to know that the apartment will meet your needs in many ways: by providing stylish yet practical accommodation; delivering organised social activities; offering dedicated spaces in which to connect with other residents and visitors; ensuring privacy; assuring a modern fitout including data cabling; presenting a location that suits you perfectly; and giving you a say in how the complex is run.
+
+Most of all, you need to feel comfortable that this is a place where you would be happy to live for the rest of your life.
+
+## 2. Can I easily access shops, cinemas, restaurants and recreational activities?
+
+Retirement living is certainly not about spending every day inside your own home. Most modern retirees like to get out and explore the area in which they live and socialise with others. If you enjoy walking, for example, does the complex you are considering provide ample walking paths nearby? Can you easily catch the latest movie and stroll or catch public transport home? Are the shopping facilities nearby and plentiful? Having the right apartment is one thing; making sure it is in the right place is equally important.
+
+## 3. Is this a secure complex?
+
+Security is extremely important, particularly as you get older. You want to enjoy living somewhere that can be locked up and protected from any intrusion while you are there – and while you are not. Is there a front desk or concierge service? Security cameras? Someone who keeps an eye on who is coming and going? Peace of mind can never be underestimated.
+
+## 4. Can my family and friends visit me?
+
+Living a full life in retirement means maintaining social connections – in fact, this is vital as we age. So your retirement living location should be one where family and friends are welcome to visit you – and one where they enjoy visiting you. Find out the ways in which the complex specifically encourages and caters to visitors.
+
+## 5. Is there somewhere safe and accessible to park my car?
+
+Many retirees still like the independence that driving their own vehicle brings. Does the complex you are considering provide car parking that is easy to access, not one of those spots that is impossible to get in and out of? Importantly, will you feel safe moving from your vehicle to your unit and carrying groceries and the like between the two?
+
+## 6. Can I bring my pet to live with me?
+
+Your dog or cat is so precious, you cannot imagine living without them. Ensure you don’t have to make the decision to say goodbye to them. Check up front about whether pets are allowed at the complex (and any rules associated with this – such as breed or size restrictions) and avoid tears down the track.
+
+## 7. Will I be able to access care services if I need them?
+
+No one really likes to think about requiring support and care services as they age, but it is wonderful to know they are available, if needed, at your retirement location. Not only does this mean you will not need to relocate if your health deteriorates: it also provides peace of mind to your friends and family. Does the facility you are thinking about offer on-site personal carers and registered nurses? Are there activities to support your wellbeing? Are there other medical facilities, such as hospitals, dentists and optometrists nearby? The answer should be ‘yes’.
+
+## 8. Who maintains the building and handles things such as leaking taps and lightbulbs that need changing?
+
+Ideally, you would have these things taken care of as part of your occupancy of the retirement complex, and the building would be well maintained by its owners. Check this out with the sales manager and ensure you are comfortable with the arrangements on offer.
+
+## 9. How much does this all cost?
+
+This is arguably the most important question of all. Do not sign a thing until you are sure you understand all the costs associated with a contract. A good sales manager will explain everything in a clear and open way, and be prepared to answer any question you may have. This is your life and future, so you have every right to enquire about the costs. Find out about body corporate fees; rates; deposits to secure an apartment; stamp duty; departure fees; and whether there are any other relevant fees.
+
+If you feel daunted, take a good friend or relative with you to support you in asking these questions.
+
+## 10. Can I sell my retirement living unit?
+
+Should you ever need to sell up, how easy will this process be? Check with the sales manager about whether the team can assist, and the process involved.
+
+So there you go – 10 important questions to get you started. No doubt you will have many more, and the best sales managers will be able to assist you with the answers to any and all of them – and even raise other issues which may have escaped your radar.
+
+Enjoy your search for the perfect place to call home in retirement, but make sure you ask the questions that deliver the answers you need. You can never have too much information.

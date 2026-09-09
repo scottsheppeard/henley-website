@@ -1,0 +1,111 @@
+---
+# Migrated from the 2026-09-09 WordPress capture by scripts/export-content.ts.
+# Rewrite the copy freely — but keep `path`, and carry the search intent of
+# `legacy.title` and `legacy.description` into whatever replaces them. Set
+# `status: reviewed` once a person has been through this file; a re-export
+# then leaves it alone.
+status: 'needs-review'
+path: '/private-aged-care/'
+type: 'page'
+title: 'Private Aged Care'
+description: null
+legacy:
+  title: 'Private Aged Care | The Henley on Broadwater'
+  description: null
+  canonical: 'https://thehenley.com.au/private-aged-care/'
+  lastmod: '2023-05-22T23:11:36+00:00'
+  shortlinkId: 497
+  capture: 'source/live-capture-2026-09-09/pages/private-aged-care.html'
+  # The old page's heading outline, so a rewrite can see what it is replacing:
+  outline:
+    - 'H1 Aged care that keeps you feeling young'
+    - 'H2 Future-proof your life with care support at The Henley.'
+    - 'H2 Aged Care That''s Different'
+    - 'H2 This is a new kind of care'
+    - 'H2 Make yourself at home.'
+    - 'H2 Care designed for you'
+    - 'H2 Frequently Asked Questions'
+---
+# Aged care that keeps you feeling young
+
+## Future-proof your life with care support at The Henley.
+
+Requiring care support shouldn’t mean losing control of your life. Life at The Henley means getting to know you, so we can build a daily rhythm around your preferences.
+
+With a high staff-to-resident ratio, we can dedicate more time to getting to know you and the people you love. Our aim is to become part of your family, with a personalised, caring, and professional approach. Care is provided by qualified staff and led by a registered nurse 24-hours a day.
+
+It’s care support that offers:
+
+-   High standards of care
+-   High staff-to-resident ratios
+-   A thoughtful, personalised approach designed for you
+
+[Find out more](/contact/)
+
+## Aged Care That's Different
+
+## This is a new kind of care
+
+Henley Private Aged Care is a household of just 12 suites designed across a single floor, The Henley offers the comfort, privacy, and warmth of home.
+
+It’s care that lives up to the highest benchmarks in Australia, with personalised touchpoints that immediately put you at ease.
+
+Here the kitchen is the heart of the house and comfortable shared living spaces offer an extension to your private suite.
+
+Early bird or night owl? Enjoy the odd snack at unusual times? This is your home and we’ll fit in with your routine.
+
+## Make yourself at home.
+
+-   Spacious private suites with kitchenettes and seating
+-   A shared residents’ kitchen with all the mod-cons
+-   Comfortable common spaces and outdoor living areas
+-   Tasteful and thoughtful interior design
+-   A health and recreational program that will keep you feeling young.
+
+We also offer a range of flexible funding options that allow you to offset daily care costs utilising any Home Care Package funding you already have or are entitled to.
+
+## Care designed for you
+
+‘Living a good life’ means different things to different people. And that’s how it should be.
+
+Our guiding principle of ‘living a good life’ ensures that you stay in control of your daily life. You’ll always be free to make choices that work for you.
+
+It’s the little things, like waking up early or having a sleep in – or when and what you want to eat. It’s also the big things, like keeping you at the centre of care conversations.
+
+Plus our unique Care Concierge service makes life easy, managing your care so you can focus on what makes you happy.
+
+## Frequently Asked Questions
+
+What makes The Henley Private Aged Care different to a typical nursing home?
+
+The Henley Private Aged Care redefines standards for aged care in Australia, with every suite and all shared living spaces designed with luxury and comfort in mind. Beautifully appointed suites feature welcoming and luxurious interiors and tasteful finishes that create a private and warm ambience, providing a lifestyle of personal touches and close relationships with staff along with views of the Broadwater.
+
+And with only 12 private suites, you can rest assured that our highly trained staff have the time to develop genuine close relationships with each individual. Choice and control form an underlying principle in the way our care is delivered and is fundamental to living a good life at The Henley. From deciding when you wake up and go to bed, to choosing when and what you eat, you have true independence in all that you do. Every individual has the option of participating in our daily activities managed and supported by our trained staff.
+
+Can I utilise my current home care funding to pay for my care?
+
+Yes. The Henley you are able to use your government funded home care packages to offset the costs of care.
+
+Are registered nurses employed on-site at all times?
+
+At The Henley, we have registered nurses on-site at all times 24 hours a day seven days a week to provide round-the-clock care to those with high care needs.
+
+How many registered nurses are there on each shift, including nights, weekends and evenings?
+
+The Henley has a minimum of one registered nurse and one personal care worker on duty, on-site 24 hours a day, 365 days a year to take care of resident’s needs and provide clinical supervision.
+
+Will medications be administered by a registered nurse?
+
+At The Henley Private Aged Care, medications are administered by an on-site registered nurse or where appropriate, a personal care worker managed by a registered nurse.
+
+Will residents be cared for by the same staff so they get to know them?
+
+Everyone loves working at The Henley, so we have a lovely team of long-term staff that rarely even have sick days! Our staff all form excellent relationships with our residents and, being that there are only 12 suites, the RN clinical care managers build solid relationships not only with the residents but also with their families and allied health services.
+
+How will changes to my health be managed?
+
+The residents at The Henley Private Aged Care have their own Clinical Case Manager who manages all aspects of their care and support services. With only 12 suites the RN clinical case manager forms solid relationships not only with their residents but also with their families and allied health services.
+
+What ongoing training programs are offered to staff and what qualifications do they possess?
+
+All personal care workers at The Henley Private Aged Care hold a minimum qualification of a Certificate III in Individual Support. All registered Nurses have current AHPRA registration and must have at least two years prior experience.

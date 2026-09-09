@@ -3,7 +3,7 @@
   "version": "0.0.0",
   "private": true,
   "type": "module",
-  "description": "thehenley.com.au — static site for The Henley on Broadwater",
+  "description": "thehenley.com.au \u2014 static site for The Henley on Broadwater",
   "engines": {
     "node": ">=22.12.0"
   },
@@ -11,6 +11,8 @@
     "dev": "astro dev",
     "start": "astro dev",
     "tokens": "node scripts/build-tokens.ts",
+    "export:content": "node scripts/export-content.ts",
+    "fonts": "scripts/build-fonts.sh",
     "prebuild": "npm run tokens",
     "build": "astro build",
     "preview": "astro preview",
@@ -26,8 +28,11 @@
     "@astrojs/check": "0.9.10",
     "@astrojs/rss": "4.0.19",
     "@astrojs/sitemap": "3.7.4",
+    "@types/turndown": "5.0.6",
+    "cheerio": "1.2.0",
     "js-yaml": "5.4.1",
     "sharp": "0.35.4",
+    "turndown": "7.2.4",
     "typescript": "6.0.3"
   },
   "allowScripts": {
