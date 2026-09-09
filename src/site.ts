@@ -46,6 +46,27 @@ export const NAV = [
   { href: '/contact/', label: 'Book a visit', action: true },
 ] as const;
 
+/**
+ * Statutory documents.
+ *
+ * The Village Comparison Document (approved Form 3) must appear, or be linked,
+ * prominently on every page that carries or links to marketing for the
+ * apartments — Retirement Villages Act 1999 (Qld) s 74(6)(a); see
+ * docs/village-comparison-document.md. On this site that is every page, so it
+ * is a footer link in the navigation columns rather than the small-print row,
+ * and the apartment pages link it again where the cost question is asked.
+ *
+ * The alias always points at the current revision and is served no-cache; the
+ * dated file keeps its WordPress-era path because it is indexed and printed.
+ */
+export const DOCUMENTS = {
+  villageComparison: {
+    href: '/documents/village-comparison-document.pdf',
+    label: 'Village Comparison Document',
+    format: 'PDF',
+  },
+} as const;
+
 /** Everything the footer lists, grouped as a visitor would expect to find it. */
 export const FOOTER_NAV = [
   {
@@ -54,6 +75,10 @@ export const FOOTER_NAV = [
       { href: '/luxury-retirement-living/', label: 'Apartment living' },
       { href: '/supported-living/', label: 'Support in your apartment' },
       { href: '/private-aged-care/', label: 'Private aged care' },
+      {
+        href: DOCUMENTS.villageComparison.href,
+        label: `${DOCUMENTS.villageComparison.label} (${DOCUMENTS.villageComparison.format})`,
+      },
     ],
   },
   {

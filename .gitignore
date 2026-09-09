@@ -33,3 +33,11 @@ __pycache__/
 *.png
 !public/**/*.png
 !src/**/*.png
+
+# Review imagery pulled from SharePoint and the old site (600 MB of originals
+# plus contact sheets). The READMEs and inventories are the record; the files
+# themselves are re-fetchable and go into src/images only once chosen.
+assets/**
+!assets/*/
+!assets/*/README.md
+!assets/*/*-inventory.md

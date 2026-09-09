@@ -15,7 +15,7 @@ import Base from '../layouts/Base.astro';
 import Hero from '../components/Hero.astro';
 import EnquiryBand from '../components/EnquiryBand.astro';
 import Questions from '../components/Questions.astro';
-import { PHONE, PHONE_HREF } from '../site.ts';
+import { DOCUMENTS, PHONE, PHONE_HREF } from '../site.ts';
 
 import wide from '../images/henley-wide-web.jpg';
 
@@ -39,6 +39,10 @@ const questions = [
   {
     q: 'What does it cost?',
     a: 'Prices depend on the apartment. The Village Comparison Document sets out the fees, and we will go through it with you when you visit — nobody should be signing anything they have not had explained.',
+    more: {
+      href: DOCUMENTS.villageComparison.href,
+      label: `Read the ${DOCUMENTS.villageComparison.label} (${DOCUMENTS.villageComparison.format})`,
+    },
   },
   {
     q: 'What happens if I need care later?',

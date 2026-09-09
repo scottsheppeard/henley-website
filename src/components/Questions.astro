@@ -14,6 +14,8 @@
 interface Question {
   q: string;
   a: string;
+  /** An optional link after the answer, for when the real answer is a document. */
+  more?: { href: string; label: string };
 }
 
 interface Props {
@@ -30,10 +32,15 @@ const { questions, heading, ground = 'linen' } = Astro.props;
     <h2 id="questions">{heading}</h2>
     <div class="questions">
       {
-        questions.map(({ q, a }) => (
+        questions.map(({ q, a, more }) => (
           <details>
             <summary>{q}</summary>
             <p>{a}</p>
+            {more && (
+              <p class="questions__more">
+                <a href={more.href}>{more.label}</a>
+              </p>
+            )}
           </details>
         ))
       }
@@ -90,5 +97,9 @@ const { questions, heading, ground = 'linen' } = Astro.props;
     margin-block: 0 var(--space-lg);
     max-width: 62ch;
     color: var(--color-on-surface-secondary);
+  }
+
+  details p + .questions__more {
+    margin-block-start: calc(-1 * var(--space-md));
   }
 </style>
