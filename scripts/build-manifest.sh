@@ -181,9 +181,11 @@ redirects = [
     {"from": "/latest-articles/(.*)", "to": "/$1", "status": 301, "pattern": True,
      "source": "WordPress Redirection rule (3,072 hits)",
      "live": live_for(origin + "/latest-articles/top-10-questions-to-ask-your-sales-manager/")},
-    {"from": "/sitemap_index.xml", "to": "/sitemap.xml", "status": 301, "source": "new site"},
-    {"from": "/page-sitemap.xml", "to": "/sitemap.xml", "status": 301, "source": "new site"},
-    {"from": "/post-sitemap.xml", "to": "/sitemap.xml", "status": 301, "source": "new site"},
+    # @astrojs/sitemap emits sitemap-index.xml, which is also what robots.txt
+    # advertises. Yoast's three paths are indexed and must land on it.
+    {"from": "/sitemap_index.xml", "to": "/sitemap-index.xml", "status": 301, "source": "Yoast sitemap index"},
+    {"from": "/page-sitemap.xml", "to": "/sitemap-index.xml", "status": 301, "source": "Yoast page sitemap"},
+    {"from": "/post-sitemap.xml", "to": "/sitemap-index.xml", "status": 301, "source": "Yoast post sitemap"},
 ]
 
 canonicalisation = [

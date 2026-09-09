@@ -1,0 +1,78 @@
+# henley-website — nonprod (dev.thehenley.com.au)
+#
+#   cd /mnt/persistent/dev/henley-website
+#   npm run tokens                                   # writes src/styles/tokens.css
+#   docker compose -f deploy/compose.nonprod.yml up -d --build
+#
+# `npm run tokens` first, always: the site image builds from this repo without
+# the brand kit mounted, so tokens.css has to already be in the build context.
+# The Dockerfile fails with that message rather than building a site with no
+# colours in it.
+#
+# The network is created once, by hand, and attached to Nginx Proxy Manager:
+#
+#   docker network create henley-website-nonprod-net
+#   # add it to /home/admin/henley-aws/docker-compose.yml under the
+#   # npm-attachment service and the networks: block, then recreate NPM
+#
+# Then in NPM, point host 4 (dev.thehenley.com.au) at henley-website-nonprod:8080
+# and add a second location, /api/enquiry -> henley-website-forms-nonprod:8000.
+
+name: henley-website-nonprod
+
+services:
+  site:
+    container_name: henley-website-nonprod
+    build:
+      context: ..
+      dockerfile: deploy/Dockerfile
+    image: henley-website:nonprod
+    restart: unless-stopped
+    networks:
+      - henley-website-nonprod-net
+    # No published port: NPM reaches it over the shared network. Nothing on
+    # this host should be able to reach it directly.
+    expose:
+      - '8080'
+    healthcheck:
+      test: ['CMD', 'wget', '-q', '-O', '/dev/null', 'http://127.0.0.1:8080/nginx-health']
+      interval: 60s
+      timeout: 5s
+      retries: 3
+    logging:
+      driver: json-file
+      options: { max-size: '10m', max-file: '3' }
+
+  forms:
+    container_name: henley-website-forms-nonprod
+    build:
+      context: ../forms
+      dockerfile: Dockerfile
+    image: henley-website-forms:nonprod
+    restart: unless-stopped
+    # The host's `admin` user, so the SQLite file and its -wal/-shm sidecars are
+    # readable by the henley-utils job that runs as that user.
+    user: '1000:1000'
+    environment:
+      INTAKE_DB_PATH: /data/intake.sqlite
+      # X-Forwarded-For is believed only from NPM. Anyone can send the header,
+      # and trusting it generally would make every rate limit bypassable by
+      # inventing an address per request. Set this to the npm-attachment
+      # container's address on this network after the first `up`:
+      #   docker inspect -f '{{range .NetworkSettings.Networks}}{{.IPAddress}} {{end}}' npm-attachment
+      TRUSTED_PROXY_IPS: ${TRUSTED_PROXY_IPS:-}
+      CONTACT_PHONE: '07 5591 2111'
+      CONTACT_EMAIL: info@thehenley.com.au
+    volumes:
+      - /mnt/persistent/stor/henley-website-nonprod:/data
+    networks:
+      - henley-website-nonprod-net
+    expose:
+      - '8000'
+    logging:
+      driver: json-file
+      options: { max-size: '10m', max-file: '3' }
+
+networks:
+  henley-website-nonprod-net:
+    external: true

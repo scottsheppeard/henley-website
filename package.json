@@ -12,6 +12,7 @@
     "start": "astro dev",
     "tokens": "node scripts/build-tokens.ts",
     "export:content": "node scripts/export-content.ts",
+    "redirects": "node scripts/build-nginx-redirects.ts",
     "fonts": "scripts/build-fonts.sh",
     "prebuild": "npm run tokens",
     "build": "astro build",

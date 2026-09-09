@@ -21,21 +21,21 @@
     },
     {
       "from": "/sitemap_index.xml",
-      "to": "/sitemap.xml",
+      "to": "/sitemap-index.xml",
       "status": 301,
-      "reason": "new site"
+      "reason": "Yoast sitemap index"
     },
     {
       "from": "/page-sitemap.xml",
-      "to": "/sitemap.xml",
+      "to": "/sitemap-index.xml",
       "status": 301,
-      "reason": "new site"
+      "reason": "Yoast page sitemap"
     },
     {
       "from": "/post-sitemap.xml",
-      "to": "/sitemap.xml",
+      "to": "/sitemap-index.xml",
       "status": 301,
-      "reason": "new site"
+      "reason": "Yoast post sitemap"
     },
     {
       "from": "/?p=3",
