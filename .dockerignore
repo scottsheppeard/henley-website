@@ -1,0 +1,18 @@
+# Keep the build context to the source. Everything here is either rebuilt
+# inside the image (node_modules via npm ci, dist via astro build) or has no
+# business in it at all (local venvs, the git dir, the live-site capture).
+node_modules/
+dist/
+.astro/
+.git/
+.venv-fonts/
+forms/.venv/
+forms/__pycache__/
+.pytest_cache/
+.playwright-mcp/
+assets/
+source/live-capture-2026-09-09/
+docs/
+*.png
+!public/**/*.png
+!src/**/*.png

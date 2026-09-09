@@ -17,7 +17,7 @@ WORKDIR /app
 
 # Dependencies first, so a change to app.py does not reinstall them.
 COPY requirements.txt .
-RUN pip install --no-cache-dir --require-hashes=false -r requirements.txt \
+RUN pip install --no-cache-dir -r requirements.txt \
  && find /usr/local -name '__pycache__' -type d -prune -exec rm -rf {} +
 
 COPY app.py schema.sql ./
