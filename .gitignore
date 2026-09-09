@@ -22,3 +22,8 @@ src/styles/tokens.css
 
 # fontTools venv created on demand by scripts/build-fonts.sh
 .venv-fonts/
+
+# Receiver test venv (forms/README.md explains how to recreate it)
+forms/.venv/
+__pycache__/
+.pytest_cache/

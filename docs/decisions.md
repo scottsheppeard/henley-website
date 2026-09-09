@@ -67,6 +67,50 @@ therefore either be silently skipped as "already processed" or, worse, overwrite
 an unrelated Lead. Starting well above the historical range removes both. No
 historical enquiries are migrated — Salesforce already holds what matters.
 
+## Enquiry form fields
+
+**Four visible fields, down from seven.** Scott's instruction was to treat the
+old Gravity Form as a guide rather than a specification, and to weigh completion
+rate against what is genuinely useful when an enquiry is processed.
+
+What the form asks now:
+
+| Field | Required | Why it earns its place |
+|---|---|---|
+| Name | yes | Needed to reply, split into Salesforce FirstName/LastName, and read by the spam classifier. |
+| Email | yes | The reply channel that always works, and `_find_existing_lead` matches on it first — it is how a repeat enquiry becomes a Task on the existing Lead instead of a duplicate. |
+| Phone | no | Read by the classifier (an Australian number is authenticity evidence), matched second for duplicates, and the channel the sales team actually uses to arrange a visit. Encouraged, not required: making it mandatory would cost the privacy-conscious more than the extra numbers are worth. |
+| Your message | no | The classifier's main signal, and the only field a salesperson reads before picking up the phone. |
+
+What it stopped asking:
+
+- **"How did you hear about us?"** Free text, so the answers were never
+  analysable in aggregate. The classifier does not read it — it reads name,
+  email, phone and message only. It reached Salesforce as
+  `ReferralSource_c__c`, which is enrichment, not routing. And it asks a
+  visitor to do attribution work that GA4 and the two Google Ads click
+  conversions already do properly. It is the field on the old form with the
+  worst ratio of completion cost to processing value, so it goes.
+  The database column stays (unwritten) so the 9-tuple henley-utils reads keeps
+  its shape and the question can return without a schema change.
+
+- **"How can we help?"** as a question. The two interest checkboxes still
+  exist and still populate `InterestType_c__c`, but on a service page the form
+  arrives with the matching box already ticked, from the page the visitor is
+  on. Someone enquiring from `/private-aged-care/` has already told us what
+  they are interested in; asking again is a question that costs a completion
+  and buys nothing. They remain visible and changeable, so the pre-selection is
+  honest rather than hidden, and `/contact/` — reached from the nav, with no
+  context to infer from — asks properly.
+
+Nothing was added. "Preferred contact time" and "are you enquiring for
+yourself?" were both considered and rejected: the second is something the
+classifier already infers from the message, and paying a question for an
+answer you can infer is a bad trade.
+
+`page_path` is stored with every submission, so the context the form used is
+recoverable later even though the visitor never typed it.
+
 ## Bot protection
 
 **Honeypot, a minimum fill-time, per-IP and daily caps and a body-size limit at

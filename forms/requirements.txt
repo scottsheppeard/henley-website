@@ -1,0 +1,5 @@
+# Pinned: this container is internet-facing and its dependency set should only
+# change deliberately. python-multipart is required for form-encoded POSTs.
+fastapi==0.121.2
+uvicorn[standard]==0.39.0
+python-multipart==0.0.20
