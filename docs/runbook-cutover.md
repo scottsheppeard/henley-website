@@ -31,6 +31,11 @@ Screenshot both hosts' configuration before touching them.
       notification emails).
 - [ ] `scripts/check-urls.sh https://dev.thehenley.com.au` green with zero
       outstanding.
+- [ ] The Village Comparison Document is linked prominently from every page
+      (footer) and from the apartment pages, at
+      `/documents/village-comparison-document.pdf`, and the file behind the
+      alias is the current revision. Section 74(6)(a) of the Retirement
+      Villages Act; see `docs/village-comparison-document.md`.
 - [ ] The design sample signed off by the GM, and `docs/brief.md`'s held
       claims either evidenced or removed.
 - [ ] **Search Console ownership secured by DNS TXT**, verified *before* Site

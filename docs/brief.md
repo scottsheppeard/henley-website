@@ -96,6 +96,15 @@ unreadable.
 brand kit's email signature says 07 5557 0000. The site number is used here
 until someone says otherwise.
 
+## Statutory content
+
+The Village Comparison Document (Form 3) must be linked prominently from
+**every page** that carries or links to marketing for the apartments, which on
+this site is every page. A footer link on every page plus an in-body link on
+the apartment pages is the plan; the current site's home-page-only link is
+narrower than the Act requires. Detail and sources:
+[village-comparison-document.md](village-comparison-document.md).
+
 ## What counts as a useful lead
 
 An enquiry the classifier calls `prospective_resident` with contact details
