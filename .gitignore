@@ -1,0 +1,21 @@
+# Astro
+dist/
+.astro/
+
+# Dependencies
+node_modules/
+
+# Generated at every build by scripts/build-tokens.ts from the brand kit's
+# DESIGN.md. A build artefact, not a source of truth — change the kit
+# (/mnt/persistent/git/branding/henley/DESIGN.md) or the generator, never this.
+src/styles/tokens.css
+
+# Local environment
+.env
+.env.*
+!.env.example
+
+# Editors / OS
+.vscode/
+.idea/
+.DS_Store

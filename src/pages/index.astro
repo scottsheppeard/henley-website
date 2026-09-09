@@ -1,0 +1,96 @@
+---
+/**
+ * Scaffold placeholder.
+ *
+ * Stage 1 replaces this with the real home page. It exists now so `astro build`
+ * has something to render, which is what proves the chain the rest of the build
+ * depends on: brand kit -> build-tokens -> tokens.css -> a page that uses them.
+ */
+import '../styles/tokens.css';
+
+const generated = new Date().toISOString().slice(0, 10);
+---
+
+<html lang="en-AU">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="robots" content="noindex" />
+    <title>The Henley on Broadwater — rebuild scaffold</title>
+  </head>
+  <body>
+    <main>
+      <p class="eyebrow">Scaffold</p>
+      <h1>A lifestyle resort like no other.</h1>
+      <p>
+        This placeholder stands in for the home page until Stage&nbsp;1. Its only job is to
+        prove the token pipeline: every colour, size and radius below is read from the brand
+        kit at build time, not written here.
+      </p>
+      <p>
+        <a class="button" href="/contact/">Book a visit</a>
+      </p>
+      <p class="caption">Built {generated}.</p>
+    </main>
+  </body>
+</html>
+
+<style>
+  body {
+    margin: 0;
+    background: var(--page-bg);
+    color: var(--page-text);
+    font: var(--page-font);
+  }
+
+  main {
+    max-width: 40rem;
+    margin: 0 auto;
+    padding: var(--space-4xl) var(--space-lg);
+  }
+
+  .eyebrow {
+    font: var(--type-label-caps);
+    letter-spacing: var(--type-label-caps-letter-spacing);
+    text-transform: uppercase;
+    color: var(--color-driftwood);
+  }
+
+  h1 {
+    font: var(--type-headline-display);
+    letter-spacing: var(--type-headline-display-letter-spacing);
+    color: var(--color-primary);
+    margin: 0 0 var(--space-lg);
+  }
+
+  p {
+    margin: 0 0 var(--space-md);
+  }
+
+  .button {
+    display: inline-flex;
+    align-items: center;
+    min-height: var(--button-primary-height);
+    padding-inline: var(--space-lg);
+    background: var(--button-primary-bg);
+    color: var(--button-primary-text);
+    font: var(--button-primary-font);
+    letter-spacing: var(--type-button-label-letter-spacing);
+    border-radius: var(--button-primary-radius);
+    text-decoration: none;
+  }
+
+  .button:hover {
+    background: var(--button-primary-hover-bg);
+  }
+
+  .button:focus-visible {
+    outline: 2px solid var(--color-focus-ring);
+    outline-offset: 2px;
+  }
+
+  .caption {
+    font: var(--type-caption);
+    color: var(--color-on-surface-muted);
+  }
+</style>

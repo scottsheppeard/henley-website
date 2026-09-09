@@ -1,0 +1,101 @@
+/*
+ * GENERATED FILE — DO NOT EDIT.
+ *
+ * Written by scripts/build-tokens.ts from the YAML front-matter of
+ * /mnt/persistent/git/branding/henley/DESIGN.md
+ * (brand kit version: test-fixture).
+ *
+ * To change a colour, a type scale or a component recipe, change the brand kit
+ * and rebuild. To expose a token the kit already defines, add its name to
+ * COMPONENTS in the generator. This file is gitignored for that reason.
+ */
+:root {
+  /* Colour — 11 tokens; 3 Cortex/Henley Care/chart tokens skipped */
+  --color-primary: #0E5B70;
+  --color-on-primary: #FFFFFF;
+  --color-surface: #FAF9F6;
+  --color-on-surface: #1E2427;
+  --color-surface-raised: #FFFFFF;
+  --color-surface-sunk: #F5F1EA;
+  --color-on-surface-secondary: #4B5458;
+  --color-dark-surface: #083B4A;
+  --color-dark-on-surface: #F5F1EA;
+  --color-primary-hover: #083B4A;
+  --color-primary-active: #072C38;
+  /* Type families — one declaration per family, referenced by every scale below */
+  --family-sans: Avenir Next LT Pro, Calibri, sans-serif;
+  --family-mono: ui-monospace, Consolas, monospace;
+  /* Type scales — font shorthand: weight size/line-height family */
+  --type-body-md: 400 16px/1.5 var(--family-sans);
+  --type-body-md-size: 16px;
+  --type-body-md-letter-spacing: 0em;
+  --type-button-label: 600 14px/1.43 var(--family-sans);
+  --type-button-label-size: 14px;
+  --type-button-label-letter-spacing: 0.02em;
+  --type-title-lg: 600 24px/1.33 var(--family-sans);
+  --type-title-lg-size: 24px;
+  --type-title-lg-letter-spacing: 0em;
+  --type-label-md: 500 14px/1.43 var(--family-sans);
+  --type-label-md-size: 14px;
+  --type-label-md-letter-spacing: 0em;
+  --type-code-sm: 400 13px/1.45 var(--family-mono);
+  --type-code-sm-size: 13px;
+  --type-code-sm-letter-spacing: 0em;
+  /* Spacing — 4px grid */
+  --space-base: 4px;
+  --space-xs: 8px;
+  --space-sm: 12px;
+  --space-lg: 24px;
+  --space-touch-target: 44px;
+  /* Radius — 4px on buttons and inputs, 8px on cards */
+  --radius-md: 4px;
+  --radius-lg: 8px;
+  /* Components — aliases the site consumes, pointing at the tokens above */
+  --page-bg: var(--color-surface);
+  --page-text: var(--color-on-surface);
+  --page-font: var(--type-body-md);
+  --page-dark-bg: var(--color-dark-surface);
+  --page-dark-text: var(--color-dark-on-surface);
+  --page-dark-font: var(--type-body-md);
+  --button-primary-bg: var(--color-primary);
+  --button-primary-text: var(--color-on-primary);
+  --button-primary-font: var(--type-button-label);
+  --button-primary-radius: var(--radius-md);
+  --button-primary-padding: var(--space-sm);
+  --button-primary-height: var(--space-touch-target);
+  --button-primary-hover-bg: var(--color-primary-hover);
+  --button-primary-hover-text: var(--color-on-primary);
+  --button-primary-hover-font: var(--type-button-label);
+  --button-primary-active-bg: var(--color-primary-active);
+  --button-primary-active-text: var(--color-on-primary);
+  --button-primary-active-font: var(--type-button-label);
+  --button-secondary-bg: var(--color-surface-raised);
+  --button-secondary-text: var(--color-primary);
+  --button-secondary-font: var(--type-button-label);
+  --button-secondary-radius: var(--radius-md);
+  --button-ghost-bg: var(--color-surface);
+  --button-ghost-text: var(--color-primary);
+  --button-ghost-font: var(--type-button-label);
+  --button-ghost-padding: var(--space-xs);
+  --input-bg: var(--color-surface-sunk);
+  --input-text: var(--color-on-surface);
+  --input-font: var(--type-body-md);
+  --input-radius: var(--radius-md);
+  --input-padding: var(--space-sm);
+  --input-height: var(--space-touch-target);
+  --card-bg: var(--color-surface-raised);
+  --card-text: var(--color-on-surface);
+  --card-font: var(--type-body-md);
+  --card-radius: var(--radius-lg);
+  --card-padding: var(--space-lg);
+  --card-title-bg: var(--color-surface-raised);
+  --card-title-text: var(--color-on-surface);
+  --card-title-font: var(--type-title-lg);
+  --nav-top-bg: var(--color-surface-raised);
+  --nav-top-text: var(--color-on-surface-secondary);
+  --nav-top-font: var(--type-label-md);
+  --nav-top-height: 64px;
+  --nav-link-active-bg: var(--color-surface-raised);
+  --nav-link-active-text: var(--color-primary);
+  --nav-link-active-font: var(--type-label-md);
+}
