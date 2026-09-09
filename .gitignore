@@ -19,3 +19,6 @@ src/styles/tokens.css
 .vscode/
 .idea/
 .DS_Store
+
+# fontTools venv created on demand by scripts/build-fonts.sh
+.venv-fonts/

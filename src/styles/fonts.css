@@ -1,0 +1,46 @@
+/*
+ * Avenir Next LT Pro — the brand typeface, self-hosted.
+ *
+ * Two faces only: Regular (400) for body copy and Demi (600) for headings,
+ * buttons and labels. The kit supplies no italic and no other weights, so
+ * nothing here should synthesise them — `font-synthesis: none` below stops the
+ * browser slanting or smearing a face we do not have, which looks wrong at
+ * headline sizes.
+ *
+ * The files are Latin subsets built by scripts/build-fonts.sh (126 KB of TTF
+ * down to under 10 KB of WOFF2 each) and are committed, so the Docker build
+ * stage needs neither fontTools nor the brand kit mounted. They are referenced
+ * relatively so Vite fingerprints them into /_astro/, which is what lets nginx
+ * serve them immutable for a year without a cache-busting scheme of our own.
+ *
+ * Licensing basis: docs/decisions.md, "Fonts".
+ */
+
+@font-face {
+  font-family: 'Avenir Next LT Pro';
+  src: url('../fonts/avenir-next-400.woff2') format('woff2');
+  font-weight: 400;
+  font-style: normal;
+  /* Text renders in the fallback immediately and swaps when the face lands:
+     for a marketing site read once by a visitor on a phone, copy they can read
+     now beats copy that is invisible for 100ms and then perfect. */
+  font-display: swap;
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA,
+    U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+2074, U+20AC, U+2122, U+2191,
+    U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+
+@font-face {
+  font-family: 'Avenir Next LT Pro';
+  src: url('../fonts/avenir-next-600.woff2') format('woff2');
+  font-weight: 600;
+  font-style: normal;
+  font-display: swap;
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA,
+    U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+2074, U+20AC, U+2122, U+2191,
+    U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+
+:root {
+  font-synthesis: none;
+}
