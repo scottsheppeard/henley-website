@@ -1,0 +1,212 @@
+---
+/**
+ * The enquiry form.
+ *
+ * Four questions. Name and email are required because we cannot reply without
+ * them; phone and the message are not. "How did you hear about us?" is gone —
+ * see docs/decisions.md. The interest checkboxes arrive already answered when
+ * the page knows the answer, so on a service page this is a four-field form
+ * with one of them optional.
+ *
+ * It is an ordinary HTML form posting to an ordinary endpoint. With JavaScript
+ * disabled it works exactly the same, minus the fill-time check — which is why
+ * there is no CAPTCHA. The one line of script sets a timestamp; nothing else on
+ * this page needs it.
+ */
+import { PATHS, PHONE, PHONE_HREF, EMAIL } from '../site.ts';
+
+interface Props {
+  /** Pre-ticks the matching interest, from the page the visitor is on. */
+  interest?: 'apartment' | 'agedCare';
+  heading?: string;
+}
+
+const { interest, heading = 'Book a visit' } = Astro.props;
+const preselected = interest ? PATHS[interest].interest : null;
+---
+
+<form class="enquiry" method="post" action="/api/enquiry">
+  <h2>{heading}</h2>
+  <p class="enquiry__intro">
+    Tell us how to reach you and we will call to arrange a time that suits. If you would
+    rather talk now, call <a class="nowrap" href={PHONE_HREF}>{PHONE}</a>.
+  </p>
+
+  <div class="field">
+    <label for="name">Your name</label>
+    <input id="name" name="name" type="text" autocomplete="name" required maxlength="120" />
+  </div>
+
+  <div class="field">
+    <label for="email">Email</label>
+    <input id="email" name="email" type="email" autocomplete="email" required maxlength="254" />
+  </div>
+
+  <div class="field">
+    <label for="phone">Phone <span class="field__note">(optional)</span></label>
+    <input id="phone" name="phone" type="tel" autocomplete="tel" maxlength="40" />
+    <p class="field__hint">The quickest way for us to arrange a visit.</p>
+  </div>
+
+  <fieldset class="field">
+    <legend>What would you like to know about?</legend>
+    <label class="choice">
+      <input
+        type="checkbox"
+        name="interest_apartment"
+        value="Apartment Living"
+        checked={preselected === 'interest_apartment'}
+      />
+      {PATHS.apartment.label}
+    </label>
+    <label class="choice">
+      <input
+        type="checkbox"
+        name="interest_aged_care"
+        value="Private Aged Care"
+        checked={preselected === 'interest_aged_care'}
+      />
+      {PATHS.agedCare.label}
+    </label>
+  </fieldset>
+
+  <div class="field">
+    <label for="enquiry_text">Anything you would like us to know <span class="field__note">(optional)</span></label>
+    <textarea id="enquiry_text" name="enquiry_text" rows="4" maxlength="5000"></textarea>
+  </div>
+
+  <!--
+    The honeypot. Named like a field worth filling, hidden from people and from
+    screen readers, and left out of the tab order. A browser leaves it empty.
+  -->
+  <div class="honeypot" aria-hidden="true">
+    <label for="company">Company</label>
+    <input id="company" name="company" type="text" tabindex="-1" autocomplete="off" />
+  </div>
+
+  <input type="hidden" name="page_path" value={Astro.url.pathname} />
+  <input type="hidden" name="started_at" value="" />
+
+  <button class="button" type="submit">Send my enquiry</button>
+
+  <p class="enquiry__privacy">
+    We use your details to reply to this enquiry. See our{' '}
+    <a href="/privacy-policy/">privacy policy</a>, or email <a href={`mailto:${EMAIL}`}>{EMAIL}</a>.
+  </p>
+</form>
+
+<script>
+  // Records when the page finished loading, so the receiver can tell a person
+  // filling in a form from a script posting instantly. Its absence is fine:
+  // with JavaScript off the check is skipped rather than failing the visitor.
+  for (const field of document.querySelectorAll<HTMLInputElement>('input[name="started_at"]')) {
+    field.value = String(Date.now());
+  }
+</script>
+
+<style>
+  .enquiry {
+    background: var(--card-bg);
+    border-radius: var(--card-radius);
+    padding: var(--space-2xl);
+    max-width: 34rem;
+    border: 1px solid var(--color-border-subtle);
+  }
+
+  .enquiry h2 {
+    margin-block-start: 0;
+  }
+
+  .enquiry__intro {
+    font: var(--type-body-md);
+    color: var(--color-on-surface-secondary);
+    margin-block-end: var(--space-xl);
+  }
+
+  .field {
+    margin-block-end: var(--space-lg);
+    border: 0;
+    padding: 0;
+  }
+
+  /* Labels stay above their field and stay visible. A placeholder that
+     disappears as you type is a memory test, and this audience should not
+     have to sit one. */
+  label,
+  legend {
+    display: block;
+    font: var(--type-label-md);
+    color: var(--color-on-surface);
+    margin-block-end: var(--space-2xs);
+    padding: 0;
+  }
+
+  .field__note {
+    /* Not --color-on-surface-muted: Driftwood on this ground is 3.78:1, under
+       the 4.5:1 text minimum. "(optional)" is exactly the word someone must be
+       able to read to know they can skip a field. */
+    color: var(--color-on-surface-secondary);
+    font-weight: 400;
+  }
+
+  .field__hint {
+    font: var(--type-body-sm);
+    color: var(--color-on-surface-secondary);
+    margin: var(--space-2xs) 0 0;
+  }
+
+  input[type='text'],
+  input[type='email'],
+  input[type='tel'],
+  textarea {
+    width: 100%;
+    min-height: var(--input-height);
+    padding: var(--space-sm);
+    background: var(--input-bg);
+    color: var(--input-text);
+    font: var(--input-font);
+    border: 1px solid var(--color-border-emphasis);
+    border-radius: var(--input-radius);
+  }
+
+  textarea {
+    resize: vertical;
+  }
+
+  .choice {
+    display: flex;
+    align-items: center;
+    gap: var(--space-sm);
+    min-height: var(--space-touch-target);
+    font: var(--type-body-md);
+    font-weight: 400;
+    margin: 0;
+  }
+
+  .choice input {
+    /* 24px, not the browser's 13px. A checkbox you can hit without aiming. */
+    inline-size: 1.5rem;
+    block-size: 1.5rem;
+    accent-color: var(--color-primary);
+  }
+
+  .honeypot {
+    position: absolute;
+    left: -9999px;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+  }
+
+  .enquiry__privacy {
+    font: var(--type-body-sm);
+    color: var(--color-on-surface-secondary);
+    margin-block: var(--space-lg) 0;
+  }
+
+  @media (max-width: 40rem) {
+    .enquiry {
+      padding: var(--space-lg);
+    }
+  }
+</style>

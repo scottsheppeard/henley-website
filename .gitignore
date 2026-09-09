@@ -27,3 +27,9 @@ src/styles/tokens.css
 forms/.venv/
 __pycache__/
 .pytest_cache/
+
+# Playwright MCP scratch output
+.playwright-mcp/
+*.png
+!public/**/*.png
+!src/**/*.png

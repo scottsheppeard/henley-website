@@ -1,0 +1,165 @@
+---
+/**
+ * Site footer.
+ *
+ * Carries the links the header deliberately does not, plus the two things a
+ * visitor most often scrolls to the bottom for: the address and the phone
+ * number. The residents' column is there because a large share of real traffic
+ * is people who already live here and want reception or the maintenance form —
+ * they are not leads and should not have to walk through a sales funnel.
+ */
+import Wordmark from './Wordmark.astro';
+import { ADDRESS, EMAIL, FOOTER_NAV, LEGAL_NAV, PHONE, PHONE_HREF, SOCIAL } from '../site.ts';
+
+const year = new Date().getFullYear();
+---
+
+<footer class="footer on-deep">
+  <div class="wrap">
+    <div class="footer__top">
+      <div class="footer__brand">
+        <Wordmark width={168} />
+        <address>
+          {ADDRESS.street}<br />
+          {ADDRESS.suburb} {ADDRESS.state} {ADDRESS.postcode}
+        </address>
+        <p class="footer__contact">
+          <a href={PHONE_HREF}>{PHONE}</a><br />
+          <a href={`mailto:${EMAIL}`}>{EMAIL}</a>
+        </p>
+      </div>
+
+      {
+        FOOTER_NAV.map((group) => (
+          <nav class="footer__group" aria-label={group.heading}>
+            <h2>{group.heading}</h2>
+            <ul>
+              {group.links.map((link) => (
+                <li>
+                  <a
+                    href={link.href}
+                    {...('external' in link && link.external
+                      ? { rel: 'noopener', target: '_blank' }
+                      : {})}
+                  >
+                    {link.label}
+                    {'external' in link && link.external && (
+                      <span class="visually-hidden"> (opens in a new tab)</span>
+                    )}
+                  </a>
+                </li>
+              ))}
+            </ul>
+          </nav>
+        ))
+      }
+    </div>
+
+    <div class="footer__bottom">
+      <p>© {year} The Henley on Broadwater Pty Ltd</p>
+      <ul class="footer__legal">
+        {LEGAL_NAV.map((link) => <li><a href={link.href}>{link.label}</a></li>)}
+        {
+          SOCIAL.map((link) => (
+            <li>
+              <a href={link.href} rel="noopener me">
+                {link.label}
+              </a>
+            </li>
+          ))
+        }
+      </ul>
+    </div>
+  </div>
+</footer>
+
+<style>
+  .footer {
+    background: var(--color-broadwater-deep);
+    color: var(--color-linen);
+    padding-block: var(--space-3xl) var(--space-xl);
+    margin-block-start: auto;
+  }
+
+  .footer__top {
+    display: grid;
+    grid-template-columns: 20rem repeat(3, 1fr);
+    gap: var(--space-2xl);
+  }
+
+  .footer__brand {
+    color: var(--color-paper);
+  }
+
+  .footer address,
+  .footer__contact {
+    font: var(--type-body-md);
+    font-style: normal;
+    margin-block: var(--space-lg) var(--space-sm);
+    color: var(--color-warm-sand);
+  }
+
+  .footer__group h2 {
+    font: var(--type-title-md);
+    color: var(--color-paper);
+    margin-block-end: var(--space-sm);
+  }
+
+  .footer__group ul,
+  .footer__legal {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+  }
+
+  .footer a {
+    display: inline-flex;
+    align-items: center;
+    min-height: var(--space-touch-target);
+    color: var(--color-warm-sand);
+    font: var(--type-body-md);
+    text-decoration: none;
+  }
+
+  .footer a:hover {
+    color: var(--color-paper);
+    text-decoration: underline;
+    text-underline-offset: 0.3em;
+  }
+
+  .footer__bottom {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-between;
+    align-items: center;
+    gap: var(--space-md);
+    margin-block-start: var(--space-2xl);
+    padding-block-start: var(--space-lg);
+    border-block-start: 1px solid var(--color-dark-border-subtle);
+  }
+
+  .footer__bottom p {
+    font: var(--type-body-sm);
+    color: var(--color-stone);
+    margin: 0;
+  }
+
+  .footer__legal {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-lg);
+  }
+
+  @media (max-width: 60rem) {
+    .footer__top {
+      grid-template-columns: repeat(2, 1fr);
+      gap: var(--space-xl);
+    }
+  }
+
+  @media (max-width: 40rem) {
+    .footer__top {
+      grid-template-columns: 1fr;
+    }
+  }
+</style>

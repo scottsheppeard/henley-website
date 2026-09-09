@@ -1,97 +1,204 @@
 ---
 /**
- * Scaffold placeholder.
+ * Home.
  *
- * Stage 1 replaces this with the real home page. It exists now so `astro build`
- * has something to render, which is what proves the chain the rest of the build
- * depends on: brand kit -> build-tokens -> tokens.css -> a page that uses them.
+ * The review's test: can a visitor tell what this is and where, in one screen,
+ * and find their own path without reading everything? So the hero carries the
+ * tagline *and* a plain sentence saying what The Henley actually is — the
+ * tagline alone explains neither retirement living nor the care offering.
+ *
+ * The 25-question FAQ that dominated the old home page has moved down to a
+ * "Questions" section, below the two paths and the practical detail. It is
+ * good content in the wrong place: nobody arrives wanting a Q&A.
+ *
+ * Copy here is drawn from src/content/pages/home.md and rewritten in the
+ * brand's voice. Everything marked in docs/brief.md as "evidence needed" is
+ * deliberately absent until someone confirms it.
  */
-import '../styles/fonts.css';
-import '../styles/tokens.css';
+import Base from '../layouts/Base.astro';
+import Hero from '../components/Hero.astro';
+import PathBand from '../components/PathBand.astro';
+import Questions from '../components/Questions.astro';
+import { PHONE, PHONE_HREF } from '../site.ts';
 
-const generated = new Date().toISOString().slice(0, 10);
+import entry from '../images/henley-entry-web.jpg';
+import front from '../images/henley-front-web.jpg';
+import vertical from '../images/henley-vertical-web.jpg';
+
+const amenities = [
+  'A bistro and bar, open daily',
+  'Swimming pool, gym and health club',
+  'Rooftop bowling green and Sky Deck',
+  'Hair and beauty room',
+  'Library, craft room and Men’s Shed',
+  'Community garden and barbecue terrace',
+  'A monthly events calendar',
+  'Concierge and 24-hour on-call support',
+];
+
+const nearby = [
+  'Broadwater Parklands, across the road',
+  'Southport beaches and the Broadwater',
+  'Australia Fair shopping centre',
+  'Light rail and bus, a short walk',
+  'Gold Coast University Hospital',
+];
+
+/**
+ * The home FAQ, cut from twenty-five to the six a first-time visitor actually
+ * arrives with. The full set moves to the pages where each question belongs.
+ * Nothing quoting a fee or the Retirement Villages Act appears until the team
+ * has confirmed the figures (docs/brief.md).
+ */
+const questions = [
+  {
+    q: 'What is The Henley on Broadwater?',
+    a: 'A lifestyle resort at 70 Marine Parade, Southport. One address with independent apartments, support in your own apartment when you want it, and a private aged care household — so your home can stay the same as your needs change.',
+  },
+  {
+    q: 'Where is it?',
+    a: 'On Marine Parade in Southport, across the road from the Broadwater Parklands and a short walk from Australia Fair, the light rail and the beach.',
+  },
+  {
+    q: 'What sizes are the apartments?',
+    a: 'One, two, three and four-bedroom independent living apartments.',
+  },
+  {
+    q: 'Can I bring my pet?',
+    a: 'Yes. Talk to us about your pet when you visit.',
+  },
+  {
+    q: 'Do I have to be a certain age to live here?',
+    a: 'Apartments are for people over 65. Private aged care is assessed on care needs rather than age.',
+  },
+  {
+    q: 'How do I look around?',
+    a: 'Book a visit and we will show you the apartments, the health club and the bistro, and answer the questions this page has not.',
+  },
+];
 ---
 
-<html lang="en-AU">
-  <head>
-    <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <meta name="robots" content="noindex" />
-    <title>The Henley on Broadwater — rebuild scaffold</title>
-  </head>
-  <body>
-    <main>
-      <p class="eyebrow">Scaffold</p>
-      <h1>A lifestyle resort like no other.</h1>
-      <p>
-        This placeholder stands in for the home page until Stage&nbsp;1. Its only job is to
-        prove the token pipeline: every colour, size and radius below is read from the brand
-        kit at build time, not written here.
+<Base
+  title="The Henley on Broadwater | A lifestyle resort in Southport"
+  description="Independent apartments, support at home and private aged care at one address on the Southport Broadwater. Book a visit to see it for yourself."
+>
+  <Hero
+    image={entry}
+    alt="The entrance to The Henley on Broadwater at sunrise, looking out from the covered driveway"
+    heading="A lifestyle resort like no other."
+    standfirst="Independent apartments, support in your own home and private aged care — at one address on the Southport Broadwater."
+    size="full"
+  >
+    <div class="actions">
+      <a class="button" href="/contact/">Book a visit</a>
+      <a class="button button--quiet" href={PHONE_HREF}>Call {PHONE}</a>
+    </div>
+  </Hero>
+
+  <section class="band band--intro" aria-labelledby="ways">
+    <div class="wrap">
+      <h2 id="ways">Two ways to live here</h2>
+      <p class="lede">
+        Most people arrive thinking about one or the other. They are different decisions,
+        so they have their own pages, their own photographs and their own people to talk to.
       </p>
-      <p>
+    </div>
+  </section>
+
+  <PathBand
+    image={vertical}
+    alt="A resident apartment at The Henley, looking out over Southport"
+    heading="Apartment living"
+    href="/luxury-retirement-living/"
+    linkLabel="See the apartments"
+  >
+    <p>
+      One, two, three and four-bedroom apartments, with the bistro, the pool, the health
+      club and the bowling green downstairs. Lock the door and go away for a month; come
+      back to neighbours who noticed you were gone.
+    </p>
+  </PathBand>
+
+  <PathBand
+    image={front}
+    alt="The entrance sign at 70 Marine Parade, Southport"
+    heading="Private aged care"
+    href="/private-aged-care/"
+    linkLabel="See how care works"
+    reversed
+    ground="linen"
+  >
+    <p>
+      A small household on a single floor, with private suites, a shared kitchen at the
+      centre of it and a registered nurse on site. Care built around how you already like
+      to live, not around a roster.
+    </p>
+  </PathBand>
+
+  <section class="band" aria-labelledby="whats-here">
+    <div class="wrap two-up">
+      <div>
+        <h2 id="whats-here">What is here</h2>
+        <ul>
+          {amenities.map((item) => <li>{item}</li>)}
+        </ul>
+      </div>
+      <div>
+        <h2>What is nearby</h2>
+        <ul>
+          {nearby.map((item) => <li>{item}</li>)}
+        </ul>
+        <p>
+          <a href="/location/">More about Southport and the Broadwater</a>
+        </p>
+      </div>
+    </div>
+  </section>
+
+  <Questions questions={questions} heading="Questions people ask first" />
+
+  <section class="band band--deep on-deep" aria-labelledby="visit">
+    <div class="wrap">
+      <h2 id="visit">Come and see it</h2>
+      <p class="lede">
+        Photographs only go so far. Most people decide after an hour here — walking through
+        an apartment, seeing the view, having lunch in the bistro.
+      </p>
+      <div class="actions">
         <a class="button" href="/contact/">Book a visit</a>
-      </p>
-      <p class="caption">Built {generated}.</p>
-    </main>
-  </body>
-</html>
+        <a class="button button--quiet" href={PHONE_HREF}>Call {PHONE}</a>
+      </div>
+    </div>
+  </section>
+</Base>
 
 <style>
-  body {
-    margin: 0;
-    background: var(--page-bg);
-    color: var(--page-text);
-    font: var(--page-font);
+  /* This band introduces the two path bands directly below it, so its bottom
+     padding and their top edge would otherwise stack into a gap wide enough to
+     read as a missing section. */
+  .band--intro {
+    padding-block-end: var(--space-2xl);
   }
 
-  main {
-    max-width: 40rem;
-    margin: 0 auto;
-    padding: var(--space-4xl) var(--space-lg);
+  .lede {
+    font: var(--type-body-lg);
+    max-width: 58ch;
   }
 
-  .eyebrow {
-    font: var(--type-label-caps);
-    letter-spacing: var(--type-label-caps-letter-spacing);
-    text-transform: uppercase;
-    color: var(--color-driftwood);
+  .band--deep .lede {
+    color: var(--color-warm-sand);
   }
 
-  h1 {
-    font: var(--type-headline-display);
-    letter-spacing: var(--type-headline-display-letter-spacing);
-    color: var(--color-primary);
-    margin: 0 0 var(--space-lg);
+  .two-up {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: var(--space-3xl);
   }
 
-  p {
-    margin: 0 0 var(--space-md);
-  }
-
-  .button {
-    display: inline-flex;
-    align-items: center;
-    min-height: var(--button-primary-height);
-    padding-inline: var(--space-lg);
-    background: var(--button-primary-bg);
-    color: var(--button-primary-text);
-    font: var(--button-primary-font);
-    letter-spacing: var(--type-button-label-letter-spacing);
-    border-radius: var(--button-primary-radius);
-    text-decoration: none;
-  }
-
-  .button:hover {
-    background: var(--button-primary-hover-bg);
-  }
-
-  .button:focus-visible {
-    outline: 2px solid var(--color-focus-ring);
-    outline-offset: 2px;
-  }
-
-  .caption {
-    font: var(--type-caption);
-    color: var(--color-on-surface-muted);
+  @media (max-width: 48rem) {
+    .two-up {
+      grid-template-columns: 1fr;
+      gap: var(--space-xl);
+    }
   }
 </style>

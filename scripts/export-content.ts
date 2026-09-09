@@ -28,7 +28,6 @@ import TurndownService from 'turndown';
 
 const REPO_ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 const MANIFEST = resolve(REPO_ROOT, 'source/migration-manifest.json');
-const CAPTURE = resolve(REPO_ROOT, 'source/live-capture-2026-09-09');
 const CONTENT = resolve(REPO_ROOT, 'src/content');
 const ORIGIN = 'https://thehenley.com.au';
 

@@ -1,0 +1,125 @@
+---
+/**
+ * Private aged care — the second path, and the other half of the design sample.
+ *
+ * Written for a different reader from the apartment page. This one is usually
+ * an adult child, often at a distance, often after something has happened. They
+ * are not browsing. They want to know what the place is actually like, whether
+ * their parent would be looked after, and who to ring — in that order, quickly.
+ *
+ * CLAIMS HELD FOR CONFIRMATION (docs/brief.md). This page repeats only what the
+ * live site already publishes, and drops what it cannot support:
+ *   - kept: twelve suites, single floor, shared kitchen, registered nurse on
+ *     site 24 hours. All currently published; all still need sign-off.
+ *   - dropped: "the highest benchmarks in Australia" — an unsupported
+ *     superlative — and "high staff-to-resident ratio", which is an adjective
+ *     rather than a claim. The ratio goes back in as a number, or not at all.
+ *   - rewritten: the Home Care Package funding paragraph. Support at Home
+ *     replaced that programme on 1 November 2025, so the old wording would be
+ *     wrong. It now says to ask us, which is true whatever the scheme is called.
+ */
+import Base from '../layouts/Base.astro';
+import Hero from '../components/Hero.astro';
+import EnquiryBand from '../components/EnquiryBand.astro';
+import Questions from '../components/Questions.astro';
+import { PHONE, PHONE_HREF } from '../site.ts';
+
+import front from '../images/henley-front-web.jpg';
+
+const household = [
+  'Twelve private suites on a single floor',
+  'Each with a kitchenette and its own seating',
+  'A shared residents’ kitchen at the centre of the house',
+  'Common living and outdoor spaces',
+  'A registered nurse on site, 24 hours',
+];
+
+const questions = [
+  {
+    q: 'What makes this different from a nursing home?',
+    a: 'Size and routine. Twelve suites on one floor is a household rather than a wing, and the day is built around how each resident already lives — when they wake, when they eat, what they do — instead of around a schedule everyone fits into.',
+  },
+  {
+    q: 'Can my parent move here from an apartment upstairs?',
+    a: 'Yes, and it happens. Care is on the same site, so the move is within one address rather than to a different suburb, and the people they know are still here.',
+  },
+  {
+    q: 'What does it cost, and what funding can we use?',
+    a: 'It depends on the suite and the care needed, and government funding arrangements changed recently. Call us and we will go through what applies to your situation rather than send you a figure that may not.',
+  },
+  {
+    q: 'Can we look around before deciding?',
+    a: 'Please do. Come and see the household, meet the nurse on duty, and ask the questions this page has not answered.',
+  },
+];
+---
+
+<Base
+  title="Private aged care | The Henley on Broadwater"
+  description="A twelve-suite aged care household on a single floor in Southport, with a registered nurse on site and care built around how each resident already lives."
+>
+  <Hero
+    image={front}
+    alt="The entrance to The Henley on Broadwater at 70 Marine Parade, Southport"
+    heading="Private aged care that keeps you feeling like yourself"
+    standfirst="A household of twelve suites in Southport, where the day is built around the people living in it."
+  >
+    <div class="actions">
+      <a class="button" href="#enquire">Arrange a visit</a>
+      <a class="button button--quiet" href={PHONE_HREF}>Call {PHONE}</a>
+    </div>
+  </Hero>
+
+  <section class="band">
+    <div class="wrap">
+      <p class="lede">
+        Needing care should not mean handing over your life. Early bird or night owl, a
+        snack at an odd hour, a lie-in on a Sunday — this is a home, and it fits around
+        the person living in it.
+      </p>
+
+      <h2>The household</h2>
+      <ul>{household.map((item) => <li>{item}</li>)}</ul>
+
+      <p>
+        Because it is small, the people caring for your mother or father get to know them
+        — what they like, who visits, what a bad day looks like. That is not a feature we
+        can list. It is the reason to come and see it.
+      </p>
+    </div>
+  </section>
+
+  <section class="band band--linen">
+    <div class="wrap">
+      <h2>If more care is needed later</h2>
+      <p>
+        Many residents come to the household from an apartment upstairs. Support can also
+        come to an apartment in ten-minute increments, for as long as that is enough. The
+        point of one address is that changing how much help you need does not mean
+        changing where you live, or who your neighbours are.
+      </p>
+      <p>
+        More about <a href="/supported-living/">support in your own apartment</a> and
+        <a href="/luxury-retirement-living/">the apartments</a>.
+      </p>
+    </div>
+  </section>
+
+  <Questions questions={questions} heading="Questions families ask" ground="paper" />
+
+  <EnquiryBand
+    interest="agedCare"
+    heading="Come and meet us"
+    invitation="Most families want to see the household and talk to whoever is on duty before they decide anything. That is exactly what a visit is for."
+    formHeading="Arrange a visit"
+  />
+</Base>
+
+<style>
+  .lede {
+    font: var(--type-title-lg);
+    color: var(--color-on-surface);
+    max-width: 42ch;
+    margin-block-end: var(--space-3xl);
+  }
+</style>

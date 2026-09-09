@@ -1,0 +1,18 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" role="img" aria-label="The Henley on Broadwater">
+  <!--
+    PROVISIONAL. The brand kit has only the wide wordmark — no compact mark, no
+    favicon — so this is a stand-in, not an addition to the kit. It lives here
+    rather than in /mnt/persistent/git/branding/henley on purpose: a favicon is
+    a brand decision for Scott, and a monogram invented by the website build
+    should not quietly become canonical. See docs/decisions.md, "Favicon".
+
+    Drawn to the wordmark's proportions: a fine-stroked H on Broadwater Deep,
+    with the crossbar sitting high the way it does in the logotype.
+  -->
+  <rect width="64" height="64" rx="6" fill="#083B4A"/>
+  <g fill="#FAF9F6">
+    <rect x="18" y="16" width="3.5" height="32"/>
+    <rect x="42.5" y="16" width="3.5" height="32"/>
+    <rect x="18" y="29" width="28" height="2.75"/>
+  </g>
+</svg>

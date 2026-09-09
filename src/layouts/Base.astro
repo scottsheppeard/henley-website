@@ -1,0 +1,114 @@
+---
+/**
+ * The page shell: head, chrome, and the structured data every page carries.
+ *
+ * Meta titles and descriptions are the one thing a rewrite must not lose. The
+ * migration manifest records what each URL answered with on the old site, and
+ * every page passes its own here rather than falling back to a template — a
+ * generated "{Title} | The Henley on Broadwater" is what 22 of the 27 old URLs
+ * had, and it told search engines nothing.
+ */
+import '../styles/fonts.css';
+import '../styles/tokens.css';
+import '../styles/global.css';
+import SiteHeader from '../components/SiteHeader.astro';
+import SiteFooter from '../components/SiteFooter.astro';
+import { ADDRESS, EMAIL, PHONE } from '../site.ts';
+
+interface Props {
+  title: string;
+  description: string;
+  /** Path of an image for link previews, relative to the site root. */
+  ogImage?: string;
+  /** Set on pages that exist to be redirected to, not to be found. */
+  noindex?: boolean;
+}
+
+const { title, description, ogImage = '/og-default.jpg', noindex = false } = Astro.props;
+
+const canonical = new URL(Astro.url.pathname, Astro.site).href;
+const image = new URL(ogImage, Astro.site).href;
+
+/**
+ * One Organization graph, on every page. It is what puts the address and phone
+ * number in front of someone searching for the place by name — the single
+ * highest-value piece of structured data for a business with one location.
+ *
+ * No FAQPage markup: Google retired FAQ rich results in May 2026, so it would
+ * be weight in the head buying nothing. The questions are still on the page as
+ * real, readable, linkable content.
+ */
+const organisation = {
+  '@context': 'https://schema.org',
+  '@type': 'ResidentialComplex',
+  name: 'The Henley on Broadwater',
+  description:
+    'Independent apartments, support at home and private aged care at one address on the Southport Broadwater.',
+  url: Astro.site?.href,
+  telephone: PHONE,
+  email: EMAIL,
+  address: {
+    '@type': 'PostalAddress',
+    streetAddress: ADDRESS.street,
+    addressLocality: ADDRESS.suburb,
+    addressRegion: ADDRESS.state,
+    postalCode: ADDRESS.postcode,
+    addressCountry: ADDRESS.country,
+  },
+};
+---
+
+<!doctype html>
+<html lang="en-AU">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>{title}</title>
+    <meta name="description" content={description} />
+    <link rel="canonical" href={canonical} />
+    {noindex && <meta name="robots" content="noindex, follow" />}
+
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content={title} />
+    <meta property="og:description" content={description} />
+    <meta property="og:url" content={canonical} />
+    <meta property="og:image" content={image} />
+    <meta property="og:site_name" content="The Henley on Broadwater" />
+    {/* en_AU, not the en_US the old site emitted. */}
+    <meta property="og:locale" content="en_AU" />
+    <meta name="twitter:card" content="summary_large_image" />
+
+    <meta name="theme-color" content="#083B4A" />
+    <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+
+    <script is:inline type="application/ld+json" set:html={JSON.stringify(organisation)} />
+
+    <slot name="head" />
+  </head>
+
+  <body>
+    <a class="skip-link" href="#main">Skip to the main content</a>
+    <SiteHeader />
+    <main id="main" tabindex="-1">
+      <slot />
+    </main>
+    <SiteFooter />
+  </body>
+</html>
+
+<style is:global>
+  body {
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh;
+  }
+
+  main {
+    flex: 1;
+  }
+
+  /* The skip link's target must not draw a focus ring around the whole page. */
+  main:focus {
+    outline: none;
+  }
+</style>

@@ -1,0 +1,60 @@
+---
+/**
+ * Not found.
+ *
+ * A 404 on this site is most often an old bookmark or a link in a printed
+ * brochure, so it names the places people were probably trying to reach rather
+ * than apologising. Anything genuinely worth keeping should be a redirect in
+ * src/content/redirects.json instead of landing here.
+ */
+import Base from '../layouts/Base.astro';
+import { PHONE, PHONE_HREF } from '../site.ts';
+---
+
+<Base
+  title="Page not found | The Henley on Broadwater"
+  description="That page has moved or no longer exists."
+  noindex
+>
+  <section class="band notfound">
+    <div class="wrap">
+      <h1>That page has moved</h1>
+      <p class="lede">
+        The address you followed does not exist any more. These are the pages people are
+        usually looking for.
+      </p>
+      <ul class="notfound__links">
+        <li><a href="/luxury-retirement-living/">Apartment living</a></li>
+        <li><a href="/private-aged-care/">Private aged care</a></li>
+        <li><a href="/location/">Where we are</a></li>
+        <li><a href="/news/">News</a></li>
+        <li><a href="/contact/">Book a visit</a></li>
+      </ul>
+      <p>Or call us on <a class="nowrap" href={PHONE_HREF}>{PHONE}</a> and we will point you at it.</p>
+    </div>
+  </section>
+</Base>
+
+<style>
+  .notfound {
+    min-height: 46vh;
+  }
+
+  .lede {
+    font: var(--type-title-lg);
+    max-width: 46ch;
+  }
+
+  .notfound__links {
+    list-style: none;
+    padding: 0;
+    margin-block: var(--space-xl);
+  }
+
+  .notfound__links a {
+    display: inline-flex;
+    align-items: center;
+    min-height: var(--space-touch-target);
+    font: var(--type-title-md);
+  }
+</style>

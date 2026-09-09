@@ -18,6 +18,8 @@
     "preview": "astro preview",
     "test": "node --test scripts/*.test.ts",
     "test:update": "UPDATE_SNAPSHOTS=1 node --test scripts/*.test.ts",
+    "check:enquiry": "scripts/check-enquiry-flow.sh",
+    "assets": "scripts/build-assets.sh",
     "check": "npm run tokens && astro check && npm test",
     "astro": "astro"
   },

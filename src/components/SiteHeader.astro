@@ -1,0 +1,171 @@
+---
+/**
+ * Site header.
+ *
+ * Two jobs, in this order: say where you are, and give the two audiences who
+ * do not want to browse — an adult child in a hurry, an existing resident
+ * needing reception — a phone number they can tap without reading anything.
+ *
+ * The navigation is grouped rather than flat. The old site put nine items in a
+ * row of equal weight, which is nine decisions before you have understood the
+ * offer. These are the three that lead somewhere a visitor actually wants to
+ * go; the rest live in the footer and inside the sections they belong to.
+ */
+import Wordmark from './Wordmark.astro';
+import { NAV, PHONE, PHONE_HREF } from '../site.ts';
+
+const { pathname } = Astro.url;
+const isCurrent = (href: string) => pathname === href;
+---
+
+<header class="header on-deep">
+  <div class="wrap header__inner">
+    <a href="/" class="header__home" aria-label="The Henley on Broadwater, home">
+      <Wordmark width={132} />
+    </a>
+
+    <nav class="header__nav" aria-label="Main">
+      <ul>
+        {
+          NAV.map((item) => (
+            <li class={'action' in item && item.action ? 'header__action' : undefined}>
+              <a href={item.href} aria-current={isCurrent(item.href) ? 'page' : undefined}>
+                {item.label}
+              </a>
+            </li>
+          ))
+        }
+      </ul>
+    </nav>
+
+    <a class="header__phone" href={PHONE_HREF}>
+      <span class="visually-hidden">Call us on </span>{PHONE}
+    </a>
+  </div>
+</header>
+
+<style>
+  .header {
+    position: sticky;
+    top: 0;
+    z-index: 20;
+    background: var(--color-broadwater-deep);
+    color: var(--color-paper);
+  }
+
+  .header__inner {
+    display: flex;
+    align-items: center;
+    gap: var(--space-lg);
+    padding-block: var(--space-sm);
+    flex-wrap: wrap;
+  }
+
+  .header__home {
+    display: flex;
+    color: var(--color-paper);
+    flex-shrink: 0;
+  }
+
+  .header__nav {
+    margin-inline-start: auto;
+  }
+
+  .header__nav ul {
+    display: flex;
+    gap: var(--space-lg);
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  .header__nav li {
+    margin: 0;
+  }
+
+  .header__nav a,
+  .header__phone {
+    display: inline-flex;
+    align-items: center;
+    min-height: var(--space-touch-target);
+    color: var(--color-paper);
+    font: var(--type-body-md);
+    text-decoration: none;
+  }
+
+  .header__nav a:hover,
+  .header__phone:hover {
+    color: var(--color-warm-sand);
+    text-decoration: underline;
+    text-underline-offset: 0.3em;
+  }
+
+  /* The current page is marked by a rule under it, not by a colour change:
+     colour alone would be the only signal for someone who cannot see it. */
+  .header__nav a[aria-current='page'] {
+    border-block-end: 2px solid var(--color-coastal-mist);
+  }
+
+  .header__phone {
+    font: var(--type-title-md);
+    color: var(--color-paper);
+    white-space: nowrap;
+  }
+
+  /* No hamburger. Three grouped links and a phone number take two rows on a
+     narrow screen, which needs no JavaScript, hides nothing behind a tap, and
+     keeps the phone number where a hurried visitor can see it.
+     
+     Two rows, not four: the header is sticky, so every row it takes is a row
+     of the page nobody can read. The phone is placed explicitly beside the
+     wordmark rather than left to flow, because it comes after the navigation
+     in the markup — correct for a screen reader, wrong for the grid. */
+  @media (max-width: 56rem) {
+    .header__inner {
+      display: grid;
+      grid-template-columns: 1fr auto;
+      align-items: center;
+      column-gap: var(--space-md);
+      row-gap: var(--space-2xs);
+      padding-block: var(--space-xs);
+    }
+
+    .header__phone {
+      grid-row: 1;
+      grid-column: 2;
+      font: var(--type-title-md);
+    }
+
+    .header__nav {
+      grid-row: 2;
+      grid-column: 1 / -1;
+      margin-inline-start: 0;
+    }
+
+    .header__nav ul {
+      gap: var(--space-lg);
+      flex-wrap: wrap;
+    }
+
+    .header__nav a {
+      /* The 44px floor is for things you tap. These are inline links in a
+         two-row band; keeping the full touch height here would spend another
+         44px of a 780px screen on chrome. They stay comfortably tappable. */
+      min-height: 2.25rem;
+    }
+  }
+
+  /* Two nav links fit one line at 360px; three do not, and the third would
+     cost a whole row of a sticky header on every page. */
+  @media (max-width: 34rem) {
+    .header__action {
+      display: none;
+    }
+  }
+
+  @media (max-width: 24rem) {
+    .header__phone {
+      font: var(--type-body-md);
+    }
+  }
+</style>

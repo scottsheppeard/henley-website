@@ -1,0 +1,15 @@
+# thehenley.com.au
+#
+# Everything is public and crawlable, as it was on the WordPress site. The two
+# pages that should not appear in results — /thank-you/ and the 404 — say so
+# themselves with a robots meta tag, which is the reliable way to keep a page
+# out of an index. Disallowing them here would only stop the crawl, not the
+# listing.
+#
+# Nonprod serves an X-Robots-Tag: noindex header from nginx instead, so this
+# file is identical in both environments and cannot drift between them.
+
+User-agent: *
+Allow: /
+
+Sitemap: https://thehenley.com.au/sitemap-index.xml

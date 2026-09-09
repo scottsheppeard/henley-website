@@ -1,0 +1,39 @@
+---
+/**
+ * The Henley wordmark, inlined so CSS can colour it.
+ *
+ * The kit ships fixed-colour variants too, but the site puts the mark on
+ * Broadwater Deep in the header and on Paper elsewhere. One inline SVG
+ * inheriting `currentColor` covers both without shipping two files, and
+ * inlining keeps it out of the critical request path.
+ *
+ * Wordmark only — the kit has no compact or stacked mark. The style guide sets
+ * a 120px minimum width, which the 148px default respects.
+ */
+import source from '../assets/wordmark.svg?raw';
+
+interface Props {
+  /** Rendered width in pixels. The artwork is 364.06 x 124.65 in its own units. */
+  width?: number;
+  class?: string;
+}
+
+const { width = 148, class: className } = Astro.props;
+const height = Math.round((width / 364.06) * 124.65);
+
+// Take the paths out of the file's own <svg> wrapper so this component controls
+// the size, colour and accessible name rather than inheriting whatever the
+// exported file happened to carry.
+const paths = source.replace(/^[\s\S]*?<svg[^>]*>/, '').replace(/<\/svg>\s*$/, '');
+---
+
+<svg
+  viewBox="0 0 364.06 124.65"
+  width={width}
+  height={height}
+  role="img"
+  aria-label="The Henley on Broadwater"
+  class={className}
+  fill="currentColor"
+  set:html={paths}
+/>

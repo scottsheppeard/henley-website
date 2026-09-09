@@ -1,0 +1,85 @@
+---
+/**
+ * The enquiry section at the foot of a service page.
+ *
+ * A form on its own in a full-width band leaves half the page empty, which
+ * reads as a mistake. More usefully, it makes the form the only way to get in
+ * touch — and a good share of this audience would rather ring than type. So the
+ * space beside it carries the same invitation as a phone call, at the same
+ * weight, instead of being padding.
+ */
+import EnquiryForm from './EnquiryForm.astro';
+import { PHONE, PHONE_HREF } from '../site.ts';
+
+interface Props {
+  interest?: 'apartment' | 'agedCare';
+  heading: string;
+  /** One sentence saying what happens after they get in touch. */
+  invitation: string;
+  formHeading: string;
+}
+
+const { interest, heading, invitation, formHeading } = Astro.props;
+---
+
+<section class="band band--linen" id="enquire" aria-labelledby="enquire-heading">
+  <div class="wrap enquire">
+    <div class="enquire__intro">
+      <h2 id="enquire-heading">{heading}</h2>
+      <p>{invitation}</p>
+      <p class="enquire__call">
+        <a class="nowrap" href={PHONE_HREF}>{PHONE}</a>
+      </p>
+      <p class="enquire__hours">Weekdays, and someone answers.</p>
+    </div>
+
+    <div class="enquire__form">
+      <EnquiryForm interest={interest} heading={formHeading} />
+    </div>
+  </div>
+</section>
+
+<style>
+  .enquire {
+    display: grid;
+    grid-template-columns: 1fr minmax(0, 34rem);
+    gap: var(--space-4xl);
+    align-items: start;
+  }
+
+  .enquire__intro p {
+    max-width: 34ch;
+  }
+
+  .enquire__call {
+    margin-block: var(--space-lg) 0;
+  }
+
+  .enquire__call a {
+    font: var(--type-headline-md);
+    letter-spacing: var(--type-headline-md-letter-spacing);
+    text-decoration: none;
+  }
+
+  .enquire__call a:hover {
+    text-decoration: underline;
+    text-underline-offset: 0.15em;
+  }
+
+  .enquire__hours {
+    font: var(--type-body-md);
+    color: var(--color-on-surface-secondary);
+    margin-block-start: var(--space-2xs);
+  }
+
+  @media (max-width: 56rem) {
+    .enquire {
+      grid-template-columns: 1fr;
+      gap: var(--space-xl);
+    }
+
+    .enquire__form :global(.enquiry) {
+      max-width: none;
+    }
+  }
+</style>

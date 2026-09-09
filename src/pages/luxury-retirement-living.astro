@@ -1,0 +1,144 @@
+---
+/**
+ * Apartment living — the representative service page for the design sample.
+ *
+ * Slug and H1 keyword are kept: /luxury-retirement-living/ carries the search
+ * intent this page has to hold onto, and the manifest records it as a URL that
+ * must keep resolving. The nav calls it "Apartment living" because that is what
+ * a person calls it; the heading keeps the search term.
+ *
+ * The enquiry form at the foot arrives with "Apartment living" already ticked,
+ * from this page. Someone here has already told us what they want to know
+ * about; asking again costs a completion and buys nothing.
+ */
+import Base from '../layouts/Base.astro';
+import Hero from '../components/Hero.astro';
+import EnquiryBand from '../components/EnquiryBand.astro';
+import Questions from '../components/Questions.astro';
+import { PHONE, PHONE_HREF } from '../site.ts';
+
+import wide from '../images/henley-wide-web.jpg';
+
+const inside = [
+  'One, two, three and four-bedroom apartments',
+  'Full kitchen, laundry and private balcony',
+  'Secure parking and storage',
+  'Emergency call and a 24-hour on-call system',
+];
+
+const downstairs = [
+  'The bistro and bar',
+  'Swimming pool, gym and health club',
+  'Rooftop bowling green and Sky Deck',
+  'Hair and beauty room',
+  'Library, craft room and Men’s Shed',
+  'Community garden and barbecue terrace',
+];
+
+const questions = [
+  {
+    q: 'What does it cost?',
+    a: 'Prices depend on the apartment. The Village Comparison Document sets out the fees, and we will go through it with you when you visit — nobody should be signing anything they have not had explained.',
+  },
+  {
+    q: 'What happens if I need care later?',
+    a: 'Support can come to your apartment in ten-minute increments, for as much or as little as you need. If you later need more than that, the private aged care household is on site. You would not be moving away from your neighbours.',
+  },
+  {
+    q: 'Can I have visitors to stay?',
+    a: 'It is your apartment. Family and friends are welcome, and there are guest facilities for longer stays.',
+  },
+  {
+    q: 'What if I want to travel?',
+    a: 'Lock the door and go. Tell reception and we will keep an eye on the place.',
+  },
+];
+---
+
+<Base
+  title="Luxury retirement living | The Henley on Broadwater"
+  description="One to four-bedroom independent apartments in Southport, with a bistro, pool, health club and bowling green downstairs, and support available in your own apartment."
+>
+  <Hero
+    image={wide}
+    alt="The Henley on Broadwater at sunrise, seen across the rooftops of Southport"
+    heading="Luxury retirement living on the Broadwater"
+    standfirst="Independent apartments at 70 Marine Parade, with the resort downstairs and support available in your own home when you want it."
+  >
+    <div class="actions">
+      <a class="button" href="#enquire">Book a visit</a>
+      <a class="button button--quiet" href={PHONE_HREF}>Call {PHONE}</a>
+    </div>
+  </Hero>
+
+  <section class="band">
+    <div class="wrap">
+      <p class="lede">
+        You are buying an apartment, not a room. It has a full kitchen, a laundry, a
+        balcony and a front door that locks. What is different is everything on the other
+        side of that door.
+      </p>
+
+      <div class="two-up">
+        <div>
+          <h2>In your apartment</h2>
+          <ul>{inside.map((item) => <li>{item}</li>)}</ul>
+        </div>
+        <div>
+          <h2>Downstairs</h2>
+          <ul>{downstairs.map((item) => <li>{item}</li>)}</ul>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="band band--linen">
+    <div class="wrap">
+      <h2>A day here</h2>
+      <p>
+        Swim before breakfast, or do not. Meet someone for coffee downstairs. Bowls on the
+        roof in the afternoon, dinner in the bistro if you would rather not cook, and back
+        to your own quiet apartment afterwards.
+      </p>
+      <p>
+        There is a full events calendar — Melbourne Cup, St Patrick's Day, shows, casino
+        nights — and no obligation to go to any of it. Most people find they do.
+      </p>
+      <p>
+        More about <a href="/dining/">the bistro</a>, <a href="/the-henley-health-club/">the health
+        club</a> and <a href="/location/">the neighbourhood</a>.
+      </p>
+    </div>
+  </section>
+
+  <Questions questions={questions} heading="Questions about the apartments" ground="paper" />
+
+  <EnquiryBand
+    interest="apartment"
+    heading="Come and see one"
+    invitation="Tell us roughly what you are after and we will show you the apartments that fit, plus the bistro, the pool and the bowling green while you are here."
+    formHeading="See an apartment"
+  />
+</Base>
+
+<style>
+  .lede {
+    font: var(--type-title-lg);
+    color: var(--color-on-surface);
+    max-width: 40ch;
+    margin-block-end: var(--space-3xl);
+  }
+
+  .two-up {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: var(--space-3xl);
+  }
+
+  @media (max-width: 48rem) {
+    .two-up {
+      grid-template-columns: 1fr;
+      gap: var(--space-xl);
+    }
+  }
+</style>

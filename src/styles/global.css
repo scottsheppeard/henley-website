@@ -1,0 +1,256 @@
+/*
+ * Site-wide foundations.
+ *
+ * Everything visual comes from tokens.css, which is generated from the brand
+ * kit. Nothing in this file should contain a raw colour, type size or spacing
+ * value — if one appears here, the kit is missing a token and that is the
+ * thing to fix.
+ *
+ * The audience is people in their seventies and eighties and their adult
+ * children, often on a phone. That sets the floor everything else works within:
+ * 18px body text, a 65-character measure, 44px touch targets, real focus rings,
+ * and no motion that nobody asked for.
+ */
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html {
+  /* No smooth scrolling: an anchor jump that animates is disorienting when
+     you are the one who asked to go there. */
+  -webkit-text-size-adjust: 100%;
+}
+
+body {
+  margin: 0;
+  background: var(--page-bg);
+  color: var(--page-text);
+  font: var(--type-body-lg);
+  /* 18px, not 16. The difference costs nothing and it is the single largest
+     legibility gain available for this audience. */
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+}
+
+h1,
+h2,
+h3,
+h4 {
+  color: var(--color-primary);
+  margin: 0 0 var(--space-md);
+  text-wrap: balance;
+}
+
+h1 {
+  font: var(--type-headline-display);
+  letter-spacing: var(--type-headline-display-letter-spacing);
+}
+
+h2 {
+  font: var(--type-headline-md);
+  letter-spacing: var(--type-headline-md-letter-spacing);
+}
+
+h3 {
+  font: var(--type-title-lg);
+  letter-spacing: var(--type-title-lg-letter-spacing);
+}
+
+p,
+ul,
+ol {
+  margin: 0 0 var(--space-md);
+  max-width: 65ch;
+}
+
+ul,
+ol {
+  padding-inline-start: var(--space-lg);
+}
+
+li {
+  margin-bottom: var(--space-xs);
+}
+
+a {
+  color: var(--color-link);
+  text-decoration-thickness: 1px;
+  text-underline-offset: 0.2em;
+}
+
+a:hover {
+  color: var(--color-link-hover);
+}
+
+img {
+  max-width: 100%;
+  height: auto;
+  display: block;
+}
+
+/* A focus ring you can actually see, on the one element that has focus.
+   :focus-visible so a mouse click does not leave a ring behind.
+
+   Not --color-focus-ring. The brand kit nominates Coastal Mist (#6FA3B2) for
+   this, and on the Paper page ground that is 2.64:1 — below the 3:1 that WCAG
+   2.2 SC 1.4.11 requires of a focus indicator, so a keyboard user would lose
+   track of where they are. Henley Teal on Paper is 7.26:1 and Warm Sand on
+   Broadwater Deep is 7.86:1. Raised with the brand kit; see docs/decisions.md. */
+:focus-visible {
+  outline: 3px solid var(--color-primary);
+  outline-offset: 2px;
+  border-radius: var(--radius-sm);
+}
+
+/* Anything on a dark ground needs a ring that reads against it. */
+.on-deep :focus-visible,
+.band--deep :focus-visible {
+  outline-color: var(--color-warm-sand);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+/* ── Layout primitives ───────────────────────────────────────────────────── */
+
+.wrap {
+  width: min(100% - var(--space-xl), 68rem);
+  margin-inline: auto;
+}
+
+/* Sections are told apart by the ground they sit on, not by cards or rules.
+   Three grounds alternate down the page: Paper, Linen, and Broadwater Deep. */
+.band {
+  padding-block: var(--space-4xl);
+}
+
+.band--linen {
+  background: var(--color-linen);
+}
+
+.band--deep {
+  background: var(--color-broadwater-deep);
+  color: var(--color-linen);
+}
+
+.band--deep h1,
+.band--deep h2,
+.band--deep h3 {
+  color: var(--color-paper);
+}
+
+.band--deep a {
+  color: var(--color-warm-sand);
+}
+
+@media (max-width: 48rem) {
+  .band {
+    padding-block: var(--space-2xl);
+  }
+}
+
+/* A phone number broken across two lines is a phone number someone has to
+   reassemble before they can dial it. */
+.nowrap {
+  white-space: nowrap;
+}
+
+/* ── Actions ─────────────────────────────────────────────────────────────── */
+
+/*
+ * One primary action, one secondary. The old site used four different labels
+ * for the same destination; the shape of a control now tells you what kind of
+ * action it is, and the label says exactly what happens.
+ */
+.button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: var(--button-primary-height);
+  padding-inline: var(--space-lg);
+  background: var(--button-primary-bg);
+  color: var(--button-primary-text);
+  font: var(--button-primary-font);
+  letter-spacing: var(--type-button-label-letter-spacing);
+  border: 2px solid transparent;
+  border-radius: var(--button-primary-radius);
+  text-decoration: none;
+  cursor: pointer;
+  transition: background-color 120ms ease-out;
+}
+
+.button:hover {
+  background: var(--button-primary-hover-bg);
+  color: var(--button-primary-text);
+}
+
+.button:active {
+  background: var(--button-primary-active-bg);
+}
+
+.button--quiet {
+  background: transparent;
+  color: var(--color-primary);
+  border-color: currentColor;
+}
+
+.button--quiet:hover {
+  background: var(--color-primary);
+  color: var(--color-on-primary);
+}
+
+.on-deep .button--quiet {
+  color: var(--color-paper);
+}
+
+.on-deep .button--quiet:hover {
+  background: var(--color-paper);
+  color: var(--color-broadwater-deep);
+}
+
+.actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-md);
+  align-items: center;
+  margin-block-start: var(--space-lg);
+}
+
+/* ── Accessibility furniture ─────────────────────────────────────────────── */
+
+.skip-link {
+  position: absolute;
+  left: var(--space-md);
+  top: var(--space-md);
+  z-index: 100;
+  padding: var(--space-sm) var(--space-md);
+  background: var(--color-paper);
+  color: var(--color-primary);
+  border-radius: var(--radius-md);
+  transform: translateY(-200%);
+}
+
+.skip-link:focus {
+  transform: translateY(0);
+}
+
+.visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  padding: 0;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}

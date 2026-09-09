@@ -1,0 +1,70 @@
+---
+/**
+ * Enquiry confirmation.
+ *
+ * The URL is kept exactly as it was: the Google Ads and GA4 setup reference it,
+ * and the migration manifest records it as a live address. It is excluded from
+ * the sitemap and marked noindex, because it exists to be redirected to rather
+ * than to be found.
+ *
+ * The conversion event fires only when the receiver sent us here — ?sent=1 —
+ * and the parameter is then stripped from the URL, so a refresh or a shared
+ * link cannot count a second lead. That is the review's point: a thank-you
+ * pageview is not evidence of an enquiry, a successful write is.
+ */
+import Base from '../layouts/Base.astro';
+import { EMAIL, PHONE, PHONE_HREF } from '../site.ts';
+---
+
+<Base
+  title="Thank you | The Henley on Broadwater"
+  description="Your enquiry has been sent. We will be in touch."
+  noindex
+>
+  <section class="band thanks">
+    <div class="wrap">
+      <h1>Thank you — that has reached us</h1>
+      <p class="lede">
+        Someone from our team will call or email you shortly. If you would rather not wait,
+        call <a class="nowrap" href={PHONE_HREF}>{PHONE}</a> and ask for the sales team.
+      </p>
+      <p>
+        Nothing arrived? Email us directly at <a href={`mailto:${EMAIL}`}>{EMAIL}</a> and we
+        will pick it up from there.
+      </p>
+      <div class="actions">
+        <a class="button button--quiet" href="/">Back to the home page</a>
+      </div>
+    </div>
+  </section>
+</Base>
+
+<script>
+  // Count the enquiry once, and only when the receiver actually stored it.
+  //
+  // The old setup had no form conversion at all; the obvious replacement — fire
+  // on every /thank-you/ pageview — would count a refresh, a back-button, or a
+  // link someone shared as new leads. The receiver redirects here with ?sent=1
+  // on a successful write; we push the event, then remove the parameter so the
+  // page cannot report itself twice.
+  const url = new URL(window.location.href);
+
+  if (url.searchParams.get('sent') === '1') {
+    window.dataLayer = window.dataLayer || [];
+    window.dataLayer.push({ event: 'enquiry_submitted' });
+
+    url.searchParams.delete('sent');
+    window.history.replaceState({}, '', url.pathname + url.search + url.hash);
+  }
+</script>
+
+<style>
+  .thanks {
+    min-height: 46vh;
+  }
+
+  .lede {
+    font: var(--type-title-lg);
+    max-width: 46ch;
+  }
+</style>

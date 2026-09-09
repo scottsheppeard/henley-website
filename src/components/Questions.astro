@@ -1,0 +1,94 @@
+---
+/**
+ * A set of questions and answers.
+ *
+ * Native <details>, so it works with JavaScript off, is keyboard-operable
+ * without any code of ours, is announced correctly by screen readers, and can
+ * be found by the browser's own find-in-page — which a div-and-click accordion
+ * cannot. There is no script here at all.
+ *
+ * No FAQPage structured data: Google retired FAQ rich results in May 2026, so
+ * the markup would buy nothing. These are here to answer the question, not to
+ * win a result snippet.
+ */
+interface Question {
+  q: string;
+  a: string;
+}
+
+interface Props {
+  questions: Question[];
+  heading: string;
+  ground?: 'paper' | 'linen';
+}
+
+const { questions, heading, ground = 'linen' } = Astro.props;
+---
+
+<section class={`band ${ground === 'linen' ? 'band--linen' : ''}`} aria-labelledby="questions">
+  <div class="wrap">
+    <h2 id="questions">{heading}</h2>
+    <div class="questions">
+      {
+        questions.map(({ q, a }) => (
+          <details>
+            <summary>{q}</summary>
+            <p>{a}</p>
+          </details>
+        ))
+      }
+    </div>
+  </div>
+</section>
+
+<style>
+  .questions {
+    max-width: 46rem;
+    margin-block-start: var(--space-xl);
+  }
+
+  details {
+    border-block-end: 1px solid var(--color-border-subtle);
+  }
+
+  summary {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--space-md);
+    min-height: var(--space-touch-target);
+    padding-block: var(--space-md);
+    font: var(--type-title-md);
+    color: var(--color-primary);
+    cursor: pointer;
+    list-style: none;
+  }
+
+  summary::-webkit-details-marker {
+    display: none;
+  }
+
+  /* A plus that becomes a minus. Drawn in CSS rather than loaded as an icon
+     font — the old site pulled in a Font Awesome Pro kit for six glyphs. */
+  summary::after {
+    content: '';
+    flex: 0 0 auto;
+    inline-size: 0.85rem;
+    block-size: 0.85rem;
+    background:
+      linear-gradient(var(--color-driftwood), var(--color-driftwood)) center / 100% 2px no-repeat,
+      linear-gradient(var(--color-driftwood), var(--color-driftwood)) center / 2px 100% no-repeat;
+    transition: transform 150ms ease-out;
+  }
+
+  details[open] summary::after {
+    background:
+      linear-gradient(var(--color-driftwood), var(--color-driftwood)) center / 100% 2px no-repeat;
+  }
+
+  details p {
+    margin-block: 0 var(--space-lg);
+    max-width: 62ch;
+    color: var(--color-on-surface-secondary);
+  }
+</style>

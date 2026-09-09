@@ -1,0 +1,132 @@
+---
+/**
+ * Contact.
+ *
+ * Three audiences land here and only one of them is a lead. Someone who already
+ * lives at The Henley, or whose parent does, wants reception or the maintenance
+ * form — and should not have to scroll past a sales form to find them. So the
+ * details come first and the form second, and the residents' routes are given
+ * their own place rather than being buried in the footer.
+ *
+ * The form is not pre-ticked here: reached from the nav, this page has no
+ * context to infer an interest from, so it asks properly.
+ */
+import Base from '../layouts/Base.astro';
+import EnquiryForm from '../components/EnquiryForm.astro';
+import { ADDRESS, EMAIL, PHONE, PHONE_HREF, SOCIAL } from '../site.ts';
+---
+
+<Base
+  title="Contact us | The Henley on Broadwater"
+  description="Call 07 5591 2111, email info@thehenley.com.au, or send an enquiry. The Henley on Broadwater, 70 Marine Parade, Southport."
+>
+  <section class="band contact">
+    <div class="wrap contact__grid">
+      <div class="contact__details">
+        <h1>Get in touch</h1>
+
+        <div class="detail">
+          <h2>Call us</h2>
+          <p class="detail__value"><a href={PHONE_HREF}>{PHONE}</a></p>
+          <p class="detail__note">Reception is open weekdays. Someone answers.</p>
+        </div>
+
+        <div class="detail">
+          <h2>Email</h2>
+          <p class="detail__value"><a href={`mailto:${EMAIL}`}>{EMAIL}</a></p>
+        </div>
+
+        <div class="detail">
+          <h2>Visit</h2>
+          <p class="detail__value">
+            <address>
+              {ADDRESS.street}<br />
+              {ADDRESS.suburb} {ADDRESS.state} {ADDRESS.postcode}
+            </address>
+          </p>
+          <p class="detail__note">
+            Across from the Broadwater Parklands, with parking at the door.
+          </p>
+        </div>
+
+        <div class="detail">
+          <h2>Follow</h2>
+          <p class="detail__value">
+            {
+              SOCIAL.map((link, index) => (
+                <>
+                  {index > 0 && ' and '}
+                  <a href={link.href} rel="noopener me">
+                    {link.label}
+                  </a>
+                </>
+              ))
+            }
+          </p>
+        </div>
+      </div>
+
+      <div class="contact__form">
+        <EnquiryForm heading="Send an enquiry" />
+      </div>
+    </div>
+  </section>
+
+  <section class="band band--linen" aria-labelledby="residents">
+    <div class="wrap">
+      <h2 id="residents">Already live here?</h2>
+      <p>
+        You do not need this form. For anything about your apartment, call reception on{' '}
+        <a class="nowrap" href={PHONE_HREF}>{PHONE}</a>, or lodge a maintenance request directly.
+      </p>
+      <p>
+        <a class="button button--quiet" href="https://forms.office.com/r/maintenance" rel="noopener" target="_blank">
+          Maintenance request<span class="visually-hidden"> (opens in a new tab)</span>
+        </a>
+      </p>
+    </div>
+  </section>
+</Base>
+
+<style>
+  .contact__grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: var(--space-4xl);
+    align-items: start;
+  }
+
+  .detail {
+    margin-block-end: var(--space-2xl);
+  }
+
+  .detail h2 {
+    font: var(--type-label-md);
+    letter-spacing: var(--type-label-md-letter-spacing);
+    /* Driftwood would be 3.78:1 here, under the text minimum. */
+    color: var(--color-on-surface-secondary);
+    margin-block-end: var(--space-2xs);
+  }
+
+  .detail__value {
+    font: var(--type-title-lg);
+    margin: 0;
+  }
+
+  .detail__value address {
+    font-style: normal;
+  }
+
+  .detail__note {
+    font: var(--type-body-md);
+    color: var(--color-on-surface-secondary);
+    margin-block: var(--space-xs) 0;
+  }
+
+  @media (max-width: 56rem) {
+    .contact__grid {
+      grid-template-columns: 1fr;
+      gap: var(--space-2xl);
+    }
+  }
+</style>

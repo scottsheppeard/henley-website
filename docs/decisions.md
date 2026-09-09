@@ -56,6 +56,29 @@ carries the site and only `src/styles/fonts.css` changes.
 Fallback stack stays in place regardless: Avenir Next LT Pro → Avenir → Calibri
 → system sans, per the brand style guide.
 
+## Focus ring colour departs from the brand kit
+
+**The site's focus ring is Henley Teal on light grounds and Warm Sand on dark,
+not the kit's Coastal Mist.**
+
+`DESIGN.md` nominates Coastal Mist `#6FA3B2` as the focus ring. Against the
+Paper page ground `#FAF9F6` that is **2.64:1**, below the 3:1 that WCAG 2.2
+SC 1.4.11 requires of a focus indicator — a keyboard user would lose track of
+where they are on the page. The substitutes measure 7.26:1 (Henley Teal on
+Paper) and 7.86:1 (Warm Sand on Broadwater Deep).
+
+This is a finding about the kit rather than a preference, and it should go back
+to the kit rather than living only here: any Henley interface using that token
+on a light surface has the same problem, not just this website. Raised with the
+brand kit; until it changes, `--color-focus-ring` is deliberately unused by this
+site and `src/styles/global.css` says why.
+
+The same measurement pass moved two pieces of small text off Driftwood
+`#8A7E6C`, which is 3.78:1 on Paper — fine for the accordion's plus/minus marks
+at the 3:1 non-text threshold, under the 4.5:1 minimum for words. The
+"(optional)" markers on form fields and the contact page's field labels are the
+words most worth being able to read.
+
 ## Enquiry intake identity
 
 **New submissions get ids starting at 100000.**
