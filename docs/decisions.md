@@ -8,6 +8,46 @@ site does is [the baseline](2026-09-09-rebuild-baseline-and-proposal.md).
 
 ---
 
+## Photography
+
+**The sample uses the professional shoots already held in SharePoint and on
+the old site, at the resolution we have, rather than waiting for anything.**
+
+Twelve photographs were chosen on 2026-09-10 from the review pull in
+`assets/` (inventories: `assets/sharepoint/README.md`,
+`assets/existing-site/README.md`; the originals are untracked). The source
+of each file in `src/images/` is recorded in `assets/sharepoint/README.md`
+by original filename:
+
+| Site file | Source | Shoot |
+|---|---|---|
+| `broadwater-aerial.jpg` | `_53a1178_20  brighter.jpg` | Jan 2015 aerial series |
+| `apartment-balcony.jpg` | `220415_418.jpg` | Brand & Co, April 2015 |
+| `apartment-balcony-parklands.jpg` | `_53a1098_08.jpg` | Jan 2015 series |
+| `apartment-view-type-b.jpg`, `-lounge-type-b`, `-kitchen-type-b` | `View / Lounge and Dining / Kitchen Type B 2.jpg` | 2017 apartment shoot |
+| `pool.jpg` | `220415_379.jpg` | Brand & Co, April 2015 |
+| `sky-deck-bowls.jpg` | `_MG_0790.jpg` | 2016 pool/Sky Deck shoot |
+| `care-nurse-resident.jpg` | `Page 4-1.jpg` | 2019 newsletter set, full res |
+| `care-dining-room.jpg`, `care-kitchen`, `care-chef`, `care-suite` | `THE HENLEY-PROOF-317 / 557 / 214 / 386.jpg` | Level 3 aged care shoot, 2048px proofs |
+
+The aged care shoot exists in SharePoint only as 2048px proofs and the
+photographer's details are gone. Scott's call: 2048px is more than the site
+ever serves (the largest rendition is 1920px, and galleries top out at
+1080px), so the proofs are used as-is rather than chased.
+
+Source copies in `src/images/` are downscaled to 2400px JPEG so the repo does
+not carry 5–8 MB originals; Astro generates the AVIF renditions at build.
+
+**Consent.** `care-dining-room.jpg` and `care-nurse-resident.jpg` show
+identifiable residents and staff from 2019 marketing shoots. No consent record
+was found in SharePoint. They stay in the sample so the GM can see the page
+as intended; before launch either the consent is confirmed or they are
+replaced with the no-people frames from the same shoots (the household
+lounge, `PROOF-543`, and the balcony, `PROOF-27`, are already in `assets/`).
+
+The four brand-kit exteriors that carried the first sample were removed from
+`src/images/`; they remain in the brand kit and in `assets/existing-site/`.
+
 ## Node version
 
 **The repo pins Node 22 in `.node-version` and selects it per-repo, never globally.**

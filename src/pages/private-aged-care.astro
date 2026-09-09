@@ -24,7 +24,11 @@ import EnquiryBand from '../components/EnquiryBand.astro';
 import Questions from '../components/Questions.astro';
 import { PHONE, PHONE_HREF } from '../site.ts';
 
-import front from '../images/henley-front-web.jpg';
+import Gallery from '../components/Gallery.astro';
+import dining from '../images/care-dining-room.jpg';
+import kitchen from '../images/care-kitchen.jpg';
+import chef from '../images/care-chef.jpg';
+import suite from '../images/care-suite.jpg';
 
 const household = [
   'Twelve private suites on a single floor',
@@ -59,8 +63,8 @@ const questions = [
   description="A twelve-suite aged care household on a single floor in Southport, with a registered nurse on site and care built around how each resident already lives."
 >
   <Hero
-    image={front}
-    alt="The entrance to The Henley on Broadwater at 70 Marine Parade, Southport"
+    image={dining}
+    alt="Residents at lunch in the household's dining room, with the windows behind them"
     heading="Private aged care that keeps you feeling like yourself"
     standfirst="A household of twelve suites in Southport, where the day is built around the people living in it."
   >
@@ -88,6 +92,14 @@ const questions = [
       </p>
     </div>
   </section>
+
+  <Gallery
+    photos={[
+      { image: kitchen, alt: "The household's open kitchen with a stone island and pendant lights", caption: 'The kitchen at the centre of the household' },
+      { image: chef, alt: 'A chef plating a meal at the kitchen bench', caption: 'Meals are cooked here, not delivered' },
+      { image: suite, alt: 'A made bed in a suite with a lamp and a framed picture', caption: 'A suite' },
+    ]}
+  />
 
   <section class="band band--linen">
     <div class="wrap">

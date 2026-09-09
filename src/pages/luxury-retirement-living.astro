@@ -17,7 +17,14 @@ import EnquiryBand from '../components/EnquiryBand.astro';
 import Questions from '../components/Questions.astro';
 import { DOCUMENTS, PHONE, PHONE_HREF } from '../site.ts';
 
-import wide from '../images/henley-wide-web.jpg';
+import Gallery from '../components/Gallery.astro';
+import view from '../images/apartment-view-type-b.jpg';
+import parklands from '../images/apartment-balcony-parklands.jpg';
+import lounge from '../images/apartment-lounge-type-b.jpg';
+import kitchen from '../images/apartment-kitchen-type-b.jpg';
+import pool from '../images/pool.jpg';
+import bowls from '../images/sky-deck-bowls.jpg';
+import balcony from '../images/apartment-balcony.jpg';
 
 const inside = [
   'One, two, three and four-bedroom apartments',
@@ -64,8 +71,8 @@ const questions = [
   description="One to four-bedroom independent apartments in Southport, with a bistro, pool, health club and bowling green downstairs, and support available in your own apartment."
 >
   <Hero
-    image={wide}
-    alt="The Henley on Broadwater at sunrise, seen across the rooftops of Southport"
+    image={parklands}
+    alt="An apartment balcony looking down over the Broadwater Parklands and across the water to the Spit"
     heading="Luxury retirement living on the Broadwater"
     standfirst="Independent apartments at 70 Marine Parade, with the resort downstairs and support available in your own home when you want it."
   >
@@ -96,6 +103,14 @@ const questions = [
     </div>
   </section>
 
+  <Gallery
+    photos={[
+      { image: lounge, alt: 'A furnished living and dining room with the Broadwater through the windows', caption: 'Living and dining, type B apartment' },
+      { image: kitchen, alt: 'A white kitchen with an oven tower and stone benchtop', caption: 'Kitchen, type B apartment' },
+      { image: balcony, alt: 'Two wicker chairs on a balcony overlooking the water', caption: 'The balcony most people end up living on' },
+    ]}
+  />
+
   <section class="band band--linen">
     <div class="wrap">
       <h2>A day here</h2>
@@ -114,6 +129,15 @@ const questions = [
       </p>
     </div>
   </section>
+
+  <Gallery
+    ground="linen"
+    photos={[
+      { image: pool, alt: 'The outdoor pool with palm trees and the tower behind', caption: 'The pool, downstairs' },
+      { image: bowls, alt: 'The rooftop bowling green with the Broadwater beyond', caption: 'The Sky Deck bowling green' },
+      { image: view, alt: 'The Broadwater seen from a balcony', caption: 'The Broadwater from a balcony' },
+    ]}
+  />
 
   <Questions questions={questions} heading="Questions about the apartments" ground="paper" />
 
