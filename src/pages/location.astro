@@ -1,0 +1,239 @@
+---
+/**
+ * Location.
+ *
+ * The review's complaint about this page: it asserted the location with a
+ * static map and a list of adjectives ("So much to do, so close to home") when
+ * the location is the single strongest thing The Henley has, and is verifiable.
+ * So this page names what is actually out the door, in the order a person walks
+ * to it — across the road, then a walk, then a short drive — and shows the
+ * neighbourhood in photographs of the neighbourhood.
+ *
+ * Distances are described the way someone would describe them out loud rather
+ * than in metres. Precise figures would need checking against a real route for
+ * an 80-year-old with a walking stick, and an over-confident "350 m" that turns
+ * out to be uphill and across two crossings is worse than "a few minutes".
+ *
+ * No embedded map. An iframe would need a third-party frame and script source
+ * in the CSP and would make a request to Google on every page view, and this is
+ * a business with one address that is not hard to find. The address is text, it
+ * is in the Organization graph on every page, and "Get directions" hands off to
+ * whatever maps application the visitor already uses.
+ *
+ * The old site's four location tiles (a beach, a paddleboarder, a lifeguard
+ * tower, a tram) read as stock and none of them were taken here. The Broadwater
+ * Parklands frames from the 2015 Brand & Co shoot show the same neighbourhood
+ * and the business owns them — see docs/decisions.md.
+ */
+import Base from '../layouts/Base.astro';
+import Hero from '../components/Hero.astro';
+import Gallery from '../components/Gallery.astro';
+import Questions from '../components/Questions.astro';
+import EnquiryBand from '../components/EnquiryBand.astro';
+import { ADDRESS, PHONE, PHONE_HREF } from '../site.ts';
+
+import aerial from '../images/broadwater-aerial.jpg';
+import pier from '../images/parklands-pier.jpg';
+import path from '../images/parklands-path.jpg';
+import water from '../images/parklands-water.jpg';
+import map from '../images/location-map.jpg';
+
+const directions = `https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(
+  '70 Marine Parade, Southport QLD 4215',
+)}`;
+
+const acrossTheRoad = [
+  'Broadwater Parklands — lawns, boardwalk and the water',
+  'Gold Coast Aquatic Centre',
+  'The Broadwater itself, and the pier',
+  'Playgrounds and the water-play fountains, for when the grandchildren come',
+];
+
+const aWalk = [
+  'Australia Fair — supermarkets, chemist, post office, cinema',
+  'The G:link light rail, and buses along Marine Parade',
+  'Southport CBD, banks and medical practices',
+  'Cafés and restaurants along the Broadwater',
+];
+
+const aShortDrive = [
+  'Gold Coast University Hospital',
+  'Main Beach, The Spit and the surf',
+  'Surfers Paradise',
+  'Sanctuary Cove and the northern golf courses',
+  'Gold Coast Airport, under an hour',
+];
+
+const questions = [
+  {
+    q: 'Can I still drive?',
+    a: 'Yes, and there is secure parking with your apartment. Plenty of residents keep a car for a while and then find they have stopped using it.',
+  },
+  {
+    q: 'What if I give up the car?',
+    a: 'This is about the best address on the Coast for that. The light rail runs the length of the city from a stop a short walk away, the buses run along Marine Parade, and the shops are close enough to walk to with a trolley.',
+  },
+  {
+    q: 'Is it noisy, being on Marine Parade?',
+    a: 'Come and stand on a balcony and judge for yourself — that is the honest answer, and it depends a great deal on which way the apartment faces and how high up it is.',
+  },
+  {
+    q: 'How far is the hospital?',
+    a: 'Gold Coast University Hospital is a short drive north, and there are medical practices and specialists in Southport itself.',
+  },
+];
+---
+
+<Base
+  title="Location | The Henley on Broadwater"
+  description="The Henley is at 70 Marine Parade, Southport, across the road from the Broadwater Parklands, a walk from Australia Fair and the light rail, and a short drive from Gold Coast University Hospital."
+>
+  <Hero
+    image={aerial}
+    alt="The Southport Broadwater from the air, with the Broadwater Parklands along the shore and The Henley’s tower beside them"
+    heading="Where it is"
+    standfirst="70 Marine Parade, Southport — on the Broadwater, with the parklands across the road and the middle of the city behind you."
+  >
+    <div class="actions">
+      <a class="button" href="#enquire">Book a visit</a>
+      <a class="button button--quiet" href={PHONE_HREF}>Call {PHONE}</a>
+    </div>
+  </Hero>
+
+  <section class="band">
+    <div class="wrap">
+      <p class="lede">
+        Most retirement resorts are somewhere quiet on the edge of town. This one is in
+        the middle of Southport with the water on its doorstep, which is a different
+        proposition entirely — you do not have to give up the city to get the view.
+      </p>
+
+      <div class="address-block">
+        <address>
+          {ADDRESS.street}<br />
+          {ADDRESS.suburb} {ADDRESS.state} {ADDRESS.postcode}
+        </address>
+        <p>
+          <a href={directions} rel="noopener" target="_blank">
+            Get directions<span class="visually-hidden"> (opens in a new tab)</span></a>
+        </p>
+      </div>
+    </div>
+  </section>
+
+  <section class="band band--linen">
+    <div class="wrap">
+      <h2>What is out the door</h2>
+      <div class="tiers">
+        <div>
+          <h3>Across the road</h3>
+          <ul>{acrossTheRoad.map((item) => <li>{item}</li>)}</ul>
+        </div>
+        <div>
+          <h3>A short walk</h3>
+          <ul>{aWalk.map((item) => <li>{item}</li>)}</ul>
+        </div>
+        <div>
+          <h3>A short drive</h3>
+          <ul>{aShortDrive.map((item) => <li>{item}</li>)}</ul>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <Gallery
+    ground="linen"
+    photos={[
+      { image: pier, alt: 'The pier at Broadwater Parklands with cyclists on the path beside it', caption: 'The parklands, across Marine Parade' },
+      { image: path, alt: 'Cyclists and walkers on the Broadwater Parklands path', caption: 'The boardwalk runs for kilometres' },
+      { image: water, alt: 'Water-play fountains at Broadwater Parklands', caption: 'The water park, for visiting grandchildren' },
+    ]}
+  />
+
+  <section class="band">
+    <div class="wrap">
+      <h2>The neighbourhood</h2>
+      <figure class="map">
+        <img
+          src={map.src}
+          width={map.width}
+          height={map.height}
+          alt="An annotated aerial photograph of Southport showing The Henley on Marine Parade, the Broadwater and its parklands, the Southport CBD, Australia Fair, the Spit and the beaches to the east."
+          loading="lazy"
+          decoding="async"
+        />
+        <figcaption>
+          The Henley on the Broadwater, with Southport behind it and the Spit across the
+          water.
+        </figcaption>
+      </figure>
+    </div>
+  </section>
+
+  <Questions questions={questions} heading="Questions about getting around" ground="linen" />
+
+  <EnquiryBand
+    interest="apartment"
+    heading="Come and stand on a balcony"
+    invitation="A location is the one thing photographs are worst at. Book a visit, and we will walk you across to the parklands afterwards if you want to see how close it really is."
+    formHeading="Book a visit"
+  />
+</Base>
+
+<style>
+  .lede {
+    font: var(--type-title-lg);
+    color: var(--color-on-surface);
+    max-width: 42ch;
+    margin-block-end: var(--space-2xl);
+  }
+
+  .address-block address {
+    font: var(--type-title-md);
+    font-style: normal;
+    color: var(--color-on-surface);
+    margin-block-end: var(--space-md);
+  }
+
+  .tiers {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: var(--space-2xl);
+  }
+
+  .tiers h3 {
+    font: var(--type-title-md);
+    letter-spacing: var(--type-title-md-letter-spacing);
+    padding-block-end: var(--space-sm);
+    border-block-end: 2px solid var(--color-warm-sand);
+  }
+
+  /* The map is a wide annotated aerial: full column width, and it is the one
+     image on the site that people will want to look at closely, so it is not
+     cropped to a tidy ratio. Plain <img>: it is already a flat 3000px JPEG of
+     rendered labels, and putting it through the AVIF pipeline softens exactly
+     the small type that makes it worth having. */
+  .map {
+    margin: 0;
+  }
+
+  .map img {
+    width: 100%;
+    height: auto;
+    border-radius: var(--radius-lg);
+  }
+
+  .map figcaption {
+    font: var(--type-body-sm);
+    color: var(--color-on-surface-secondary);
+    padding-block-start: var(--space-sm);
+    max-width: 60ch;
+  }
+
+  @media (max-width: 56rem) {
+    .tiers {
+      grid-template-columns: 1fr;
+      gap: var(--space-xl);
+    }
+  }
+</style>

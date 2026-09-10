@@ -15,6 +15,12 @@ interface Photo {
   image: ImageMetadata;
   alt: string;
   caption: string;
+  /**
+   * Marks a picture that is not a photograph. It sits *on* the image, because
+   * a visitor deciding where to live has to know that at a glance and a
+   * caption underneath is read second, if at all.
+   */
+  badge?: string;
 }
 
 interface Props {
@@ -29,17 +35,20 @@ const { photos, ground = 'paper' } = Astro.props;
   <div class="wrap">
     <ul class="gallery">
       {
-        photos.map(({ image, alt, caption }) => (
+        photos.map(({ image, alt, caption, badge }) => (
           <li>
             <figure>
-              <Image
-                src={image}
-                alt={alt}
-                widths={[480, 720, 1080]}
-                sizes="(max-width: 56rem) 100vw, 33vw"
-                format="avif"
-                loading="lazy"
-              />
+              <div class="frame">
+                <Image
+                  src={image}
+                  alt={alt}
+                  widths={[480, 720, 1080]}
+                  sizes="(max-width: 56rem) 100vw, 33vw"
+                  format="avif"
+                  loading="lazy"
+                />
+                {badge && <p class="badge">{badge}</p>}
+              </div>
               <figcaption>{caption}</figcaption>
             </figure>
           </li>
@@ -68,6 +77,24 @@ const { photos, ground = 'paper' } = Astro.props;
 
   figure {
     margin: 0;
+  }
+
+  .frame {
+    position: relative;
+  }
+
+  /* Deep ground, Paper text: 13:1, the same pairing the hero band uses, so it
+     stays legible over whatever corner of the image it lands on. */
+  .badge {
+    position: absolute;
+    inset-block-start: var(--space-sm);
+    inset-inline-start: var(--space-sm);
+    margin: 0;
+    padding: var(--space-2xs) var(--space-xs);
+    background: var(--color-broadwater-deep);
+    color: var(--color-paper);
+    font: var(--type-label-md);
+    border-radius: var(--radius-sm);
   }
 
   figure :global(img) {

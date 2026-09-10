@@ -86,6 +86,26 @@ export const DOCUMENTS = {
     label: 'Village Comparison Document',
     format: 'PDF',
   },
+  /**
+   * Henley Care's Support at Home fee schedule, linked from /supported-living/.
+   *
+   * The same two-file arrangement as the Village Comparison Document, and for
+   * the same reason: the dated path is what the live site published and what
+   * people have printed, and the alias is what this site links so a new
+   * revision does not leave every link pointing at a superseded document.
+   *
+   * The current revision is dated 1 July 2026 and is written in Support at
+   * Home terms — the eight classifications, the three service categories and
+   * their contribution bands. It is the source for what /supported-living/ and
+   * the Support at Home article say about how the funding is shaped; neither
+   * republishes the figures, because this document is the thing that is
+   * maintained and they are not.
+   */
+  scheduleOfFees: {
+    href: '/documents/schedule-of-fees.pdf',
+    label: 'Schedule of Fees',
+    format: 'PDF',
+  },
 } as const;
 
 /** Everything the footer lists, grouped as a visitor would expect to find it. */

@@ -1,0 +1,254 @@
+---
+/**
+ * Dining.
+ *
+ * The old page was five headings of restaurant-brochure language — "indulge the
+ * senses", "taste the world", "no passport required" — around one fact a
+ * prospective resident actually wants: someone else cooks, every day, and you
+ * do not have to be sociable about it.
+ *
+ * It is also the one page on the site whose subject is currently a building
+ * site. The ground floor is being refurbished; the Hub is serving in the
+ * meantime; 70 Marine reopens as the renders show. Publishing 2023 photographs
+ * of the old bistro as the current room would be a small lie that a visitor
+ * discovers on the tour, so the page says what is happening instead.
+ *
+ * Every render carries a badge on the image and a caption naming the concept
+ * report it came from (docs/brief.md: renders must be labelled as renders).
+ * No reopening date appears anywhere: nobody has given us one, and a date on a
+ * website is a promise.
+ */
+import Base from '../layouts/Base.astro';
+import Hero from '../components/Hero.astro';
+import Gallery from '../components/Gallery.astro';
+import Questions from '../components/Questions.astro';
+import EnquiryBand from '../components/EnquiryBand.astro';
+import { PHONE, PHONE_HREF } from '../site.ts';
+
+import plating from '../images/bistro-chef-plating.jpg';
+import vegetables from '../images/bistro-vegetables.jpg';
+import prep from '../images/bistro-kitchen-prep.jpg';
+import scones from '../images/hub-scones.jpg';
+import hubRoom from '../images/hub-room.jpg';
+import hubBarista from '../images/hub-barista.jpg';
+import marine from '../images/render-70-marine.jpg';
+import terrace from '../images/render-terrace-evening.jpg';
+import atrium from '../images/render-atrium.jpg';
+
+const questions = [
+  {
+    q: 'Do I have to eat in the bistro?',
+    a: 'No. Every apartment has a full kitchen, and plenty of residents cook most nights. The bistro is there for the nights you would rather not, and for when you have people to feed.',
+  },
+  {
+    q: 'Can I get a meal brought up to me?',
+    a: 'Yes. Room service runs from the same à la carte menu, prepared to order. It is the thing residents mention most often after a hospital stay or a bad week.',
+  },
+  {
+    q: 'Is it included, or do I pay for what I eat?',
+    a: 'You pay for what you order, the way you would anywhere. Nobody is buying a meal plan they do not use.',
+  },
+  {
+    q: 'What about a special diet?',
+    a: 'Tell the kitchen. They cook for residents on modified, allergy-restricted and texture-modified diets every day, and a dietitian visits.',
+  },
+  {
+    q: 'Can my family eat here when they visit?',
+    a: 'Yes, and grandchildren are not a problem. Book a table if there are more than a few of you.',
+  },
+];
+---
+
+<Base
+  title="Dining | The Henley on Broadwater"
+  description="A bistro and bar at 70 Marine Parade, Southport: chef-prepared meals daily, à la carte room service and a ground floor currently being rebuilt. See the plans."
+>
+  <Hero
+    image={plating}
+    alt="A chef plating a main course on the pass in The Henley’s kitchen"
+    heading="Dining"
+    standfirst="A kitchen downstairs, open daily, with chefs who cook to order — and know how you take it."
+  >
+    <div class="actions">
+      <a class="button" href="#enquire">Book a visit</a>
+      <a class="button button--quiet" href={PHONE_HREF}>Call {PHONE}</a>
+    </div>
+  </Hero>
+
+  <section class="band">
+    <div class="wrap">
+      <p class="lede">
+        The thing people underestimate about moving here is how much of the week they
+        get back when they stop planning dinner.
+      </p>
+
+      <div class="two-up">
+        <div>
+          <h2>How it works</h2>
+          <ul>
+            <li>Breakfast, lunch and dinner, prepared on site</li>
+            <li>À la carte, cooked to order rather than plated in advance</li>
+            <li>Room service from the same menu</li>
+            <li>A bar, and a coffee machine that gets a workout</li>
+            <li>Modified, allergy-restricted and texture-modified diets catered daily</li>
+          </ul>
+        </div>
+        <div>
+          <h2>And when you want an occasion</h2>
+          <p>
+            There are themed nights through the year — a Tuscan menu, a French one, a
+            Vietnamese one — and the kitchen will take a booking for a birthday or a
+            family lunch without it becoming a production.
+          </p>
+          <p>
+            Eat with people or eat alone. Both are normal here, and nobody keeps score.
+          </p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <Gallery
+    photos={[
+      { image: vegetables, alt: 'Roasted vegetables plated on a marble bench', caption: 'From the à la carte menu' },
+      { image: prep, alt: 'A chef dressing a tray of roasted vegetables in the kitchen', caption: 'The kitchen, mid-service' },
+      { image: scones, alt: 'Scones with strawberries and cream on a plate', caption: 'Morning tea at the Hub, July 2026' },
+    ]}
+  />
+
+  <section class="band band--linen">
+    <div class="wrap">
+      <h2>The ground floor is being rebuilt</h2>
+      <p class="lede lede--tight">
+        Right now the whole ground floor — the arrival, reception and the bistro — is a
+        building site, and the Hub is running in its place.
+      </p>
+      <div class="two-up">
+        <div>
+          <p>
+            The Hub opened in July 2026 as the temporary room: coffee, morning tea, lunch
+            and somewhere to sit with visitors while the works go on around it. It is a
+            stand-in, and residents treat it as one, but the kitchen behind it is the
+            same kitchen.
+          </p>
+          <p>
+            If you are coming to look at an apartment, this is what you will see on the
+            day. We would rather you knew that before you arrived than found it out in
+            the lift.
+          </p>
+        </div>
+        <div>
+          <p>
+            When the work is finished the bistro reopens as <strong>70 Marine</strong>,
+            with its own street frontage on Marine Parade, an outdoor terrace and a
+            reworked arrival and lobby behind it.
+          </p>
+          <p>
+            We have not published an opening date because we have not been given one.
+            Ask when you visit and you will get the current answer rather than the
+            optimistic one.
+          </p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <Gallery
+    ground="linen"
+    photos={[
+      { image: hubRoom, alt: 'Residents at tables in the Hub, with staff serving', caption: 'The Hub, the temporary room, July 2026' },
+      { image: hubBarista, alt: 'A barista working behind the Hub counter', caption: 'Coffee at the Hub' },
+    ]}
+  />
+
+  <section class="band">
+    <div class="wrap">
+      <h2>What is coming</h2>
+      <p>
+        These are the architects’ concept images, not photographs — the ground floor does
+        not look like this yet, and the finished rooms will differ from them in the way
+        finished rooms always do.
+      </p>
+    </div>
+  </section>
+
+  <Gallery
+    photos={[
+      {
+        image: marine,
+        alt: 'Concept image of the rebuilt Marine Parade frontage, with the entry on the left and the 70 Marine café glazing on the right',
+        caption: '70 Marine and the new entry, from Marine Parade',
+        badge: 'Render',
+      },
+      {
+        image: terrace,
+        alt: 'Concept image of the 70 Marine outdoor terrace in the evening, with festoon lighting and people at tables',
+        caption: 'The terrace, evening',
+        badge: 'Render',
+      },
+      {
+        image: atrium,
+        alt: 'Concept image of the rebuilt lobby, a double-height space with planting and a circular skylight',
+        caption: 'The lobby behind it',
+        badge: 'Render',
+      },
+    ]}
+  />
+
+  <section class="band band--source">
+    <div class="wrap">
+      <p class="source">
+        Concept images from the ground floor interior concept report, DBI, revision D,
+        January 2026. Design is subject to change and nothing shown is a commitment.
+      </p>
+    </div>
+  </section>
+
+  <Questions questions={questions} heading="Questions about dining" ground="linen" />
+
+  <EnquiryBand
+    interest="apartment"
+    heading="Come for lunch"
+    invitation="The best way to judge a kitchen is to eat from it. Book a visit and we will put you at a table, then show you the apartments afterwards."
+    formHeading="Book a visit"
+  />
+</Base>
+
+<style>
+  .lede {
+    font: var(--type-title-lg);
+    color: var(--color-on-surface);
+    max-width: 40ch;
+    margin-block-end: var(--space-3xl);
+  }
+
+  .lede--tight {
+    margin-block-end: var(--space-xl);
+  }
+
+  .two-up {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: var(--space-3xl);
+  }
+
+  /* The attribution belongs to the gallery above it, not to the page: it sits
+     tight under the images rather than a full band away from them. */
+  .band--source {
+    padding-block: 0 var(--space-3xl);
+  }
+
+  .source {
+    font: var(--type-body-sm);
+    color: var(--color-on-surface-secondary);
+    max-width: 60ch;
+    margin: 0;
+  }
+
+  @media (max-width: 48rem) {
+    .two-up {
+      grid-template-columns: 1fr;
+      gap: var(--space-xl);
+    }
+  }
+</style>

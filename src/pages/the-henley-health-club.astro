@@ -1,0 +1,166 @@
+---
+/**
+ * The Henley Health Club.
+ *
+ * Slug kept: /the-henley-health-club/ is in the manifest and is the name on the
+ * door. The old page opened with "Vibrant, active, healthy and happy" and
+ * "state of the art" twice, which tells a 78-year-old weighing up whether they
+ * could actually use the place nothing at all. What answers that question is
+ * the class list — which is real, and is theirs — and what the machines are.
+ *
+ * The two gym photographs are from the 2021 opening shoot and have nobody in
+ * them, which is the honest choice here as well as the safe one: the old site's
+ * only gym picture is a 1200x350 crop of residents mid-class, and a photograph
+ * of other people exercising is not what someone wondering if they'd be out of
+ * place needs to see.
+ */
+import Base from '../layouts/Base.astro';
+import Hero from '../components/Hero.astro';
+import Gallery from '../components/Gallery.astro';
+import Questions from '../components/Questions.astro';
+import EnquiryBand from '../components/EnquiryBand.astro';
+import { PHONE, PHONE_HREF } from '../site.ts';
+
+import gymWide from '../images/gym-wide.jpg';
+import gym from '../images/gym.jpg';
+import pool from '../images/pool.jpg';
+import bowls from '../images/sky-deck-bowls.jpg';
+
+const classes = [
+  'Gentle exercise',
+  'Balance class',
+  'Cardio class',
+  'Yoga',
+  'Chair yoga and chair meditation',
+  'Meditation',
+  'Aqua aerobics',
+  'Walking group',
+];
+
+const questions = [
+  {
+    q: 'I have not exercised in years. Is it for me?',
+    a: 'That is most people who start. The balance and gentle exercise classes exist precisely for someone who has not done this in a while, and nobody is watching you.',
+  },
+  {
+    q: 'Do I pay extra?',
+    a: 'The gym, the pool and the group classes are part of living here. A one-to-one session with a trainer is arranged separately.',
+  },
+  {
+    q: 'What if I have a bad hip, or a heart condition?',
+    a: 'Tell the trainers and bring whatever your doctor or physiotherapist has said. They will build around it — that is the ordinary case here, not the exception.',
+  },
+  {
+    q: 'When is it open?',
+    a: 'The gym and pool are open to residents through the day. Classes run to a timetable that changes with the season; reception has the current one.',
+  },
+];
+---
+
+<Base
+  title="The Henley Health Club | The Henley on Broadwater"
+  description="A gym, pool and group exercise classes on site at The Henley on Broadwater in Southport — balance, yoga, aqua aerobics and gentle exercise, with trainers who work around what your body does."
+>
+  <Hero
+    image={gymWide}
+    alt="The Henley Health Club gym, with cardio equipment along a wall of windows"
+    heading="The Henley Health Club"
+    standfirst="A gym, a pool and a class timetable downstairs — close enough that the walk there is never the reason you skipped it."
+  >
+    <div class="actions">
+      <a class="button" href="#enquire">Book a visit</a>
+      <a class="button button--quiet" href={PHONE_HREF}>Call {PHONE}</a>
+    </div>
+  </Hero>
+
+  <section class="band">
+    <div class="wrap">
+      <p class="lede">
+        The hardest part of keeping this up at 75 is getting there. Ours is one lift ride
+        away, which removes most of the excuses and all of the weather.
+      </p>
+
+      <div class="two-up">
+        <div>
+          <h2>Classes</h2>
+          <ul>{classes.map((item) => <li>{item}</li>)}</ul>
+          <p class="note">
+            The timetable changes through the year. Reception has the current one.
+          </p>
+        </div>
+        <div>
+          <h2>The gym</h2>
+          <p>
+            The resistance machines are air-pressure rather than weight stacks: easier on
+            joints, and they start lighter and step up in smaller increments than a
+            conventional gym allows. There is cardio equipment along the windows.
+          </p>
+          <p>
+            The pool is downstairs for laps or for the aqua aerobics class, and the
+            bowling green is on the roof.
+          </p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <Gallery
+    photos={[
+      { image: gym, alt: 'Resistance machines and free weights in the health club gym', caption: 'The gym' },
+      { image: pool, alt: 'The outdoor swimming pool with palm trees and the tower behind', caption: 'The pool, for laps and aqua aerobics' },
+      { image: bowls, alt: 'The rooftop bowling green with the Broadwater beyond', caption: 'The Sky Deck bowling green' },
+    ]}
+  />
+
+  <section class="band band--linen">
+    <div class="wrap">
+      <h2>The trainers</h2>
+      <p>
+        There is no single programme everyone is put on. The trainers will ask what you
+        used to do, what hurts, what your doctor has said, and what you actually want to
+        be able to keep doing — carry the shopping, get off the floor, last eighteen holes
+        — and work back from that.
+      </p>
+      <p>
+        If you would rather just use the machines on your own, that is a perfectly good
+        answer too.
+      </p>
+    </div>
+  </section>
+
+  <Questions questions={questions} heading="Questions about the health club" />
+
+  <EnquiryBand
+    interest="apartment"
+    heading="Have a look at it"
+    invitation="Come and see the gym and the pool while you are here — and if you want to, meet whoever is on that day and ask them the question you are actually worried about."
+    formHeading="Book a visit"
+  />
+</Base>
+
+<style>
+  .lede {
+    font: var(--type-title-lg);
+    color: var(--color-on-surface);
+    max-width: 40ch;
+    margin-block-end: var(--space-3xl);
+  }
+
+  .two-up {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: var(--space-3xl);
+  }
+
+  .note {
+    font: var(--type-body-md);
+    color: var(--color-on-surface-secondary);
+  }
+
+  @media (max-width: 48rem) {
+    .two-up {
+      grid-template-columns: 1fr;
+      gap: var(--space-xl);
+    }
+  }
+</style>

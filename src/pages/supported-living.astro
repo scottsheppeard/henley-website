@@ -1,0 +1,223 @@
+---
+/**
+ * Support in your apartment.
+ *
+ * The middle of the three ways to live here, and the one the old site explained
+ * worst — "Live a life you'll love", "Your life, your way", "It's all about
+ * you" — three headings that could belong to any provider in the country.
+ *
+ * What makes it distinctive is concrete and was buried: help arrives in
+ * ten-minute increments, in your own apartment, from staff already in the
+ * building. That is the whole proposition, and it is the answer to the question
+ * an adult child asks — what happens between "fine on their own" and "needs
+ * aged care".
+ *
+ * Everything about money comes from Henley Care's Schedule of Fees (1 July
+ * 2026), which is linked rather than transcribed: it is dated, it is the thing
+ * that gets revised, and a figure copied onto a web page is a figure that goes
+ * stale silently. The page describes the *shape* of the funding — the three
+ * service categories and who contributes to which — because that shape is what
+ * someone needs in order to read the schedule at all.
+ */
+import Base from '../layouts/Base.astro';
+import Hero from '../components/Hero.astro';
+import Gallery from '../components/Gallery.astro';
+import Questions from '../components/Questions.astro';
+import EnquiryBand from '../components/EnquiryBand.astro';
+import { DOCUMENTS, PHONE, PHONE_HREF } from '../site.ts';
+
+import tea from '../images/supported-living-tea.jpg';
+import lounge from '../images/apartment-lounge-type-b.jpg';
+import balcony from '../images/apartment-balcony.jpg';
+import lobby from '../images/lobby.jpg';
+
+const help = [
+  'Personal care — showering, dressing, grooming',
+  'Help with medication',
+  'Cleaning, laundry and the domestic jobs',
+  'Meal preparation',
+  'Shopping, and someone to come with you',
+  'Transport to appointments',
+  'Nursing care, from a registered nurse',
+];
+
+const concierge = [
+  'Coordinating and scheduling your services',
+  'Organising prescriptions',
+  'Liaising with your GP, specialists and allied health',
+  'Keeping your family in the loop',
+  'Handling the paperwork',
+];
+
+const questions = [
+  {
+    q: 'How little can I ask for?',
+    a: 'Ten minutes. Support is scheduled in ten-minute increments, so help with stockings in the morning does not have to be booked as an hour of care you do not need.',
+  },
+  {
+    q: 'Is this only for people who are unwell?',
+    a: 'No. A good share of it is temporary — after a fall, after surgery, after a hospital stay — and stops again when you are back on your feet. Some of it is simply not wanting to clean the shower any more.',
+  },
+  {
+    q: 'Who actually comes?',
+    a: 'Henley Care staff who work in this building. Personal care workers for daily support, registered nurses for anything clinical. Not a roster of strangers from an agency.',
+  },
+  {
+    q: 'Does the government pay for it?',
+    a: 'It can. If you have a Support at Home classification, your budget can be spent on these services, and the government pays all of the clinical ones. What you contribute to the rest depends on your assessment. If you have no classification, or do not want to wait for one, you can arrange services privately.',
+    more: {
+      href: DOCUMENTS.scheduleOfFees.href,
+      label: `Read the ${DOCUMENTS.scheduleOfFees.label} (${DOCUMENTS.scheduleOfFees.format})`,
+    },
+  },
+  {
+    q: 'What if I end up needing more than this?',
+    a: 'The private aged care household is on the same site, and moving into it is not moving away — the same building, the same people at the door, the same bistro downstairs.',
+    more: { href: '/private-aged-care/', label: 'See how private aged care works' },
+  },
+];
+---
+
+<Base
+  title="Support in your apartment | The Henley on Broadwater"
+  description="Personal care, nursing, cleaning and transport in your own apartment at The Henley in Southport — from ten minutes at a time, funded through Support at Home or privately."
+>
+  <Hero
+    image={tea}
+    alt="A resident with a cup of tea on a lounge in her apartment, a tea tray in front of her"
+    heading="Support in your own apartment"
+    standfirst="Help that comes to your door in ten-minute increments — as much or as little as you want, for as long as you want it."
+  >
+    <div class="actions">
+      <a class="button" href="#enquire">Talk to us</a>
+      <a class="button button--quiet" href={PHONE_HREF}>Call {PHONE}</a>
+    </div>
+  </Hero>
+
+  <section class="band">
+    <div class="wrap">
+      <p class="lede">
+        There is a long stretch between managing perfectly well and needing aged care.
+        Most of life happens in it. This is what we do in that stretch.
+      </p>
+
+      <div class="two-up">
+        <div>
+          <h2>What you can ask for</h2>
+          <ul>{help.map((item) => <li>{item}</li>)}</ul>
+        </div>
+        <div>
+          <h2>And someone to organise it</h2>
+          <p>
+            A care manager keeps the whole arrangement together, so you are not the one
+            chasing it:
+          </p>
+          <ul>{concierge.map((item) => <li>{item}</li>)}</ul>
+        </div>
+      </div>
+
+      <p class="reassurance">
+        It stays your apartment. You keep your own front door, your own key and your own
+        routine — the help fits around them rather than replacing them.
+      </p>
+    </div>
+  </section>
+
+  <Gallery
+    photos={[
+      { image: lounge, alt: 'A furnished apartment living and dining room with the Broadwater through the windows', caption: 'Your own apartment, not a room in a facility' },
+      { image: balcony, alt: 'Two wicker chairs on an apartment balcony overlooking the water', caption: 'The balcony stays yours too' },
+      { image: lobby, alt: 'The Henley lobby with parquet floor and an orchid on the desk', caption: 'Staff are in the building, not on the road' },
+    ]}
+  />
+
+  <section class="band band--linen">
+    <div class="wrap">
+      <h2>Paying for it</h2>
+      <div class="two-up">
+        <div>
+          <h3>Through Support at Home</h3>
+          <p>
+            Support at Home replaced Home Care Packages on 1 November 2025. If you have
+            been assessed and given a classification, it comes with a budget you can spend
+            on these services.
+          </p>
+          <p>
+            Services fall into three categories, and they are funded differently. The
+            government pays the whole cost of <strong>clinical</strong> care — nursing,
+            wound care, medication management. For <strong>independence</strong> services
+            such as personal care, and for <strong>everyday living</strong> services such
+            as cleaning and laundry, you contribute at a rate Services Australia works out
+            from your pension status and your income and assets assessment.
+          </p>
+          <p>
+            If you were already on a Home Care Package before November 2025, you moved
+            across on terms no worse than the ones you had.
+          </p>
+        </div>
+        <div>
+          <h3>Or privately</h3>
+          <p>
+            You do not have to be assessed, funded or waiting for anything. Services can
+            be arranged privately at the same rates, starting whenever you want them —
+            which is what most people do while an assessment is in the queue.
+          </p>
+          <h3>The rates</h3>
+          <p>
+            Every service, hour and contribution band is set out in the schedule. It is
+            revised from time to time, so read the current one rather than a figure
+            someone quoted you.
+          </p>
+          <p>
+            <a href={DOCUMENTS.scheduleOfFees.href}>
+              {DOCUMENTS.scheduleOfFees.label} ({DOCUMENTS.scheduleOfFees.format})
+            </a>
+          </p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <Questions questions={questions} heading="Questions about support at home" />
+
+  <EnquiryBand
+    interest="agedCare"
+    heading="Tell us what is happening"
+    invitation="If you are working out what a parent needs, or what you will need yourself, a conversation is more use than a brochure. Tell us the situation and we will tell you plainly whether we can help."
+    formHeading="Ask about support"
+  />
+</Base>
+
+<style>
+  .lede {
+    font: var(--type-title-lg);
+    color: var(--color-on-surface);
+    max-width: 40ch;
+    margin-block-end: var(--space-3xl);
+  }
+
+  .two-up {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: var(--space-3xl);
+  }
+
+  .two-up h3:not(:first-child) {
+    margin-block-start: var(--space-xl);
+  }
+
+  .reassurance {
+    font: var(--type-body-lg);
+    max-width: 56ch;
+    margin-block-start: var(--space-2xl);
+    padding-block-start: var(--space-lg);
+    border-block-start: 1px solid var(--color-border-subtle);
+  }
+
+  @media (max-width: 48rem) {
+    .two-up {
+      grid-template-columns: 1fr;
+      gap: var(--space-xl);
+    }
+  }
+</style>
