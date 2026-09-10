@@ -1,0 +1,65 @@
+---
+/**
+ * The hero band, without the photograph.
+ *
+ * The site's one structural idea is a photograph, a hard edge, and the words on
+ * Broadwater Deep beneath it. Some pages have no photograph and should not be
+ * given one: a privacy policy does not need a picture of the Broadwater, and a
+ * decorative image above a legal document actively misrepresents what the page
+ * is for.
+ *
+ * So they get the band on its own. It is the same band, the same ground and the
+ * same type as every other page's heading — the page reads as part of the site
+ * rather than as an unstyled leftover, which is what the old site's legal pages
+ * looked like.
+ */
+interface Props {
+  heading: string;
+  /** One sentence saying what this page is. Optional: some pages need none. */
+  standfirst?: string;
+}
+
+const { heading, standfirst } = Astro.props;
+---
+
+<section class="page-header on-deep">
+  <div class="wrap">
+    <h1>{heading}</h1>
+    {standfirst && <p class="page-header__standfirst">{standfirst}</p>}
+    <slot />
+  </div>
+</section>
+
+<style>
+  .page-header {
+    background: var(--color-broadwater-deep);
+    color: var(--color-linen);
+    /* The trailing radius-xl is what the next band's rounded top corners
+       overlap, exactly as the hero does (see .hero + .band in global.css). */
+    padding-block: var(--space-3xl) calc(var(--space-3xl) + var(--radius-xl));
+  }
+
+  .page-header :global(h1) {
+    color: var(--color-paper);
+    margin-block-end: var(--space-md);
+    max-width: 22ch;
+  }
+
+  .page-header__standfirst {
+    font: var(--type-body-lg);
+    color: var(--color-warm-sand);
+    max-width: 60ch;
+    margin: 0;
+  }
+
+  @media (max-width: 48rem) {
+    .page-header {
+      padding-block: var(--space-2xl) calc(var(--space-2xl) + var(--radius-xl));
+    }
+
+    .page-header :global(h1) {
+      font: var(--type-headline-lg);
+      max-width: none;
+    }
+  }
+</style>

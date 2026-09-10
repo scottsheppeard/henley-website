@@ -287,11 +287,96 @@ img {
 
 /* Where a deep hero hands over to the first content band, the band's top
    corners are rounded over the deep ground so the change of surface reads as
-   a page settling rather than a hard cut. */
-.hero + .band {
+   a page settling rather than a hard cut. The photograph-less page header is
+   the same band and gets the same handover. */
+.hero + .band,
+.page-header + .band {
   position: relative;
   margin-block-start: calc(-1 * var(--radius-xl));
   border-radius: var(--radius-xl) var(--radius-xl) 0 0;
+}
+
+/* ── Reading ─────────────────────────────────────────────────────────────── */
+
+/*
+ * The narrow column, for pages that are only words: the legal pages and the
+ * articles. `.wrap` is 68rem, which is right for two columns of lists and
+ * photographs and much too wide for a paragraph — the global 65ch cap keeps
+ * the *text* readable inside it but leaves headings and rules stretched across
+ * the full width, so the page reads as a wide layout with narrow text in it
+ * rather than as something written to be read.
+ */
+.wrap--narrow {
+  width: min(100% - var(--space-xl), 42rem);
+  margin-inline: auto;
+}
+
+/*
+ * Markdown comes out of the content collection as bare elements with no
+ * classes, so prose is styled by element inside `.prose` rather than by hand.
+ * Nothing here sets a colour or a size directly; the global elements already
+ * do, and this is only about the rhythm between them.
+ */
+.prose > :first-child {
+  margin-block-start: 0;
+}
+
+.prose h2 {
+  font: var(--type-title-lg);
+  letter-spacing: var(--type-title-lg-letter-spacing);
+  margin-block-start: var(--space-2xl);
+}
+
+.prose h3 {
+  font: var(--type-title-md);
+  letter-spacing: var(--type-title-md-letter-spacing);
+  margin-block-start: var(--space-xl);
+}
+
+/* Captured Markdown carries the old site's emphasis, which was used for
+   decoration rather than stress — "Live a life you'll _love_". Left as
+   emphasis, it reads as shouting in the middle of a sentence. */
+.prose em {
+  font-style: italic;
+}
+
+.prose img {
+  border-radius: var(--radius-lg);
+  margin-block: var(--space-xl);
+}
+
+.prose blockquote {
+  margin: var(--space-xl) 0;
+  padding-inline-start: var(--space-lg);
+  border-inline-start: 3px solid var(--color-warm-sand);
+  color: var(--color-on-surface-secondary);
+}
+
+.prose hr {
+  margin-block: var(--space-2xl);
+  border: 0;
+  border-block-start: 1px solid var(--color-border-subtle);
+}
+
+/* A dated note at the head of an article whose subject has since changed —
+   the Home Care Packages piece. It has to be impossible to skim past, because
+   the risk is someone acting on superseded information about their funding. */
+.notice {
+  background: var(--color-linen);
+  border-inline-start: 4px solid var(--color-primary);
+  border-radius: 0 var(--radius-md) var(--radius-md) 0;
+  padding: var(--space-lg);
+  margin-block-end: var(--space-2xl);
+}
+
+.notice > :last-child {
+  margin-block-end: 0;
+}
+
+.notice h2 {
+  font: var(--type-title-md);
+  letter-spacing: var(--type-title-md-letter-spacing);
+  margin-block: 0 var(--space-xs);
 }
 
 /* ── Accessibility furniture ─────────────────────────────────────────────── */

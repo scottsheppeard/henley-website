@@ -1,0 +1,244 @@
+---
+/**
+ * Privacy policy.
+ *
+ * **This page states what the system actually does. It has not been through
+ * legal review, and it must be before launch** — see docs/brief.md, "Claims
+ * held for confirmation", and the plan's open items. Everything below is
+ * sourced from the code and the decisions record rather than from the old
+ * policy, and each claim is checkable:
+ *
+ *   fields collected      forms/schema.sql, docs/decisions.md "Enquiry form fields"
+ *   IP / user-agent       forms/schema.sql (remote_ip, user_agent, page_path)
+ *   the classifier        henley-utils modules/spam_classifier.py — an LLM call,
+ *                         six categories, reading name/email/phone/message
+ *   Salesforce            update_salesforce_leads.py, WebFormID_c__c upsert
+ *   reception digest      non_sales_enquiry_notifications.py, over Microsoft 365
+ *   analytics             GTM-PGSH3HF7, gtag GT-TXH3QGV, two Google Ads click
+ *                         conversions on tel: and mailto:
+ *   maintenance form      a Microsoft Form, site.ts MAINTENANCE_FORM
+ *
+ * The old policy was four paragraphs that said a contact form existed and that
+ * information is not sold. It did not mention Salesforce, Microsoft, Google or
+ * an AI classification step, and it did not say that anything leaves Australia
+ * — which, under APP 8, is the disclosure that matters most here.
+ *
+ * Two things this page deliberately does not do. It does not claim the site is
+ * secure — the old wording's "commercially acceptable means" is the one honest
+ * sentence in it and is kept. And it does not treat "we replied to your
+ * enquiry" and "we send you marketing" as one consent; the review asked for
+ * those to stay distinct, so they are separate paragraphs with separate bases.
+ */
+import Base from '../layouts/Base.astro';
+import PageHeader from '../components/PageHeader.astro';
+import { EMAIL, PHONE, PHONE_HREF, ADDRESS } from '../site.ts';
+
+const updated = '10 September 2026';
+---
+
+<Base
+  title="Privacy policy | The Henley on Broadwater"
+  description="How The Henley on Broadwater collects, uses, stores and discloses personal information from this website, and how to reach us about it."
+>
+  <PageHeader
+    heading="Privacy policy"
+    standfirst="What we collect through this website, what happens to it, and who else sees it."
+  />
+
+  <section class="band">
+    <div class="wrap wrap--narrow prose">
+      <p class="updated">Last updated {updated}</p>
+
+      <p>
+        This policy covers <strong>thehenley.com.au</strong> and is written to the
+        Australian Privacy Principles in the Privacy Act 1988 (Cth). It describes the
+        website. If you live here, or a member of your family does, your residence or
+        care agreement and the documents given to you at the time govern the information
+        held about you, and this policy does not replace them.
+      </p>
+
+      <h2>What we collect</h2>
+
+      <h3>When you send an enquiry</h3>
+      <p>The enquiry form asks for:</p>
+      <ul>
+        <li>your name and email address, which are required;</li>
+        <li>your phone number and your message, which are optional;</li>
+        <li>whether you are asking about apartment living, private aged care, or both.</li>
+      </ul>
+      <p>Submitting the form also records, without asking you:</p>
+      <ul>
+        <li>the page you sent it from;</li>
+        <li>your IP address and the identifying string your browser sends;</li>
+        <li>the date and time.</li>
+      </ul>
+      <p>
+        Those last three are kept for one reason: they let us tell a real enquiry from
+        automated abuse, and they let us limit how often the form can be submitted from
+        one place. They are not used to build a profile of you.
+      </p>
+
+      <h3>When you use the site</h3>
+      <p>
+        We use Google Analytics and Google Tag Manager to count visits and see which
+        pages people read, and Google Ads records when someone clicks the phone number or
+        the email address so we know which advertising is working. These set cookies in
+        your browser and send Google your IP address and details of the pages you view.
+        Our web server also keeps ordinary request logs.
+      </p>
+      <p>
+        You can refuse or delete these cookies in your browser settings. Nothing on this
+        site stops working if you do.
+      </p>
+
+      <h3>When you lodge a maintenance request</h3>
+      <p>
+        The residents' maintenance form is a Microsoft Form, not part of this website.
+        What you enter there goes to Microsoft and then to our maintenance team.
+      </p>
+
+      <h2>What we do with an enquiry</h2>
+      <p>When you send an enquiry, this happens:</p>
+      <ol>
+        <li>
+          It is stored in a database on infrastructure The Henley controls, in Australia.
+        </li>
+        <li>
+          An automated step reads your name, email address, phone number and message to
+          sort genuine enquiries from spam and to work out who should answer — sales, or
+          reception. <strong>That step uses an external artificial-intelligence
+          service</strong>, so the content of your enquiry is sent to that provider to be
+          classified. It is not used to train anybody's model, and no decision that
+          affects you is made by it beyond which desk your enquiry lands on.
+        </li>
+        <li>
+          If you are enquiring about living here, your details are added to Salesforce,
+          the customer relationship system our sales team uses, so that someone can
+          follow up and so we can see we have already spoken to you.
+        </li>
+        <li>
+          Other enquiries are sent to reception in a summary email, using Microsoft 365.
+        </li>
+      </ol>
+      <p>
+        A person reads every enquiry that reaches either destination. Nothing is answered
+        automatically.
+      </p>
+
+      <h2>Replying to you, and marketing</h2>
+      <p>
+        <strong>Replying is not marketing.</strong> If you ask us something, we will
+        answer — by email or phone, using the details you gave us. That is the purpose you
+        gave them to us for and it needs no further permission.
+      </p>
+      <p>
+        <strong>Marketing is separate and is your choice.</strong> We will only add you to
+        a mailing list, or send you news and events you did not ask for, if you tell us
+        you want that. If we ever do send you something like that, it will say who it is
+        from and how to stop it, and stopping it takes one reply. You can also tell us at
+        any time on the details below, and it will not affect anything else.
+      </p>
+
+      <h2>Who else sees it</h2>
+      <p>
+        We do not sell personal information, and we do not give it to anyone for their own
+        marketing. It is handled by:
+      </p>
+      <ul>
+        <li><strong>Salesforce</strong> — the sales team's customer relationship system.</li>
+        <li><strong>Microsoft</strong> — email and Microsoft 365, and the maintenance form.</li>
+        <li><strong>Google</strong> — analytics and advertising measurement.</li>
+        <li>
+          <strong>An artificial-intelligence provider</strong> — the classification step
+          described above.
+        </li>
+        <li>
+          Our IT and hosting providers, who can reach the systems in order to keep them
+          running.
+        </li>
+      </ul>
+      <p>
+        <strong>Some of these store or process information outside Australia</strong>,
+        including in the United States. That is the ordinary arrangement for services of
+        this kind, and it means your information may be handled under another country's
+        laws. We use these providers on their standard terms and do not permit them to use
+        your information for their own purposes.
+      </p>
+      <p>
+        We will also disclose information where the law requires it, or where it is
+        necessary to prevent a serious threat to someone's life, health or safety.
+      </p>
+
+      <h2>How long we keep it</h2>
+      <p>
+        Enquiries are kept while there is a reason to — a live conversation, a record that
+        we have already spoken, an obligation to keep records. If you ask us to delete
+        yours and no such reason applies, we will.
+      </p>
+
+      <h2>Security</h2>
+      <p>
+        We take reasonable steps to protect the information we hold. But no transmission
+        over the internet and no method of electronic storage is completely secure, and we
+        cannot guarantee absolute security. Please do not send us sensitive information —
+        health details, financial details, identity documents — through the enquiry form.
+        Ring us instead.
+      </p>
+
+      <h2>Seeing, correcting or complaining about what we hold</h2>
+      <p>
+        You can ask us what personal information we hold about you, ask us to correct it,
+        or complain about how we have handled it. Contact us and we will acknowledge it
+        and respond within a reasonable time — normally 30 days.
+      </p>
+      <p>
+        If you are not satisfied with our response, you can take the complaint to the
+        Office of the Australian Information Commissioner at
+        <a href="https://www.oaic.gov.au/" rel="noopener">oaic.gov.au</a> or on
+        1300 363 992.
+      </p>
+
+      <h2>Other websites</h2>
+      <p>
+        Where this site links somewhere else — a government website, a Microsoft form,
+        our Facebook or Instagram pages — that site has its own privacy policy and we have
+        no control over it.
+      </p>
+
+      <h2>Changes</h2>
+      <p>
+        If this policy changes, the new version appears here with a new date at the top.
+      </p>
+
+      <h2>Contact us</h2>
+      <p>
+        <a href={`mailto:${EMAIL}`}>{EMAIL}</a><br />
+        <a class="nowrap" href={PHONE_HREF}>{PHONE}</a><br />
+        <span class="address">
+          The Henley on Broadwater, {ADDRESS.street}, {ADDRESS.suburb} {ADDRESS.state}
+          {' '}{ADDRESS.postcode}
+        </span>
+      </p>
+    </div>
+  </section>
+</Base>
+
+<style>
+  .updated {
+    font: var(--type-body-sm);
+    color: var(--color-on-surface-secondary);
+    margin-block-end: var(--space-xl);
+  }
+
+  .address {
+    color: var(--color-on-surface-secondary);
+  }
+
+  .prose ol {
+    padding-inline-start: var(--space-lg);
+  }
+
+  .prose ol li {
+    margin-block-end: var(--space-md);
+  }
+</style>
