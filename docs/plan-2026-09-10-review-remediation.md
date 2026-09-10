@@ -55,8 +55,8 @@ P1 means resolve before production cutover and prioritise for any exposed receiv
 | ID | Priority | Work item | Completion evidence | Status |
 |---|---|---|---|---|
 | R01 | P1 | Escape error-page content | HTML-injection regression tests and rendered response check | Done |
-| R02 | P1 | Make proxy trust consistent | Tests with runtime middleware plus container/proxy verification | Implemented and deployed to nonprod; through-NPM check blocked on the missing `/api/enquiry` location |
-| R03 | P1 | Preserve final WordPress enquiries through cutover | Corrected runbook and demonstrated final-enquiry reconciliation | Implemented; rehearsal pending |
+| R02 | P1 | Make proxy trust consistent | Tests with runtime middleware plus container/proxy verification | Done; verified through NPM on nonprod 2026-09-10 |
+| R03 | P1 | Preserve final WordPress enquiries through cutover | Corrected runbook and demonstrated final-enquiry reconciliation | Runbook corrected; rehearsal **deferred by Scott** 2026-09-10 (see §7) |
 | R04 | P2 | Remove clock-dependent silent enquiry loss | Skewed-clock and no-JavaScript submissions are stored | Done |
 | R05 | P2 | Restore and centralise the maintenance form URL | Both resident entry points reach the correct form | Done |
 | R06 | P2 | Enforce the body limit on received bytes | Oversized streamed requests return 413 before parsing | Done |
@@ -66,6 +66,7 @@ P1 means resolve before production cutover and prioritise for any exposed receiv
 | UX01 | UX | Put the resident route before the sales form | Correct reading order and mobile placement | Done |
 | UX02 | UX | Replace copy explaining the website with useful visitor information | Copy reviewed against the brief without new unsupported claims | Done |
 | F01 | Follow-up | Expire inactive rate-limit buckets | Deterministic time-based regression test | Done |
+| F02 | Follow-up | Decide whether a rejected submission should spend a per-IP slot | A visitor who mistypes twice keeps a third attempt | Open — raised 2026-09-10, not changed |
 
 ## 3. Resume instructions and working constraints
 
@@ -296,6 +297,30 @@ While editing the limiter for R02, add bounded periodic expiry of inactive addre
 
 **Acceptance:** A deterministic simulated-time test shows inactive windows being removed without requiring a return visit from that IP. Active addresses retain their counters, and the fourth-submission rule still holds.
 
+### F02 — A rejected submission spends a per-IP slot
+
+Found while running R02's acceptance through NPM, not by the original review.
+
+`within_ip_limit()` is called before validation, so a submission refused for a
+missing name or an unparseable email counts against the three-an-hour budget
+exactly as a stored one does. A visitor who mistypes their email address twice
+has one attempt left; a third mistake locks them out for an hour.
+
+It is not a silent loss — they get the 429 page with the phone number and the
+email address on it, which is the whole reason that page exists — so this is a
+good deal less serious than R04 was. But the audience is people in their
+seventies and eighties typing an address on a phone, and the limiter's real job
+is stopping repeated *stored* submissions: a bot sending malformed bodies is
+already storing nothing, and the honeypot, the body limit and the daily cap are
+what actually bound it.
+
+**Not changed.** Where the counter goes is a deliberate trade between typo
+tolerance and abuse resistance, and it is Scott's call rather than a defect to
+quietly fix. The change, if wanted, is to keep the refusal check where it is and
+move the `window.append(now)` so a slot is only spent when a submission is
+actually accepted — a few lines, plus a test that three malformed attempts do
+not consume the budget.
+
 ## 5. Recommended delivery order
 
 Land each coherent slice after the relevant checks pass. These are sequential implementation slices; they do not require multiple agents.
@@ -344,7 +369,7 @@ Record completion evidence in this table when implementation starts. Use test re
 | B / receiver | (slice B) | 75 receiver tests green; all new regressions verified failing against the pre-fix receiver; `check-enquiry-flow.sh` green; `check-proxy-trust.sh` green (and 8 failures against the pre-fix image) | NPM's append behaviour and the absence of a hop in front of it confirmed on host 4 | Nonprod end-to-end: NPM host 4 has no `/api/enquiry` location yet, so the receiver has never been reached through NPM |
 | C / visitor journeys | (slice C) | Measured at 320/360/390/768/1280/1440: `#enquire` clearance −61px → +63px (mobile) and +27px → +111px (desktop); home offer and full booking button now inside the first screen at every size; passes at 150%/200% text, 200%/400% zoom and landscape, no horizontal overflow, focus rings visible. Maintenance form opened and confirmed as the live Henley form | — | Scott's design review of the revised hero crop; screenshots in the session scratchpad `shots-before/` and `shots-after/` |
 | D / R09 | (slice D) | `check-urls-fixture.sh`: a complete fixture passes strict 84/0/0, and each of 16 deliberate defects fails it for the right reason; sample mode keeps its outstanding count and disclaims itself. Strict correctly refuses the current partial site (33 passed, 49 failed, 0 outstanding) | Sample mode green against the site container: 53 passed, 0 failed, 49 outstanding | Strict passes only once Stage 3 exists — that is the gate working, not a defect |
-| E / deployment rehearsal | `3111031` | Receiver suite green on Python 3.12, the image's version, as well as 3.11 | Nonprod rebuilt from `main` 2026-09-10 and verified: receiver logs `X-Forwarded-For is believed from 192.168.160.4`; `check-urls.sh --sample https://dev.thehenley.com.au` 53 passed / 0 failed / 49 outstanding; shortlinks and named redirects now return relative Locations through NPM; the six-viewport measurements match local exactly | Through-NPM receiver test still blocked on the missing `/api/enquiry` location; R03 drain rehearsal not run |
+| E / deployment rehearsal | `3111031` | Receiver suite green on Python 3.12, the image's version, as well as 3.11 | Nonprod rebuilt from `main` 2026-09-10 and verified: receiver logs `X-Forwarded-For is believed from 192.168.160.4`; `check-urls.sh --sample https://dev.thehenley.com.au` 53 passed / 0 failed / 49 outstanding; shortlinks and named redirects now return relative Locations through NPM; the six-viewport measurements match local exactly | **Through-NPM receiver acceptance passed 2026-09-10** (15 checks: spoofed hops, the 429, escaping, the chunked 413, skewed clocks) once Scott added the location. R03 drain rehearsal deferred by decision |
 
 ## 7. Completion and launch boundaries
 
@@ -355,15 +380,18 @@ Remediation is complete when:
 - [x] The receiver's existing intake contract remains intact and both runtime/proxy and streamed-body checks pass. *`check-enquiry-flow.sh` green; `check-proxy-trust.sh` green through a real nginx, and 8 failures against the pre-fix image.*
 - [x] Mobile enquiry headings are visible; the revised hero and resident route pass the documented browser checks.
 - [x] The URL checker distinguishes a partial sample from a release-ready site, and the runbook uses strict mode.
-- [ ] The old-source drain procedure has been reconciled with the real henley-utils implementation and rehearsed. *Reconciled and written up; **not rehearsed**.*
+- [x] The old-source drain procedure has been reconciled with the real henley-utils implementation ~~and rehearsed~~. *Reconciled and written up. The rehearsal was **deliberately deferred by Scott on 2026-09-10** — few enquiries, not worth holding the work up; see below.*
 - [x] Changes are landed, relevant documentation agrees with the code, and the stream/register records the next step.
 
-### What slice E still needs, and who can do it
+### Slice E: what was verified, and what Scott decided
 
-Neither is a code change; both need someone with access this session did not have.
+1. ~~**NPM host 4 has no `/api/enquiry` location.**~~ **Added by Scott 2026-09-10**, and R02's nonprod acceptance ran against it the same day. Through the real NPM location, from one client address: four valid submissions carrying four invented first hops returned 303, 303, 303, 429 and stored three rows, every one of them against the address NPM observed and none against a spoofed hop; the 429 page still carries the phone number; a script element in the email field came back escaped at 400; a 20 KB chunked body with no `Content-Length` was refused 413 and stored nothing; an ordinary submission and one from a clock five minutes fast were both stored. The receiver logs `X-Forwarded-For is believed from 192.168.160.4` at startup. Test rows removed afterwards; the id sequence is deliberately left advanced.
 
-1. **NPM host 4 has no `/api/enquiry` location.** `POST https://dev.thehenley.com.au/api/enquiry` is answered 404 by the static site, so the receiver has never been reached through NPM and the nonprod half of R02's acceptance cannot be run. Scott adds the location (→ `henley-website-forms-nonprod:8000`), re-reads `TRUSTED_PROXY_IPS` from npm-attachment on that network, and recreates the forms container. `scripts/check-proxy-trust.sh` already proves the same behaviour locally.
-2. **The R03 drain rehearsal touches live systems.** It needs a synthetic Gravity Forms entry either side of a simulated switch, and a `DRY_RUN=true` run of the nightly job — a write to the production WordPress database and a run of the real classifier. That is Scott's call and his to schedule; the procedure is written up in the runbook under "Draining WordPress".
+   The location is configured `X-Forwarded-For $remote_addr` — an overwrite rather than an append — which is the stricter of the two shapes and the one the production hosts should copy.
+
+2. **The R03 drain rehearsal is deferred, by Scott's decision, 2026-09-10.** His reasoning: the site takes very few enquiries, and the rehearsal should not hold the work up.
+
+   What that does and does not mean. The *correction* stands and is not affected: the runbook no longer tells anyone to stop `db-prod-henley` while `DB_HOST` is still set, which was the instruction that would have stopped enquiry processing altogether. What is deferred is the *walk-through* — nobody has yet put a synthetic enquiry either side of a simulated switch and watched it reach a terminal outcome. So at cutover the drain procedure will be run for the first time on real enquiries. Low volume genuinely limits the exposure, and the reconciliation queries in the runbook are read-only and can be run as often as you like on the day. Worth ten minutes of care rather than a rehearsal.
 
 ~~Also still outstanding: the deployed nonprod containers are older than `main`.~~ **Done 2026-09-10.** Both nonprod containers were rebuilt from `main` and verified; dev.thehenley.com.au now carries every change here.
 
@@ -373,7 +401,7 @@ The original launch dependencies still apply: remaining pages and assets, privac
 
 At handover, state whether the work is locally implemented, verified on nonprod, or ready for cutover. Those are different milestones. Leave the stream in place; Scott decides when to finish it.
 
-**As at 2026-09-10 this work is implemented, landed on `main`, and deployed to nonprod, where the visitor-facing half is verified. The receiver has still never been reached through NPM, the R03 drain has not been rehearsed, and this is not ready for cutover.**
+**As at 2026-09-10 this work is implemented, landed on `main`, and verified on nonprod — including the receiver, through the real NPM location. It is not ready for cutover: Stage 3 is unbuilt, the business approvals in the brief are outstanding, and the R03 drain will be run for the first time on the day, by decision.**
 
 ## 8. Suggested prompt for the next implementation session
 

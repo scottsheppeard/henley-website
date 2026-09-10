@@ -86,7 +86,10 @@ runs uvicorn with `--no-proxy-headers` on purpose: it previously ran
 a header anyone could send, before `client_ip()` saw the real peer.
 
 `client_ip()` takes the **last** field of the header, because the proxy appends
-the address it observed and a client cannot write anything after it. That field
+the address it observed and a client cannot write anything after it. (NPM's
+`/api/enquiry` location goes further and *overwrites* the header with
+`$remote_addr`, so it holds one address and nothing the client sent. The
+last-field rule is correct either way.) That field
 must parse as an IP address; if it does not, the peer is used and a warning is
 logged, on the reasoning that a chain not ending in the proxy's own observation
 means the proxy is not appending, and the earlier entries are the client's to

@@ -316,13 +316,26 @@ so the chain is one hop and the last field is the visitor. If a CDN or load
 balancer is ever put in front, this stops being true and both the receiver's
 parsing and this note need revisiting.
 
-**Also outstanding on nonprod:** host 4 currently has only `location /`. The
-`/api/enquiry` → `henley-website-forms-nonprod:8000` location has not been
-added, so `POST https://dev.thehenley.com.au/api/enquiry` is answered 404 by the
-static site. The receiver has never been exercised through NPM. Add that
-location before the "test enquiry through dev" item above, and run
-`scripts/check-proxy-trust.sh` first — it proves the same behaviour locally
-without waiting for NPM.
+**The `/api/enquiry` location is stricter still.** Added to host 4 on
+2026-09-10, it sets `X-Forwarded-For $remote_addr` — an **overwrite**, not an
+append — so whatever the client sent is discarded before the receiver sees it
+and the header holds exactly one address: the one NPM observed. `client_ip()`
+reads the last field, so append and overwrite both give the right answer; this
+is the safer of the two and the production location should be configured the
+same way. Verified end to end on nonprod the same day: four submissions with
+four invented first hops stored three rows, all carrying the real client
+address, with the fourth refused.
+
+~~Also outstanding on nonprod: host 4 has only `location /`.~~ **Added
+2026-09-10.** Host 4 now carries `/api/enquiry` →
+`henley-website-forms-nonprod:8000` and the receiver has been exercised through
+it. Configure the production hosts the same way, alongside `/webhooks`.
+
+One thing that check taught, worth knowing before running it again: the per-IP
+window lives in the worker's memory, so `docker restart` on the forms container
+is what resets it, and a *validation failure* spends a slot just as a stored
+submission does — the limiter runs before validation. Probe readiness with an
+oversized body, which is refused at the ASGI boundary and costs nothing.
 
 The value itself is the npm-attachment container's address **on this site's
 network**:
