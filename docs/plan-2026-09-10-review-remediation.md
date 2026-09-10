@@ -69,6 +69,7 @@ P1 means resolve before production cutover and prioritise for any exposed receiv
 | F02 | Follow-up | Decide whether a rejected submission should spend a per-IP slot | A visitor who mistypes twice keeps a third attempt | Open — raised 2026-09-10, not changed |
 | F03 | Follow-up | Give the www → apex redirect an owner that is not WordPress | `www` 301s to the apex with WordPress stopped | Done 2026-09-10 — `www.thehenley.com.au` is now an NPM Redirection Host; path, query, port 80/443 and ACME renewal all verified |
 | F04 | Follow-up | Bound the enquiry route's body at NPM | NPM refuses an oversized body rather than streaming it to the receiver | Done on `dev.thehenley.com.au` 2026-09-10 and the 16 KB/64 KB boundary verified both ways; repeat on `thehenley.com.au` at cutover |
+| F05 | Follow-up | `dev.thehenley.com.au` serves no `X-Robots-Tag`, so nonprod is not actually `noindex` | Every nonprod page carries the header, asserted by the strict gate | Open — found 2026-09-10 after the full site went to nonprod; Scott is reviewing the site first |
 
 ## 3. Resume instructions and working constraints
 
@@ -322,6 +323,79 @@ quietly fix. The change, if wanted, is to keep the refusal check where it is and
 move the `window.append(now)` so a slot is only spent when a submission is
 actually accepted — a few lines, plus a test that three malformed attempts do
 not consume the budget.
+
+### F05 — Nonprod is not `noindex`, and never has been
+
+Found 2026-09-10 while verifying the Stage 3 deploy to `dev.thehenley.com.au`.
+Not a regression from that deploy — the deploy is what made it matter.
+
+**`dev.thehenley.com.au` returns no `X-Robots-Tag` header on any page.** NPM
+proxy host 4 does carry the directive, at server level:
+
+```nginx
+add_header X-Robots-Tag "noindex, nofollow" always;
+```
+
+It is silently dropped. `location /` includes NPM's shared
+`conf.d/include/proxy.conf`, which sets `add_header X-Served-By $host;`, and
+nginx inherits `add_header` into a location **only if that location declares
+none of its own**. So the one endpoint that does inherit it is the one that
+declares no header of its own:
+
+```
+/api/enquiry  →  HTTP/1.1 405   X-Robots-Tag: noindex, nofollow
+/             →  HTTP/1.1 200   X-Served-By: dev.thehenley.com.au   (no X-Robots-Tag)
+```
+
+This is the same rule [deploy/nginx.conf](../deploy/nginx.conf) already
+documents for our own configuration — "nginx inherits add_header only into
+locations that define none, so a location setting just a Cache-Control silently
+drops all of these" — recurring one layer up, in NPM's.
+
+**Why it matters more from 2026-09-10.** Until that day nonprod served the
+five-page design sample. It now serves the complete site: 27 indexable pages,
+a sitemap and two RSS feeds, all of it a duplicate of what production will
+publish. `robots.txt` is deliberately identical in both environments (it says
+so in its own comments) precisely because the header was supposed to be the
+thing that separated them.
+
+**What is still standing.** Every page's canonical points at
+`https://thehenley.com.au/...`, which is the strong signal against duplicate
+indexing, and the domain is not linked publicly. Neither is the guard that was
+designed.
+
+**Why the fix does not belong in NPM.** `proxy.conf` is a shared include used
+by every proxy host on that instance, so adding the header there changes hosts
+that have nothing to do with this project. NPM's per-host advanced field
+injects at server level, which is exactly where the directive already is and
+already being dropped. Nothing in NPM's UI writes inside the generated
+`location /`.
+
+**Proposed fix — serve it from our own container**, where it is
+version-controlled, testable, and survives an NPM recreation:
+
+1. `deploy/security-headers.conf` gains `include /etc/nginx/conf.d/env-*.conf;`.
+   It is already included by every location in `deploy/nginx.conf` that sets a
+   header of its own, so the header reaches all of them by the same route the
+   existing security headers take.
+2. A new `deploy/env-noindex.conf` containing the `X-Robots-Tag` line, bind
+   mounted to `/etc/nginx/conf.d/env-noindex.conf` by
+   `deploy/compose.nonprod.yml` only. `compose.prod.yml` mounts nothing, the
+   glob matches no files, and nginx's `include` accepts that silently.
+3. Extend the "security headers" section of `scripts/check-urls.sh` to assert
+   the header is present when the target is nonprod and absent when it is
+   production, and add the pair to `scripts/check-urls-fixture.sh` so the gate
+   is shown to fail on each.
+
+**Also worth knowing at cutover.** The same inheritance rule applies to
+production hosts 5 and 11. Any `add_header` put into an NPM host's advanced
+configuration will be dropped from `location /` for as long as `proxy.conf`
+sets one. Response headers for production come from our container, which is
+where they should stay.
+
+**Acceptance:** `curl -sI https://dev.thehenley.com.au/` shows
+`X-Robots-Tag: noindex, nofollow`; the same request against production does
+not; the strict gate asserts both and the fixture proves it fails on each.
 
 ## 5. Recommended delivery order
 

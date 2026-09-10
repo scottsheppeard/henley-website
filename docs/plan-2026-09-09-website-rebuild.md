@@ -149,6 +149,19 @@ Three things this took that the plan did not anticipate:
   leads with the concept renders, labelled as renders, and says the Hub is
   temporary.
 
+**Deployed to nonprod 2026-09-10.** `dev.thehenley.com.au` serves the complete
+site; only the `site` container was rebuilt, the receiver was left running.
+`scripts/check-urls.sh --strict https://dev.thehenley.com.au` reports 84
+passed, 0 failed, 0 outstanding — the first time the strict gate has passed
+against a deployment. Awaiting Scott's review, then the GM's and Giselle's.
+
+Verifying that deploy turned up **F05** in the remediation plan: nonprod has
+never actually served `X-Robots-Tag: noindex`, because NPM's `location /`
+declares an `add_header` of its own and so drops the server-level one. It was
+tolerable when nonprod was five sample pages and is not now that it is a
+complete duplicate of the production site. Logged rather than fixed, at Scott's
+direction, so the review is not held up.
+
 **Still outstanding in Stage 3:** GTM + gtag snippet and the CSP verification
 under it; the legacy asset list into `deploy/legacy-assets`; the
 keyboard/zoom/screen-reader pass; Lighthouse; the strict URL gate run against a
