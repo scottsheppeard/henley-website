@@ -47,6 +47,27 @@ export const NAV = [
 ] as const;
 
 /**
+ * The residents' maintenance form.
+ *
+ * A Microsoft Form the maintenance team owns, linked from the footer and from
+ * the contact page. It is here once because it was here twice: both copies had
+ * been replaced with the placeholder `forms.office.com/r/maintenance`, which is
+ * not a Henley address and never resolved, so every existing resident who
+ * followed either link got nothing.
+ *
+ * The value is the one the live site published, recovered from
+ * source/live-capture-2026-09-09/pages/contact.html. Confirmed on 2026-09-10 to
+ * still open "Maintenance Request — Request assistance from the maintenance team
+ * at The Henley on Broadwater", asking unit number, the request, the labour and
+ * materials acknowledgement and a name. If it is ever retired, the replacement
+ * comes from the form's owner; do not invent a shortlink.
+ */
+export const MAINTENANCE_FORM = {
+  href: 'https://forms.office.com/pages/responsepage.aspx?id=juKGyJ_MokG0gjcr_cUkcGG7XWGR5wtMgypQqRG4KFVUN1pGSExIVVI2MzlVUU9VMkNEU1RHWkZMNy4u',
+  label: 'Maintenance request',
+} as const;
+
+/**
  * Statutory documents.
  *
  * The Village Comparison Document (approved Form 3) must appear, or be linked,
@@ -94,8 +115,8 @@ export const FOOTER_NAV = [
     heading: 'Residents',
     links: [
       {
-        href: 'https://forms.office.com/r/maintenance',
-        label: 'Maintenance request',
+        href: MAINTENANCE_FORM.href,
+        label: MAINTENANCE_FORM.label,
         external: true,
       },
       { href: '/contact/', label: 'Contact reception' },

@@ -58,6 +58,20 @@ const { image, alt, heading, standfirst, size = 'inner' } = Astro.props;
        proportions instead of being cropped to a strip on a laptop and a
        column on a phone, and nothing shifts as the page loads. */
     aspect-ratio: 16 / 7;
+    /* But never more than half the window. At 1440x900 the uncapped 16:7 was
+       630px of photograph, which put the booking button at y=983 — a screen
+       and a bit below the sentence explaining what this place is. The ratio
+       still decides the shape; this decides how much of the first screen a
+       photograph is allowed to be, and it only binds on tablet and desktop
+       where the shortfall was.
+
+       width: 100% is load-bearing, not tidiness. With an auto inline size, a
+       clamped block size makes the box narrow to keep the ratio — the cap took
+       450px off the *width* and left a third of the screen blank beside the
+       photograph. A definite width means only the height is clamped, and
+       object-fit: cover crops rather than shrinks. */
+    width: 100%;
+    max-block-size: 48vh;
     overflow: hidden;
   }
 

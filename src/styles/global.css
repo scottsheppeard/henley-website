@@ -18,10 +18,37 @@
   box-sizing: border-box;
 }
 
+/*
+ * The sticky header's height, built from the same tokens SiteHeader.astro is,
+ * so it tracks the header instead of drifting from a number someone measured
+ * once. One row on a wide screen; two below 56rem, which is the header's own
+ * breakpoint.
+ */
+:root {
+  --header-height: calc(var(--space-touch-target) + 2 * var(--space-sm));
+}
+
+@media (max-width: 56rem) {
+  :root {
+    /* The phone row, then the navigation row at its own reduced height. */
+    --header-height: calc(
+      var(--space-touch-target) + var(--space-2xs) + 2.25rem + 2 * var(--space-sm)
+    );
+  }
+}
+
 html {
   /* No smooth scrolling: an anchor jump that animates is disorienting when
      you are the one who asked to go there. */
   -webkit-text-size-adjust: 100%;
+
+  /* Every anchor destination clears the sticky header. Without it, following
+     "Arrange a visit" on a phone put the enquiry heading 61px *behind* the
+     header — the page had moved, and the thing you asked for was not on it.
+     On the scrolling root rather than on #enquire, so it is true for the skip
+     link and for anything given a fragment later, and because it applies to a
+     direct /page/#enquire load as well as to a click. */
+  scroll-padding-block-start: calc(var(--header-height) + var(--space-md));
 }
 
 body {

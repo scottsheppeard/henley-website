@@ -115,6 +115,15 @@ henley-website/
 4. Thank-you page pushes `enquiry_submitted` to `dataLayer` only when `sent=1` is present, then strips the parameter; Scott adds the GTM trigger. No conversion counted on plain revisits.
 
 ### Stage 3 — Full build (after sample sign-off)
+**Two figures the captured content gets wrong** and every post carrying them must
+be corrected as it is built (sales team, 2026-09-10; see `docs/brief.md`,
+"Claims confirmed by the business"): the aged care household has **21 suites**,
+not twelve — `whatever-care-you-need-we-can-provide-it.md`,
+`the-henley-private-aged-care-its-our-approach-that-sets-us-apart.md` and
+`private-aged-care.md` all say twelve — and apartments are for people **over
+70**, not over 65. The built pages are already corrected; the captured source is
+deliberately not, because it is the record of what the old site published.
+
 Remaining service pages, legal pages, news index with `/news/page/2/` kept as a real second page, 15 posts with prev/next, documents at legacy paths plus `/documents/*.pdf` aliases (`Cache-Control: no-cache` on aliases, long max-age on dated files), redirects from `redirects.json`, per-page meta and JSON-LD (`Organization`, `Article`), sitemap, robots, RSS, GTM + gtag snippet, CSP verified with GTM/Ads under it on nonprod once the blocking trigger exists, legacy asset list (`branding/`, `2025/09/lightspeed.png` and `sharepoint.png`, dated PDFs, referenced images) copied into `deploy/legacy-assets`, image pipeline (AVIF/WebP, hero ≤ 200 KB), keyboard/zoom/screen-reader pass, Lighthouse.
 
 ### Stage 4 — Preview and acceptance, Stage 5 — Release

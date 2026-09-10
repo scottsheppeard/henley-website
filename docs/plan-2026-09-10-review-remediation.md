@@ -54,13 +54,13 @@ P1 means resolve before production cutover and prioritise for any exposed receiv
 | R02 | P1 | Make proxy trust consistent | Tests with runtime middleware plus container/proxy verification | Implemented; nonprod verification pending |
 | R03 | P1 | Preserve final WordPress enquiries through cutover | Corrected runbook and demonstrated final-enquiry reconciliation | Implemented; rehearsal pending |
 | R04 | P2 | Remove clock-dependent silent enquiry loss | Skewed-clock and no-JavaScript submissions are stored | Done |
-| R05 | P2 | Restore and centralise the maintenance form URL | Both resident entry points reach the correct form | Pending |
+| R05 | P2 | Restore and centralise the maintenance form URL | Both resident entry points reach the correct form | Done |
 | R06 | P2 | Enforce the body limit on received bytes | Oversized streamed requests return 413 before parsing | Done |
-| R07 | P2 | Offset enquiry anchor scrolling below the sticky header | Service-page headings remain visible after clicks and direct fragment navigation | Pending |
-| R08 | P2 | Reduce the homepage hero height | Initial-screen offer and booking action visible at agreed viewport sizes | Pending |
+| R07 | P2 | Offset enquiry anchor scrolling below the sticky header | Service-page headings remain visible after clicks and direct fragment navigation | Done |
+| R08 | P2 | Reduce the homepage hero height | Initial-screen offer and booking action visible at agreed viewport sizes | Done; Scott's design review pending |
 | R09 | P2 | Add strict launch URL verification | Missing required pages, feeds and redirect destinations fail the strict gate | Pending |
-| UX01 | UX | Put the resident route before the sales form | Correct reading order and mobile placement | Pending |
-| UX02 | UX | Replace copy explaining the website with useful visitor information | Copy reviewed against the brief without new unsupported claims | Pending |
+| UX01 | UX | Put the resident route before the sales form | Correct reading order and mobile placement | Done |
+| UX02 | UX | Replace copy explaining the website with useful visitor information | Copy reviewed against the brief without new unsupported claims | Done |
 | F01 | Follow-up | Expire inactive rate-limit buckets | Deterministic time-based regression test | Done |
 
 ## 3. Resume instructions and working constraints
@@ -338,7 +338,7 @@ Record completion evidence in this table when implementation starts. Use test re
 |---|---|---|---|---|
 | A / R03 | (slice A) | Reader inspected in henley-utils; `/webhooks/health` probe verified 200 against production 2026-09-10 | — | Drain rehearsal on nonprod (needs a WordPress-side synthetic enquiry and a `DRY_RUN` nightly run) |
 | B / receiver | (slice B) | 75 receiver tests green; all new regressions verified failing against the pre-fix receiver; `check-enquiry-flow.sh` green; `check-proxy-trust.sh` green (and 8 failures against the pre-fix image) | NPM's append behaviour and the absence of a hop in front of it confirmed on host 4 | Nonprod end-to-end: NPM host 4 has no `/api/enquiry` location yet, so the receiver has never been reached through NPM |
-| C / visitor journeys | — | — | — | Not started |
+| C / visitor journeys | (slice C) | Measured at 320/360/390/768/1280/1440: `#enquire` clearance −61px → +63px (mobile) and +27px → +111px (desktop); home offer and full booking button now inside the first screen at every size; passes at 150%/200% text, 200%/400% zoom and landscape, no horizontal overflow, focus rings visible. Maintenance form opened and confirmed as the live Henley form | — | Scott's design review of the revised hero crop; screenshots in the session scratchpad `shots-before/` and `shots-after/` |
 | D / R09 | — | — | — | Not started |
 | E / deployment rehearsal | — | — | — | Not started |
 

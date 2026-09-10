@@ -62,12 +62,15 @@ substantiate its differentiators, not restate them louder.
    the transition actually works in practice, which is the question an adult
    child will ask first.
 
-3. **A twelve-suite aged care household, single floor, registered nurse on
+3. **A twenty-one-suite aged care household, single floor, registered nurse on
    site 24 hours, high staff-to-resident ratio.**
+   *Evidence held* for the suite count: **21**, corrected by the sales team on
+   2026-09-10. The live site, and every 2023 post still in `src/content`, says
+   twelve.
    *Evidence needed* — "high staff-to-resident ratio" is not a claim, it is an
    adjective. It needs the actual ratio, confirmed against current rostering
    and safe to publish, or it should be replaced with something concrete. The
-   24-hour RN cover and the twelve suites need the same confirmation.
+   24-hour RN cover needs the same confirmation.
 
 4. **Resort amenity as standard**, not as an upgrade: bistro, pool, gym, Sky
    Deck bowling green, hair and beauty room, and a monthly events calendar.
@@ -147,12 +150,23 @@ resolving, but the content needs a decision.
 | `making-the-most-of-your-homecare-package` | **Rewrite or archive** | It describes the Home Care Packages Program as current. Support at Home replaced HCP on 1 November 2025. Republishing it as current guidance would be wrong, and it is one of the pages an adult child is most likely to land on. *Decision needed before launch.* |
 | Five 2023 resident-life posts | Keep with honest dates | *Decision (GM):* keep, refresh or retire. They date the site, but they are the only real evidence of resident life it has. |
 
+## Claims confirmed by the business
+
+- **Twenty-one private aged care suites**, not twelve — sales team, 2026-09-10.
+- **Apartments are for people over 70**, not over 65 — sales team, 2026-09-10.
+
+Both were wrong on the live WordPress site and are therefore wrong in every
+captured page and post under `src/content`. The built pages carry the correct
+figures; the captured content is the archive of what the old site said and is
+left as it is, so Stage 3 must correct these as each post is built.
+
 ## Claims held for confirmation
 
 Nothing below ships until someone with authority signs it off:
 
 - Weekly fee figures and the "Retirement Villages Act" wording in the home FAQ.
-- The staff-to-resident ratio, 24-hour RN cover, and twelve-suite count.
+- The staff-to-resident ratio and 24-hour RN cover. *(The suite count is no
+  longer held: the sales team confirmed 21 on 2026-09-10.)*
 - "Highest benchmarks in Australia" — an unsupported superlative as written.
 - The testimonials ("Phil & Jill"), which need current permission to publish.
 - Home Care Package funding language, per the Support at Home change above.
