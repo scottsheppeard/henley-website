@@ -136,9 +136,17 @@ the WordPress reader, and what was actually built reads both sources.
    ```bash
    docker network create henley-website-prod-net   # once
    cd /mnt/persistent/dev/henley-website
+   scripts/with-node.sh npm ci                     # a fresh checkout has none
    scripts/with-node.sh npm run tokens
-   docker compose -f deploy/compose.prod.yml up -d --build
+   cp deploy/.env.example deploy/.env              # then set TRUSTED_PROXY_IPS
+   docker compose --env-file deploy/.env -f deploy/compose.prod.yml up -d --build
    ```
+   `--env-file` is not optional: Compose reads `.env` from the directory it is
+   run in, not from `deploy/`, and `deploy/.env` is gitignored so a fresh
+   checkout has none. Without both, the receiver starts trusting no proxy —
+   which looks exactly like a working deployment until someone tries to bypass
+   a rate limit. This happened on nonprod on 2026-09-10 and the startup warning
+   is what caught it.
    Attach `henley-website-prod-net` to `npm-attachment` in
    `/home/admin/henley-aws/docker-compose.yml`, recreate NPM, then set
    `TRUSTED_PROXY_IPS` to the npm-attachment address on that network and

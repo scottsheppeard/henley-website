@@ -38,7 +38,21 @@ from fastapi import FastAPI, Form, Request
 from fastapi.responses import HTMLResponse, JSONResponse, RedirectResponse
 from starlette.types import ASGIApp, Message, Receive, Scope, Send
 
+# Uvicorn configures the `uvicorn.*` loggers and leaves the root logger without
+# a handler, so without this nothing below WARNING was ever emitted: a correctly
+# configured deployment printed nothing at startup, and so did a badly
+# configured one. The line saying which proxies are trusted is exactly the one
+# an operator needs to see, and silence is not confirmation.
+#
+# basicConfig, not a handler of our own: it is a no-op if something has already
+# configured the root logger, so it cannot double up under a different runner.
+logging.basicConfig(
+    level=os.environ.get("LOG_LEVEL", "INFO").upper(),
+    format="%(levelname)s:     %(message)s",
+)
+
 logger = logging.getLogger("henley.forms")
+logger.setLevel(os.environ.get("LOG_LEVEL", "INFO").upper())
 
 # ── Configuration ────────────────────────────────────────────────────────────
 

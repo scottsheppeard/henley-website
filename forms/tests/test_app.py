@@ -823,6 +823,47 @@ def test_addresses_are_normalised_so_one_visitor_is_one_bucket(receiver, monkeyp
     assert rows(app_module)[0]["remote_ip"] == stored
 
 
+def test_startup_says_out_loud_which_proxies_it_believes(receiver, caplog):
+    """Silence is not confirmation.
+
+    Uvicorn configures its own loggers and leaves the root one without a
+    handler, so this module's INFO went nowhere at all: a correct deployment
+    printed nothing at startup, and so did a broken one. `docker logs … | head`
+    is the documented check, and it has to have something to read.
+    """
+    _, app_module = receiver
+    assert app_module.TRUSTED_PROXIES == {"10.0.0.1"}
+
+    with caplog.at_level("INFO", logger="henley.forms"):
+        with TestClient(app_module.app):
+            pass
+
+    assert "X-Forwarded-For is believed from 10.0.0.1" in caplog.text
+    assert app_module.logger.getEffectiveLevel() <= 20, "INFO would be dropped"
+
+
+def test_an_empty_trusted_proxy_list_is_a_warning_not_a_default(tmp_path, monkeypatch, caplog):
+    """It is what a missed deployment step looks like, and it looks like success.
+
+    It is also what the documented compose command actually produced: Compose
+    reads `.env` from the directory it runs in, not from deploy/, so
+    TRUSTED_PROXY_IPS arrived empty and nothing about the deployment looked
+    wrong. See deploy/.env.example.
+    """
+    monkeypatch.setenv("INTAKE_DB_PATH", str(tmp_path / "intake.sqlite"))
+    monkeypatch.setenv("TRUSTED_PROXY_IPS", "")
+
+    import app as app_module
+
+    reloaded = importlib.reload(app_module)
+    with caplog.at_level("WARNING", logger="henley.forms"):
+        with TestClient(reloaded.app):
+            pass
+
+    assert reloaded.TRUSTED_PROXIES == set()
+    assert "TRUSTED_PROXY_IPS is empty" in caplog.text
+
+
 def test_the_container_does_not_let_uvicorn_rewrite_the_client_address(receiver):
     """The defect was in the Docker command, which no in-process test exercised.
 

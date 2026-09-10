@@ -6,8 +6,13 @@
 # matter.
 #
 #   cd /mnt/persistent/dev/henley-website
-#   npm run tokens
-#   docker compose -f deploy/compose.prod.yml up -d --build
+#   scripts/with-node.sh npm ci                      # a fresh checkout has none
+#   scripts/with-node.sh npm run tokens
+#   docker compose --env-file deploy/.env -f deploy/compose.prod.yml up -d --build
+#
+# --env-file is not optional. Compose reads `.env` from the directory it runs
+# in, not from deploy/, so without it TRUSTED_PROXY_IPS arrives empty and the
+# receiver believes no proxy at all — see deploy/.env.example.
 #
 # `npm run tokens` first, always: the site image builds from this repo without
 # the brand kit mounted, so tokens.css has to already be in the build context.
