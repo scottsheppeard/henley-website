@@ -47,7 +47,8 @@ by original filename:
 | `apartment-view-type-b.jpg`, `-lounge-type-b`, `-kitchen-type-b` | `View / Lounge and Dining / Kitchen Type B 2.jpg` | 2017 apartment shoot |
 | `pool.jpg` | `220415_379.jpg` | Brand & Co, April 2015 |
 | `sky-deck-bowls.jpg` | `_MG_0790.jpg` | 2016 pool/Sky Deck shoot |
-| `care-nurse-resident.jpg` | `Page 4-1.jpg` | 2019 newsletter set, full res |
+| `care-nurse-resident.jpg` | `Page 4-1.jpg` | 2019 newsletter set, full res (no longer on the home page) |
+| `care-level4-lunch.jpg` | `Shared Externally/Shared with Henley Care Directors/25-26Yr/Aug 25/Level 4 photos/lunch lv 4.docx` (embedded photo, 2092px) | Staff phone photo, June 2025, refurbished Level 4 |
 | `care-dining-room.jpg`, `care-kitchen`, `care-chef`, `care-suite` | `THE HENLEY-PROOF-317 / 557 / 214 / 386.jpg` | Level 3 aged care shoot, 2048px proofs |
 
 The aged care shoot exists in SharePoint only as 2048px proofs and the
@@ -58,7 +59,15 @@ ever serves (the largest rendition is 1920px, and galleries top out at
 Source copies in `src/images/` are downscaled to 2400px JPEG so the repo does
 not carry 5–8 MB originals; Astro generates the AVIF renditions at build.
 
-**Consent.** `care-dining-room.jpg` and `care-nurse-resident.jpg` show
+**Level 4.** Scott asked for the refurbished Level 4 on the home page's care
+tile (2026-09-10). SharePoint holds no professional shoot of it: the only
+photographs are fourteen staff phone snaps from a June 2025 morning tea and
+lunch, stored at 640px, with larger copies embedded in the Word documents
+beside them. The lunch photograph is used at its 2092px embedded size. It is
+good enough for a 4:3 tile served at 1080px and no more; a proper shoot of
+Level 4 is the obvious next photography job.
+
+**Consent.** `care-dining-room.jpg`, `care-level4-lunch.jpg` and `care-nurse-resident.jpg` show
 identifiable residents and staff from 2019 marketing shoots. No consent record
 was found in SharePoint. They stay in the sample so the GM can see the page
 as intended; before launch either the consent is confirmed or they are

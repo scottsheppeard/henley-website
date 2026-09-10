@@ -192,3 +192,13 @@ Full folder inventory: `sharepoint-inventory.md`. Contact sheets of ~1,440 candi
 - `Sales and Marketing/Images/Photo library/Level 3 High res images/` - 607 LOW-RES proofs of the professional aged-care shoot (`THE HENLEY-PROOF-*.jpg`, 2048px). Only ~10 of these exist at full res (in `General/Photo library/2019 External Newsletter Photos to use` and `Sales and Marketing/Images/High Res Photography - The Henley`). If more aged-care imagery is wanted, the photographer's full-res delivery should be sourced (or proofs used at small sizes).
 - `General/Branding/` - the April 2026 brand kit (style guide DOCX, 200+ logo PNG/JPG/SVG variants, fonts, email signature, web-header backgrounds). Use this for logos rather than the 2014-2016 EPS files.
 - Brochures, floor plans, price list, fact sheets - see `sharepoint-inventory.md`.
+
+### aged-care-level4/ - refurbished Level 4, June 2025 (staff phone photos)
+
+Source folder: `Documents/Shared Externally/Shared with Henley Care Directors/25-26Yr/Aug 25/Level 4 photos` (14 files: 9 JPGs at 640x480 and 5 Word documents). The JPGs are too small for the site; these three are the larger copies extracted from inside the Word documents. Identifiable residents throughout - consent unverified. No professional photography of Level 4 exists anywhere in SharePoint (searched DocumentCenter, Sales, HoDs, Staff-ALL, HenleyCareRN, Strategic Program and the intranet root on 2026-09-10).
+
+| File | From | Size | Note |
+|---|---|---|---|
+| `lunch-lv4.jpg` | `lunch lv 4.docx` | 2092x1462 | Four residents at lunch, dining room, Broadwater through the windows. Used as the home page care tile. |
+| `lounge-lv4.jpg` | `Lv 4.docx` | 1354x1016 | Four residents in the lounge with framed prints. |
+| `balcony-morning-tea-lv4.jpg` | `lv 4 morning tea.docx` | 1379x977 | Two residents on the balcony with tea. |
