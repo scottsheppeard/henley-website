@@ -13,13 +13,73 @@ the sequencing decisions belong with the code that assumes them.
 
 ## The one thing that must not be lost
 
-NPM hosts 5 (`thehenley.com.au`) and 11 (`www.thehenley.com.au`) each carry a
-`/webhooks` location pointing at `henley-webhooks:8000`. **Systems beyond this
-website depend on it.** Retargeting a host in NPM does not preserve custom
-locations automatically, and nothing about the website will look broken if it
-disappears — which is exactly why it is the first and last thing to check.
+NPM host 5 (`thehenley.com.au`) carries a `/webhooks` location pointing at
+`henley-webhooks:8000`. **Systems beyond this website depend on it.**
+Retargeting a host in NPM does not preserve custom locations automatically, and
+nothing about the website will look broken if it disappears — which is exactly
+why it is the first and last thing to check.
 
-Screenshot both hosts' configuration before touching them.
+Host 11 (`www`) does **not** have one and does not need one: everything on www
+is 301'd to the apex, so www callers arrive at host 5. An earlier version of
+this runbook said both hosts carried it; only host 5 does. Corrected 2026-09-10
+after reading the generated configs.
+
+It is not theoretical traffic. One day of host 5's access log:
+
+| Calls | Client | Path |
+|---|---|---|
+| 423 | 210.10.231.33 | `/webhooks/upload/fob` (every 10 minutes) |
+| 11 | 13.54.1.75 | `/webhooks/painchek/assessment` |
+| 4 | 54.92.76.241, 13.112.30.110 | `/webhooks/upload/insight` |
+
+Three separate integrations, none of which is this website. Note that the
+access log prints the *host-level* upstream in `[Sent-to …]`, so these lines say
+`wp-prod-henley` even though the location proxies to `henley-webhooks:8000`.
+Do not read that as evidence of where they went.
+
+Screenshot host 5's configuration before touching it. The location, verbatim
+from `/data/nginx/proxy_host/5.conf` on 2026-09-10, is:
+
+```nginx
+location /webhooks {
+    proxy_set_header Host $host;
+    proxy_set_header X-Forwarded-Scheme $scheme;
+    proxy_set_header X-Forwarded-Proto  $scheme;
+    proxy_set_header X-Forwarded-For    $remote_addr;
+    proxy_set_header X-Real-IP          $remote_addr;
+    proxy_pass       http://henley-webhooks:8000;
+    include conf.d/include/force-ssl.conf;
+}
+```
+
+## The other thing nobody owns yet: www → apex
+
+`https://www.thehenley.com.au/contact/` 301s to the apex today, and **WordPress
+is what issues that redirect** — `wp-prod-henley` answers `Host:
+www.thehenley.com.au` with a 301 of its own. NPM host 11 is a plain proxy host
+with a single `location /`; it does no canonicalisation.
+
+The static site does not do it either, deliberately: `deploy/nginx.conf` says
+TLS, HSTS and the apex/www canonicalisation are NPM's job, and the container
+answers 200 to either hostname.
+
+So the moment WordPress stops, nothing redirects www — host 11 would start
+serving the whole site a second time under a second hostname. The canonical
+tags point at the apex, so it is duplicate content rather than an outage, but
+it is a contract the migration manifest records (`canonicalisation: www to
+apex`) and nobody currently keeps.
+
+**Fix it before cutover day, not on it.** In NPM, host 11 becomes a
+**Redirection Host** to `https://thehenley.com.au`, 301, preserving the path,
+reusing the existing `npm-10` certificate. Done today it is a no-op from
+outside — the same 301 to the same place — and it removes a dependency on
+WordPress while WordPress is still there to fall back on. Verify with:
+
+```bash
+curl -sS -o /dev/null -w '%{http_code} → %{redirect_url}\n' \
+  https://www.thehenley.com.au/contact/
+# expect: 301 → https://thehenley.com.au/contact/
+```
 
 The probe is `GET /webhooks/health`, which the service answers with
 `{"status":"healthy","timestamp":"…"}` and HTTP 200. Use that, not an
@@ -165,9 +225,21 @@ the WordPress reader, and what was actually built reads both sources.
    a wrong path or an unmounted volume looks like, and the failure is otherwise
    silent.
 
-4. **Switch NPM hosts 5 and 11** to `henley-website-prod:8080`, **re-adding
-   `/webhooks` → `henley-webhooks:8000`** and adding
+4. **Switch NPM host 5** to `henley-website-prod:8080`, **re-adding
+   `/webhooks` → `henley-webhooks:8000`** (verbatim, above) and adding
    `/api/enquiry` → `henley-website-forms-prod:8000`.
+
+   Host 11 needs no retargeting if it has already become a Redirection Host as
+   described above. If it has not, do that first — it is the step that stops www
+   serving the site a second time once WordPress is gone.
+
+   On the `/api/enquiry` location, set `client_max_body_size 64k;` in its
+   Advanced box. NPM's global is `client_max_body_size 2000m`, so without it NPM
+   will accept two gigabytes from a client and stream them at a receiver whose
+   limit is 16 KB. The receiver stops reading at the limit and answers 413, but
+   there is no reason to carry the upload that far. Copy host 4's settings,
+   which use `X-Forwarded-For $remote_addr` — an overwrite, and the shape the
+   receiver is happiest with.
 
 5. **Check, immediately:**
    ```bash
@@ -355,9 +427,10 @@ deployment until someone tries to bypass a rate limit.
 
 ## If it goes wrong
 
-Point NPM hosts 5 and 11 back at `wp-prod-henley:80`, restore the `/webhooks`
+Point NPM host 5 back at `wp-prod-henley:80`, restore the `/webhooks`
 location, and `docker start wp-prod-henley` (and `db-prod-henley` if the drain
-had already reached step 5c). Nothing in the cutover destroys WordPress state.
+had already reached step 5c). Host 11 as a Redirection Host is correct either
+way and needs no rollback. Nothing in the cutover destroys WordPress state.
 
 Enquiries taken through the new site in the meantime are still in the intake
 store and are still read by the nightly job, because `INTAKE_DB_PATH` stays

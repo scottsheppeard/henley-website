@@ -67,6 +67,8 @@ P1 means resolve before production cutover and prioritise for any exposed receiv
 | UX02 | UX | Replace copy explaining the website with useful visitor information | Copy reviewed against the brief without new unsupported claims | Done |
 | F01 | Follow-up | Expire inactive rate-limit buckets | Deterministic time-based regression test | Done |
 | F02 | Follow-up | Decide whether a rejected submission should spend a per-IP slot | A visitor who mistypes twice keeps a third attempt | Open — raised 2026-09-10, not changed |
+| F03 | Follow-up | Give the www → apex redirect an owner that is not WordPress | `www` 301s to the apex with WordPress stopped | Open — NPM change, see the runbook |
+| F04 | Follow-up | Bound the enquiry route's body at NPM | NPM refuses an oversized body rather than streaming it to the receiver | Open — one line in host 4/5's Advanced box |
 
 ## 3. Resume instructions and working constraints
 
