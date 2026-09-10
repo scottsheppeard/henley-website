@@ -77,6 +77,65 @@ lounge, `PROOF-543`, and the balcony, `PROOF-27`, are already in `assets/`).
 The four brand-kit exteriors that carried the first sample were removed from
 `src/images/`; they remain in the brand kit and in `assets/existing-site/`.
 
+### Stage 3: the remaining pages (2026-09-10)
+
+Thirty-six more photographs, for the four amenity pages, the two feeds and the
+fifteen posts. Two new sources join the SharePoint pull:
+
+**The old site's own uploads** (`assets/existing-site/2023/`, inventory in that
+folder's `README.md`). These are the photographs the WordPress site published,
+so their provenance is the site's own history and each one's live role is
+recorded. The bistro kitchen shots and the fifteen post headers come from here —
+the posts' images were lost in the capture, which stored WordPress's lazy-load
+`data:` placeholders rather than the files, so the index and the articles would
+otherwise carry nothing.
+
+**The ground-floor refurbishment renders.** `render-70-marine.jpg` and
+`render-arrival.jpg` are the two "external 3D perspective" plates from
+`26-01-14 The Henley_ID Concept Report_Rev D (3).pdf` (DBI, Rev D, 14 January
+2026), extracted from the PDF at their embedded 3840x2070 rather than
+rasterised. `render-atrium.jpg`, `render-courtyard.jpg` and
+`render-terrace-evening.jpg` come from the brand kit's
+`06_Imagery/Renovation_Renders/`, which holds screenshots of a viewer rather
+than the plates themselves; the terrace frame had the viewer's toolbar chopped
+off its foot, and the other two were already clean.
+
+`scripts/build-assets.sh` says renders are deliberately not copied because
+labelling them is a content decision rather than an asset one. Scott made that
+decision on 2026-09-10: the bistro is a building site, so `/dining/` leads with
+what is coming. **Every render on the site carries a visible "Render" label and
+a caption naming the concept report and its date.** They are a January 2026
+concept, not a photograph of anything that exists, and nothing about them is
+committed to.
+
+**The Hub.** `hub-*.jpg` are from the July 2026 Hubstitute opening — the
+temporary hub running while the ground floor is refurbished (Scott,
+2026-09-10). Captioned as temporary, so the site does not show a room as
+permanent that is scheduled to be replaced by the renders beside it.
+
+**Resolution.** Amenity heroes keep the 2400px source the first twelve used.
+The fifteen `post-*.jpg` are held at 1600px instead: the largest rendition any
+of them gets is a 1200px article header, and the index thumbnail is 600px, so
+2400px was a megabyte each of repository weight that the site never serves.
+
+**Consent.** The same caveat as the first pull, and it now reaches further.
+`post-art-classes`, `post-fashion`, `post-high-tea`, `post-dietitian`,
+`post-lego`, `post-connections`, `post-health`, `post-questions`,
+`post-advantage`, `post-aged-care-approach`, `post-care-tailored`,
+`post-home-care`, `supported-living-tea` and `hub-*` all show identifiable
+residents, staff or visitors. Every one of them was published on the live
+WordPress site or is Scott's own 2026 photography, which is why they are used
+here — but *published before* is not the same as *consent on file*, and the
+2023 resident photographs are now three years old. Before launch: confirm, or
+replace. `parklands-*` and `gym*` have no identifiable faces and need nothing.
+
+**Licence.** The old site's `beach-1.jpg`, `standup.jpg`, `swimming.jpg` and
+`shopping.jpg` were the location page's tiles and read as stock; none of them
+were taken. The Broadwater Parklands frames from the Brand & Co April 2015
+shoot (`parklands-*.jpg`) say the same thing about the neighbourhood with a
+licence the business actually holds.
+
+
 ## Node version
 
 **The repo pins Node 22 in `.node-version` and selects it per-repo, never globally.**
