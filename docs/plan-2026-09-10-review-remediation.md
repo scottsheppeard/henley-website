@@ -1,12 +1,14 @@
 # Website review remediation plan
 
 **Date:** 2026-09-10, Australia/Brisbane  
-**Status:** Planned; implementation has not started.  
+**Status:** Implemented and landed on `main` (2026-09-10). Slices A–D complete;
+slice E — the nonprod and downstream rehearsals — is outstanding and is blocked
+on the two things named in §6. This is not a production cutover authorisation.  
 **Project:** `henley-website`, stream `website-rebuild`  
 **Reviewed revision:** `294521b` — home: refurbished Level 4 lunch photo on the care tile  
 **Purpose:** Preserve the findings from the 10 September review and provide a complete implementation handover for a later session.
 
-Creating this plan does not implement the fixes or authorise a production cutover. Scott asked to save the plan so implementation can resume when he is ready.
+Creating this plan did not implement the fixes or authorise a production cutover. Implementation ran on 2026-09-10 in the same stream; what follows is the plan as written, with the register, evidence table and completion list updated in place. Nothing here authorises a cutover.
 
 ## 1. Scope and current position
 
@@ -41,6 +43,8 @@ At review time, the stream and `main` both pointed to `294521b` and the worktree
 | Desktop home at 1440 × 900 | Main hero booking button began at approximately 983px, below the first screen |
 
 These were local checks against source and built files. They did not establish the current deployed NPM header configuration, exercise the real Salesforce/digest pipeline, or perform a full accessibility audit. Local receiver tests used Python 3.11; the receiver image specifies Python 3.12, so include the container in later verification.
+
+**Closed during implementation:** the deployed NPM header configuration was read (host 4 and `conf.d/include/proxy.conf`: `$proxy_add_x_forwarded_for`, i.e. append, with no proxy in front of NPM), and the 75-test receiver suite was run inside a Python 3.12 image as well as the 3.11 virtualenv — same result. Still not done: the real Salesforce/digest pipeline, and a full accessibility audit.
 
 Temporary scripts and screenshots were saved under `/tmp` during the review. They are disposable and are not required to resume: the reproductions and expected outcomes are recorded below.
 
@@ -340,23 +344,34 @@ Record completion evidence in this table when implementation starts. Use test re
 | B / receiver | (slice B) | 75 receiver tests green; all new regressions verified failing against the pre-fix receiver; `check-enquiry-flow.sh` green; `check-proxy-trust.sh` green (and 8 failures against the pre-fix image) | NPM's append behaviour and the absence of a hop in front of it confirmed on host 4 | Nonprod end-to-end: NPM host 4 has no `/api/enquiry` location yet, so the receiver has never been reached through NPM |
 | C / visitor journeys | (slice C) | Measured at 320/360/390/768/1280/1440: `#enquire` clearance −61px → +63px (mobile) and +27px → +111px (desktop); home offer and full booking button now inside the first screen at every size; passes at 150%/200% text, 200%/400% zoom and landscape, no horizontal overflow, focus rings visible. Maintenance form opened and confirmed as the live Henley form | — | Scott's design review of the revised hero crop; screenshots in the session scratchpad `shots-before/` and `shots-after/` |
 | D / R09 | (slice D) | `check-urls-fixture.sh`: a complete fixture passes strict 84/0/0, and each of 16 deliberate defects fails it for the right reason; sample mode keeps its outstanding count and disclaims itself. Strict correctly refuses the current partial site (33 passed, 49 failed, 0 outstanding) | Sample mode green against the site container: 53 passed, 0 failed, 49 outstanding | Strict passes only once Stage 3 exists — that is the gate working, not a defect |
-| E / deployment rehearsal | — | — | — | Not started |
+| E / deployment rehearsal | — | Receiver suite also green on Python 3.12, the image's version (75 passed), closing the version gap noted in §1 | — | Blocked, see below |
 
 ## 7. Completion and launch boundaries
 
 Remediation is complete when:
 
-- [ ] Each R01–R09 item has implementation and acceptance evidence, with no unresolved P1 finding.
-- [ ] UX01 and UX02 are reviewed, and F01 is resolved or explicitly recorded as deferred with a reason.
-- [ ] The receiver's existing intake contract remains intact and both runtime/proxy and streamed-body checks pass.
-- [ ] Mobile enquiry headings are visible; the revised hero and resident route pass the documented browser checks.
-- [ ] The URL checker distinguishes a partial sample from a release-ready site, and the runbook uses strict mode.
-- [ ] The old-source drain procedure has been reconciled with the real henley-utils implementation and rehearsed.
-- [ ] Changes are landed, relevant documentation agrees with the code, and the stream/register records the next step.
+- [x] Each R01–R09 item has implementation and acceptance evidence, with no unresolved P1 finding. *R01 and R02 are the P1s; both are implemented, R02's deployed verification is listed below.*
+- [x] UX01 and UX02 are reviewed, and F01 is resolved or explicitly recorded as deferred with a reason. *F01 resolved.*
+- [x] The receiver's existing intake contract remains intact and both runtime/proxy and streamed-body checks pass. *`check-enquiry-flow.sh` green; `check-proxy-trust.sh` green through a real nginx, and 8 failures against the pre-fix image.*
+- [x] Mobile enquiry headings are visible; the revised hero and resident route pass the documented browser checks.
+- [x] The URL checker distinguishes a partial sample from a release-ready site, and the runbook uses strict mode.
+- [ ] The old-source drain procedure has been reconciled with the real henley-utils implementation and rehearsed. *Reconciled and written up; **not rehearsed**.*
+- [x] Changes are landed, relevant documentation agrees with the code, and the stream/register records the next step.
+
+### What slice E still needs, and who can do it
+
+Neither is a code change; both need someone with access this session did not have.
+
+1. **NPM host 4 has no `/api/enquiry` location.** `POST https://dev.thehenley.com.au/api/enquiry` is answered 404 by the static site, so the receiver has never been reached through NPM and the nonprod half of R02's acceptance cannot be run. Scott adds the location (→ `henley-website-forms-nonprod:8000`), re-reads `TRUSTED_PROXY_IPS` from npm-attachment on that network, and recreates the forms container. `scripts/check-proxy-trust.sh` already proves the same behaviour locally.
+2. **The R03 drain rehearsal touches live systems.** It needs a synthetic Gravity Forms entry either side of a simulated switch, and a `DRY_RUN=true` run of the nightly job — a write to the production WordPress database and a run of the real classifier. That is Scott's call and his to schedule; the procedure is written up in the runbook under "Draining WordPress".
+
+Also still outstanding, unchanged by this remediation: **the deployed nonprod containers are older than `main`.** Nothing on dev.thehenley.com.au carries the receiver fixes, the hero cap, the anchor offset, the resident link or `absolute_redirect off` until it is rebuilt.
 
 The original launch dependencies still apply: remaining pages and assets, privacy wording, held care/fee claims, resident photography permissions, business review of the sample, analytics configuration, ownership/maintenance arrangements, backups and the production cutover procedure. Refer to the existing brief and runbook for their current status rather than treating this plan as their approval.
 
 At handover, state whether the work is locally implemented, verified on nonprod, or ready for cutover. Those are different milestones. Leave the stream in place; Scott decides when to finish it.
+
+**As at 2026-09-10 this work is locally implemented and landed on `main`. It is not verified on nonprod and it is not ready for cutover.**
 
 ## 8. Suggested prompt for the next implementation session
 
