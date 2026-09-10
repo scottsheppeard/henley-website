@@ -39,6 +39,12 @@ const isCurrent = (href: string) => pathname === href;
     </nav>
 
     <a class="header__phone" href={PHONE_HREF}>
+      <svg class="header__phone-icon" aria-hidden="true" focusable="false" viewBox="0 0 24 24" width="20" height="20">
+        <path
+          fill="currentColor"
+          d="M6.6 10.8a15.1 15.1 0 0 0 6.6 6.6l2.2-2.2a1 1 0 0 1 1-.25c1.1.37 2.3.57 3.6.57a1 1 0 0 1 1 1V20a1 1 0 0 1-1 1A17 17 0 0 1 3 4a1 1 0 0 1 1-1h3.5a1 1 0 0 1 1 1c0 1.25.2 2.45.57 3.57a1 1 0 0 1-.25 1L6.6 10.8Z"
+        />
+      </svg>
       <span class="visually-hidden">Call us on </span>{PHONE}
     </a>
   </div>
@@ -57,6 +63,8 @@ const isCurrent = (href: string) => pathname === href;
     display: flex;
     align-items: center;
     gap: var(--space-lg);
+    /* 12px above and below at every width: the wordmark and the phone number
+       should never sit against the top edge of the screen. */
     padding-block: var(--space-sm);
     flex-wrap: wrap;
   }
@@ -103,13 +111,20 @@ const isCurrent = (href: string) => pathname === href;
   /* The current page is marked by a rule under it, not by a colour change:
      colour alone would be the only signal for someone who cannot see it. */
   .header__nav a[aria-current='page'] {
-    border-block-end: 2px solid var(--color-coastal-mist);
+    border-block-end: 3px solid var(--color-paper);
+    font-weight: 600;
   }
 
   .header__phone {
+    gap: var(--space-xs);
+    min-width: var(--space-touch-target);
     font: var(--type-title-md);
     color: var(--color-paper);
     white-space: nowrap;
+  }
+
+  .header__phone-icon {
+    flex: 0 0 auto;
   }
 
   /* No hamburger. Three grouped links and a phone number take two rows on a
@@ -127,7 +142,7 @@ const isCurrent = (href: string) => pathname === href;
       align-items: center;
       column-gap: var(--space-md);
       row-gap: var(--space-2xs);
-      padding-block: var(--space-xs);
+      padding-block: var(--space-sm);
     }
 
     .header__phone {

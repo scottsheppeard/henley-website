@@ -8,6 +8,26 @@ site does is [the baseline](2026-09-09-rebuild-baseline-and-proposal.md).
 
 ---
 
+## The primary button on the deep ground
+
+**On Broadwater Deep the primary button is Warm Sand with Deep text, not the
+kit's Henley Teal fill.**
+
+The kit's `button-primary` is Henley Teal `#0E5B70` on white. Every hero and
+enquiry band on this site sits on Broadwater Deep `#083B4A`, and teal on deep
+measures about 1.5:1 — the main action on the page was the least visible
+element in it, and on a phone in daylight it disappeared. Warm Sand `#D9CFC0`
+on Deep is 7.9:1 and Deep text on Warm Sand is 9:1. The teal button is
+unchanged on light grounds. Raised 2026-09-10 from a mobile review; like the
+focus ring, this belongs back in the kit as an `on-dark` variant.
+
+The same review stacked the hero's two actions full-width below 480px, gave
+the header 12px of vertical padding and a phone icon on the number, marked the
+current page with a 3px Paper rule and a semibold label, floored the mobile
+hero photograph at 240px, and rounded the top corners of the first content
+band over the deep hero. Body text was already 18px, weight 400, line-height
+1.56 from the kit and was left as it is.
+
 ## Photography
 
 **The sample uses the professional shoots already held in SharePoint and on

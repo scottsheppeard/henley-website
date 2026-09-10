@@ -75,7 +75,9 @@ const { image, alt, heading, standfirst, size = 'inner' } = Astro.props;
   .hero__band {
     background: var(--color-broadwater-deep);
     color: var(--color-linen);
-    padding-block: var(--space-2xl) var(--space-3xl);
+    /* The extra radius-xl at the foot is what the next band's rounded
+       corners overlap (see .hero + .band in global.css). */
+    padding-block: var(--space-2xl) calc(var(--space-3xl) + var(--radius-xl));
   }
 
   .hero__band :global(h1) {
@@ -96,6 +98,7 @@ const { image, alt, heading, standfirst, size = 'inner' } = Astro.props;
     .hero--inner .hero__image {
       /* Taller on a phone: a 21:6 letterbox at 360px wide is 100px of nothing. */
       aspect-ratio: 4 / 3;
+      min-height: 240px;
     }
 
     .hero__band :global(h1) {
