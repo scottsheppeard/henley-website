@@ -1,15 +1,24 @@
 ---
-# Migrated from the 2026-09-09 WordPress capture by scripts/export-content.ts.
-# Rewrite the copy freely — but keep `path`, and carry the search intent of
-# `legacy.title` and `legacy.description` into whatever replaces them. Set
-# `status: reviewed` once a person has been through this file; a re-export
-# then leaves it alone.
-status: 'needs-review'
+# Rewritten 2026-09-10 for Support at Home. The captured 2023 original, which
+# described Home Care Packages as current and quoted a 2023 funding
+# announcement, is preserved at `legacy.capture` and in the migration capture.
+# `status: reviewed` keeps scripts/export-content.ts from restoring it.
+#
+# What is said here about how the funding is shaped — the eight classifications,
+# the three service categories and who contributes to which — comes from Henley
+# Care's own Schedule of Fees dated 1 July 2026
+# (public/wp-content/uploads/2026/07/, aliased at /documents/schedule-of-fees.pdf),
+# which is already written in Support at Home terms. No dollar figures are
+# repeated here: the schedule is the document that gets revised, and a rate
+# copied into an article goes stale silently.
+status: 'reviewed'
 path: '/making-the-most-of-your-homecare-package/'
 type: 'post'
-title: 'Making the most of your homecare package.'
-description: null
-date: '2023-05-22'
+title: 'Making the most of your Support at Home budget'
+description: 'Support at Home replaced Home Care Packages on 1 November 2025. What changed, what it means if you already had a package, and how it works at The Henley.'
+# The rewrite's date, not the 2023 original's. Support at Home did not exist in
+# 2023, and dating this piece then would be the opposite of an honest date.
+date: '2026-09-10'
 ogImage: '/wp-content/uploads/2023/04/Make_The_Most_Of_Your_Package_Head.jpeg'
 legacy:
   title: 'Making the most of your homecare package. | The Henley on Broadwater'
@@ -25,30 +34,58 @@ legacy:
     - 'H2 Spend more, get less?'
     - 'H2 Making the most out of what you have'
 ---
-# Making the most of your homecare package.
 
-At The Henley Private Aged Care, we’re thrilled that the government has just announced 10,000 extra high-level Home Care packages and is investing $287 million over the next three years. It’s great news.
+If you have been looking into home care for a parent, or for yourself, you have probably read a lot of pages about Home Care Packages. Most of them are now out of date.
 
-## But what does that mean for you?
+**Home Care Packages ended on 1 November 2025.** The program that replaced them is called Support at Home. If you already had a package you did not lose anything, but almost everything about how the money is described has changed, and it is worth understanding before you spend any of it.
 
-Depending on where you live, and who provides your home care services and your individual package, and the nature of those services provided can have a significant effect on your budget.
+## What actually changed
 
-## Spend more, get less?
+Under the old scheme there were four package levels. Support at Home has **eight classifications**, plus two separate short pathways — one for restorative care after an illness or a fall, and one for end-of-life care. Each classification carries an annual amount, released as a budget through the year rather than accumulating in a pool.
 
-Usually, home care is charged at 30-minute increments, and that includes travel time, so the greater the distance your provider has to travel, the more of your budget is effectively wasted.
+The bigger change is how services are grouped. Everything you might buy now falls into one of three categories, and they are funded differently:
 
-Tasks that have large amounts of dead time attached to them are also wasteful of your budget. Take a routine task such as doing the washing. Clothes are loaded, and the machine turned on. But unless there’s a range of things to be done in the time it takes for the cycle to finish, there’ll be wastage and when you sit down and calculate the lost time over a year, it can be an awful lot!
+- **Clinical supports** — nursing, wound care, medication management, continence assessment. **The government pays the full cost.** You contribute nothing.
+- **Independence services** — personal care, help with medication, getting to appointments, keeping on top of your own affairs. You contribute a share.
+- **Everyday living services** — cleaning, laundry, shopping, meal preparation. You contribute a larger share.
 
-## Making the most out of what you have
+Your actual contribution rate is set by Services Australia, from your pension status and your income and assets assessment — not by your provider. Two people with the same classification can pay quite different amounts.
 
-At The Henley Private Aged Care, we’ve created an environment that not only provides a new benchmark for comfort and care but is affordable.
+## If you already had a package
 
-Unlike a nursing home, when you come to The Henley Private Aged Care, you won’t forfeit all of your government home care funding, nor will you lose your accrued funds. And it will go further too.
+You were moved across automatically, on **no worse off** arrangements: your contribution terms cannot be worse than they were under your old package, and funds you had accrued came with you. Our fee schedule still lists the four transitioned package levels alongside the eight new classifications for exactly this reason.
 
-As a resident, our care staff are there on-site, all the time to assist you in whichever ways you need, so there’s no travel time to pay for. And doing the smaller tasks is cheaper too – you won’t be paying for any downtime. Social activities are included as part of your weekly fees, so you won’t need to spend any of your home care package on simply enjoying your life. At The Henley Private Aged Care, high quality of life is a given!
+If you have never been assessed, the way in is My Aged Care — an assessment, then a classification. It is not quick, which is worth knowing early.
 
-This all begs the question, what to do with all the savings. Well, that’s entirely down to you. You might want to spend it on areas of care that you might require, a device or an aid that makes like a little easier, or you may be happy to carry on accruing funds for a time when they’re of more use. The point is, at The Henley Private Aged Care, you’ll have that option.
+## Where budgets get wasted
 
-It doesn’t stop there though. We not only have one of the highest staff to resident ratios in the industry, but we have a Registered Nurse (RN) available onsite to provide residents with the care they need at all times as well as care staff. Residents who have previously only been visited once a day at home by care staff find that this round-the-clock access to trained medical staff provides peace of mind.
+This part has not changed at all, and it is still the thing that decides how far your funding goes.
 
-So, if our unique approach to affordability interests you, you want to find out more about our vibrant and comfortable environment or you’re interested in our range of services that includes high-care and palliative, get in touch or watch the videos on our homepage to find out more.
+Home care is billed by time, and time includes getting there. If your provider drives across the city to you, a share of every visit pays for the drive rather than for the care. Tasks with dead time in the middle waste more of it — someone loads the washing machine, and then either waits or leaves and comes back, and both are billed.
+
+Care management takes a set share of your budget as well. Ours is ten per cent, which is the common arrangement; what differs between providers is what you get for it.
+
+## Why it goes further here
+
+At The Henley, the care staff are already in the building.
+
+There is no travel time to pay for, because nobody travels. A ten-minute job is booked as ten minutes rather than as the half-hour that a visit across town has to be. Someone can start the washing, do something else in the same building, and come back — without a second trip appearing on your statement. Over a year the difference is not small.
+
+Social activities are part of the weekly fee for living here, so none of your budget goes on simply having a life. And because there are staff on site through the day and a registered nurse in the building, the help that would otherwise mean an unplanned visit — or an ambulance — is a few minutes away.
+
+What you do with what you save is up to you. Some people buy more of the care they actually want; some buy a piece of equipment that makes a real difference; some let it accrue for a year when they will need it more.
+
+## Worth checking rather than assuming
+
+Two things depend on your own circumstances, and we would rather you checked them than took our word for it:
+
+- **What you will contribute.** That is Services Australia's assessment, not ours.
+- **What happens to your funding if you move into our private aged care household.** The Henley Private Aged Care is a private household, not a government-subsidised residential aged care home, and that distinction is what determines how your Support at Home funding is treated. Ask us, and ask My Aged Care, before you rely on it either way.
+
+The current rates for every service, and the contribution bands for each category, are in our schedule of fees.
+
+[Schedule of Fees (PDF)](/documents/schedule-of-fees.pdf)
+
+For the program itself — assessments, classifications and how contributions are worked out — the authority is [myagedcare.gov.au](https://www.myagedcare.gov.au/) or 1800 200 422.
+
+If you would rather just talk it through with someone who does this every day, [get in touch](/contact/) or read about [support in your own apartment](/supported-living/).

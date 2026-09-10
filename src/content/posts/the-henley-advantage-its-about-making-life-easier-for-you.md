@@ -4,11 +4,11 @@
 # `legacy.title` and `legacy.description` into whatever replaces them. Set
 # `status: reviewed` once a person has been through this file; a re-export
 # then leaves it alone.
-status: 'needs-review'
+status: 'reviewed'
 path: '/the-henley-advantage-its-about-making-life-easier-for-you/'
 type: 'post'
 title: 'The Henley Advantage. It''s about making life easier for you'
-description: null
+description: 'Choice and control, and what they look like in practice — starting from the resident rather than from the roster.'
 date: '2023-07-04'
 ogImage: '/wp-content/uploads/2023/04/connections.jpeg'
 legacy:
@@ -25,7 +25,6 @@ legacy:
     - 'H2 To be the best, we’ve got the best'
     - 'H2 Flexible financial options'
 ---
-# The Henley Advantage. It’s about making life easier for you
 
 The moment you enter The Henley Private Aged Care you can feel the difference. Many things have combined to make us the premier nursing home on the Gold Coast, and we continue in our ongoing efforts to improve things even further.
 

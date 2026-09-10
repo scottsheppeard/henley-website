@@ -4,11 +4,11 @@
 # `legacy.title` and `legacy.description` into whatever replaces them. Set
 # `status: reviewed` once a person has been through this file; a re-export
 # then leaves it alone.
-status: 'needs-review'
+status: 'reviewed'
 path: '/why-retirement-living-is-good-for-you/'
 type: 'post'
 title: 'Why Retirement Living is good for you'
-description: null
+description: 'Eight things modern retirement living gets right — location, peace of mind, facilities, and the friends you have not met yet.'
 date: '2023-05-22'
 ogImage: '/wp-content/uploads/2023/04/good-for-you.jpeg'
 legacy:
@@ -30,7 +30,6 @@ legacy:
     - 'H2 7. On-site care and wellbeing support'
     - 'H2 8. Competitive costs'
 ---
-# Why Retirement Living is good for you
 
 As a growing number of Australians consider their lifestyle options as they mature, many are discovering the benefits of modern retirement living. Here are some of the positives.
 

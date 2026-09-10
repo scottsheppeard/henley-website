@@ -4,11 +4,11 @@
 # `legacy.title` and `legacy.description` into whatever replaces them. Set
 # `status: reviewed` once a person has been through this file; a re-export
 # then leaves it alone.
-status: 'needs-review'
+status: 'reviewed'
 path: '/amazingartists/'
 type: 'post'
 title: 'Our amazing artists'
-description: 'We are so lucky to have such talented residents living at The Henley.Cora is an amazing artist and we organised an exhibition of her Legos work. Cora is pictured here with the piano (which actually works and plays music!)'
+description: 'Cora built a working Lego grand piano — and then a typewriter, the Taj Mahal and Big Ben. So we put on an exhibition.'
 date: '2023-05-30'
 ogImage: '/wp-content/uploads/2023/05/Image-1024x768.jpeg'
 legacy:
@@ -30,20 +30,8 @@ legacy:
   outline:
     - 'H1 Our amazing artists'
 ---
-# Our amazing artists
 
 We are so lucky to have such talented residents living at The Henley.
 
 Cora is an amazing artist and we organised an exhibition of her Legos work. Cora is pictured here with the piano (which actually works and plays music!)
 
-![](/wp-content/uploads/2023/05/Image-1-225x300.jpeg)
-
-![](/wp-content/uploads/2023/05/Image-4-300x225.jpeg)
-
-![](/wp-content/uploads/2023/05/Image-5-300x225.jpeg)
-
-![](/wp-content/uploads/2023/05/Image-6-300x225.jpeg)
-
-![](data:image/svg+xml,%3Csvg%20xmlns='http://www.w3.org/2000/svg'%20viewBox='0%200%20300%20225'%3E%3C/svg%3E)
-
-![](data:image/svg+xml,%3Csvg%20xmlns='http://www.w3.org/2000/svg'%20viewBox='0%200%20225%20300'%3E%3C/svg%3E)

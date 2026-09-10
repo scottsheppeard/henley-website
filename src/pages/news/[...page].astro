@@ -1,0 +1,241 @@
+---
+/**
+ * The news index, at /news/ and /news/page/2/.
+ *
+ * Ten to a page, which is what WordPress served and what the manifest records:
+ * fifteen articles make exactly two pages, and /news/page/3/ has to 404 because
+ * it did before. Both live URLs are preserved rather than page 2 being folded
+ * into page 1 — it is indexed and it self-canonicalises.
+ *
+ * A rest parameter rather than Astro's paginate(), because paginate() numbers
+ * pages /news/2/ and the address here is /news/page/2/. The parameter is
+ * undefined for the first page and the literal 'page/2' for the second.
+ *
+ * No cards. The site tells sections apart by the ground they sit on, and a grid
+ * of bordered, shadowed boxes would be the one place it suddenly did not — so
+ * an entry is a photograph, a date, a title and a sentence, separated by space.
+ * The whole title is the link: "Read more" gives a screen-reader user a list of
+ * identical links and gives everyone else a smaller thing to hit.
+ */
+import type { GetStaticPaths } from 'astro';
+import { getCollection } from 'astro:content';
+import { Image } from 'astro:assets';
+
+import Base from '../../layouts/Base.astro';
+import PageHeader from '../../components/PageHeader.astro';
+import { POST_IMAGES } from '../../post-images.ts';
+import { PHONE, PHONE_HREF } from '../../site.ts';
+
+export const getStaticPaths = (async () => {
+  // Inside getStaticPaths, not beside it: Astro extracts this function into its
+  // own module to run it at build time, so anything declared in the component's
+  // frontmatter scope is undefined here. The failure is a build-time
+  // "PER_PAGE is not defined", not a type error.
+  const PER_PAGE = 10;
+
+  const posts = (await getCollection('posts')).sort(
+    (a, b) => b.data.date.getTime() - a.data.date.getTime(),
+  );
+
+  const total = Math.max(1, Math.ceil(posts.length / PER_PAGE));
+
+  return Array.from({ length: total }, (_, index) => {
+    const number = index + 1;
+    return {
+      params: { page: number === 1 ? undefined : `page/${number}` },
+      props: {
+        posts: posts.slice(index * PER_PAGE, (index + 1) * PER_PAGE),
+        current: number,
+        total,
+      },
+    };
+  });
+}) satisfies GetStaticPaths;
+
+const { posts, current, total } = Astro.props;
+
+const href = (n: number) => (n === 1 ? '/news/' : `/news/page/${n}/`);
+
+const formatter = new Intl.DateTimeFormat('en-AU', {
+  day: 'numeric',
+  month: 'long',
+  year: 'numeric',
+});
+---
+
+<Base
+  title={current === 1 ? 'News | The Henley on Broadwater' : `News, page ${current} | The Henley on Broadwater`}
+  description="Life at The Henley on Broadwater, and guides to retirement living, aged care and downsizing on the Gold Coast."
+>
+  <PageHeader
+    heading="News"
+    standfirst="What happens here, and what we have learnt worth passing on about retirement living, care and moving house."
+  />
+
+  <section class="band">
+    <div class="wrap">
+      {current > 1 && <p class="page-note">Page {current} of {total}</p>}
+
+      <ul class="index">
+        {
+          posts.map((post) => {
+            const entry = POST_IMAGES[post.id];
+            if (!entry) {
+              throw new Error(`No entry in src/post-images.ts for the post "${post.id}".`);
+            }
+            const { header } = entry;
+            return (
+              <li class="entry">
+                <a class="entry__link" href={post.data.path}>
+                  <Image
+                    src={header.image}
+                    alt=""
+                    widths={[400, 600, 800]}
+                    sizes="(max-width: 56rem) 100vw, 33rem"
+                    format="avif"
+                    loading="lazy"
+                  />
+                  <h2>{post.data.title}</h2>
+                </a>
+                <p class="entry__date">
+                  <time datetime={post.data.date.toISOString().slice(0, 10)}>
+                    {formatter.format(post.data.date)}
+                  </time>
+                </p>
+                <p class="entry__extract">{post.data.description}</p>
+              </li>
+            );
+          })
+        }
+      </ul>
+
+      {
+        total > 1 && (
+          <nav class="pager" aria-label="News pages">
+            {current > 1 && (
+              <a class="button button--quiet pager__newer" href={href(current - 1)}>
+                Newer articles
+              </a>
+            )}
+            {current < total && (
+              <a class="button button--quiet pager__older" href={href(current + 1)}>
+                Older articles
+              </a>
+            )}
+          </nav>
+        )
+      }
+    </div>
+  </section>
+
+  <section class="band band--deep on-deep" aria-labelledby="visit">
+    <div class="wrap">
+      <h2 id="visit">Come and see it</h2>
+      <p class="closing">
+        The articles are the easy part. An hour here tells you more than all of them.
+      </p>
+      <div class="actions">
+        <a class="button" href="/contact/">Book a visit</a>
+        <a class="button button--quiet" href={PHONE_HREF}>Call {PHONE}</a>
+      </div>
+    </div>
+  </section>
+</Base>
+
+<style>
+  .page-note {
+    font: var(--type-body-md);
+    color: var(--color-on-surface-secondary);
+    margin-block-end: var(--space-xl);
+  }
+
+  .index {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: var(--space-3xl) var(--space-2xl);
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    max-width: none;
+  }
+
+  .entry {
+    margin: 0;
+  }
+
+  /* The photograph and the heading are one link, so the target is large and a
+     screen reader announces the article title once rather than twice. The image
+     is alt="" because the heading beside it is the accessible name. */
+  .entry__link {
+    display: block;
+    text-decoration: none;
+  }
+
+  .entry__link :global(img) {
+    width: 100%;
+    aspect-ratio: 3 / 2;
+    object-fit: cover;
+    border-radius: var(--radius-lg);
+    margin-block-end: var(--space-md);
+  }
+
+  .entry__link h2 {
+    font: var(--type-title-lg);
+    letter-spacing: var(--type-title-lg-letter-spacing);
+    margin-block-end: var(--space-2xs);
+  }
+
+  .entry__link:hover h2 {
+    text-decoration: underline;
+    text-underline-offset: 0.15em;
+  }
+
+  .entry__date {
+    font: var(--type-body-sm);
+    color: var(--color-on-surface-secondary);
+    margin-block-end: var(--space-xs);
+  }
+
+  .entry__extract {
+    margin: 0;
+  }
+
+  .pager {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-md);
+    margin-block-start: var(--space-4xl);
+    padding-block-start: var(--space-xl);
+    border-block-start: 1px solid var(--color-border-subtle);
+  }
+
+  /* Each control keeps its own end of the row whether or not the other is
+     there: forward is always on the right, back is always on the left, so the
+     pair does not jump sides between page one and the last page. */
+  .pager__older {
+    margin-inline-start: auto;
+  }
+
+  .closing {
+    font: var(--type-body-lg);
+    color: var(--color-warm-sand);
+    max-width: 54ch;
+  }
+
+  @media (max-width: 56rem) {
+    .index {
+      grid-template-columns: 1fr;
+      gap: var(--space-2xl);
+    }
+  }
+
+  @media (max-width: 30rem) {
+    .pager {
+      flex-direction: column;
+    }
+
+    .pager .button {
+      width: 100%;
+    }
+  }
+</style>

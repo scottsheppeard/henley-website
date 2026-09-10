@@ -4,11 +4,11 @@
 # `legacy.title` and `legacy.description` into whatever replaces them. Set
 # `status: reviewed` once a person has been through this file; a re-export
 # then leaves it alone.
-status: 'needs-review'
+status: 'reviewed'
 path: '/retirement-living-how-to-make-the-connections-that-count/'
 type: 'post'
 title: 'Retirement living – how to make the connections that count'
-description: null
+description: 'The worry nobody says out loud when they downsize: will I know anyone? On making friends again in your seventies and eighties.'
 date: '2023-05-29'
 ogImage: '/wp-content/uploads/2023/04/connections.jpeg'
 legacy:
@@ -26,7 +26,6 @@ legacy:
     - 'H2 Stay connected to the local community'
     - 'H2 Be positive'
 ---
-# Retirement living – how to make the connections that count
 
 Many people quite rightly pride themselves on having a wide social circle. Getting together with friends for dinners and debates. Embracing family members on special occasions. Joining peers for an important function.
 

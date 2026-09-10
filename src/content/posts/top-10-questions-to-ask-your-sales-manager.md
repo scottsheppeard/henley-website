@@ -4,11 +4,11 @@
 # `legacy.title` and `legacy.description` into whatever replaces them. Set
 # `status: reviewed` once a person has been through this file; a re-export
 # then leaves it alone.
-status: 'needs-review'
+status: 'reviewed'
 path: '/top-10-questions-to-ask-your-sales-manager/'
 type: 'post'
 title: 'Top 10 Questions to ask your Sales Manager'
-description: null
+description: 'The ten questions worth asking before you sign anything at a retirement village — including the ones about leaving.'
 date: '2023-07-04'
 ogImage: '/wp-content/uploads/2023/04/Scroll-Group-8@2x.jpg'
 legacy:
@@ -32,7 +32,6 @@ legacy:
     - 'H2 9. How much does this all cost?'
     - 'H2 10. Can I sell my retirement living unit?'
 ---
-# Top 10 Questions to ask your Sales Manager
 
 So you’ve found a unit in a retirement living complex that you love? Great!
 

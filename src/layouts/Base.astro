@@ -80,6 +80,14 @@ const organisation = {
 
     <meta name="theme-color" content="#083B4A" />
     <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+    {/* The old site advertised the feed on every page; readers discovered it
+        that way and still do. */}
+    <link
+      rel="alternate"
+      type="application/rss+xml"
+      title="The Henley on Broadwater"
+      href="/feed/"
+    />
 
     <script is:inline type="application/ld+json" set:html={JSON.stringify(organisation)} />
 

@@ -4,11 +4,11 @@
 # `legacy.title` and `legacy.description` into whatever replaces them. Set
 # `status: reviewed` once a person has been through this file; a re-export
 # then leaves it alone.
-status: 'needs-review'
+status: 'reviewed'
 path: '/whatever-care-you-need-we-can-provide-it/'
 type: 'post'
 title: 'Whatever care you need. We can provide it.'
-description: null
+description: 'High care, dementia care and palliative care in a twenty-one-suite household, built around what each resident needs.'
 date: '2023-05-29'
 ogImage: '/wp-content/uploads/2023/04/Tailored-high-care-palliative-dementia_head.jpeg'
 legacy:
@@ -24,7 +24,6 @@ legacy:
     - 'H2 Tailored Care. Providing personalised and individual care for those with particular needs'
     - 'H2 The best in care, the best in finance options'
 ---
-# Whatever care you need. We can provide it.
 
 In aged care, as in life generally, there is no ‘one size fits all’ solution. At The Henley Private Aged Care, we’ve gone to great lengths to provide a level of comfort and a luxury environment for our residents that allows them to choose how they live their lives and maintain control as they would do at home.
 
@@ -40,7 +39,7 @@ So, how do we do it?
 
 At The Henley Private Aged Care, we have one of the highest staff to resident ratios in the industry. There’s always a minimum of one registered nurse and one personal carer (AIN) at all times.
 
-As there are only 12 suites, our staff have the time to spend with each resident, getting to know them, understanding their particular needs and proving the appropriate levels of care as required.
+As there are only 21 suites, our staff have the time to spend with each resident, getting to know them, understanding their particular needs and proving the appropriate levels of care as required.
 
 Individual and personal care services are provided and managed by Luminise Care Solutions, experienced nurses who are leaders in the aged care industry. All Luminise staff have had double the amount of training in a broad range of areas including high, dementia and palliative care.
 

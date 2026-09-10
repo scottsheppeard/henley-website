@@ -4,11 +4,11 @@
 # `legacy.title` and `legacy.description` into whatever replaces them. Set
 # `status: reviewed` once a person has been through this file; a re-export
 # then leaves it alone.
-status: 'needs-review'
+status: 'reviewed'
 path: '/art_classes/'
 type: 'post'
 title: 'Art classes at The Henley'
-description: 'On Fridays, we get our creative juices flowing with art classes! We have a dedicated art teacher that shows us different techniques and styles. We can''t wait to showcase some of the masterpieces. We have some very talented residents amongst us!'
+description: 'Friday mornings in the lounge with an art teacher, and a roomful of residents who turn out to be rather good at this.'
 date: '2023-05-29'
 ogImage: '/wp-content/uploads/2023/05/IMG_0294-scaled.jpg'
 legacy:
@@ -26,14 +26,7 @@ legacy:
   outline:
     - 'H1 Art classes at The Henley'
 ---
-# Art classes at The Henley
 
 On Fridays, we get our creative juices flowing with art classes!
 
 We have a dedicated art teacher that shows us different techniques and styles. We can’t wait to showcase some of the masterpieces. We have some very talented residents amongst us!
-
-![](data:image/svg+xml,%3Csvg%20xmlns='http://www.w3.org/2000/svg'%20viewBox='0%200%20300%20225'%3E%3C/svg%3E)
-
-![](data:image/svg+xml,%3Csvg%20xmlns='http://www.w3.org/2000/svg'%20viewBox='0%200%20225%20300'%3E%3C/svg%3E)
-
-![](data:image/svg+xml,%3Csvg%20xmlns='http://www.w3.org/2000/svg'%20viewBox='0%200%20300%20225'%3E%3C/svg%3E)

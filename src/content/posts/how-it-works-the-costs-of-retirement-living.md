@@ -4,11 +4,11 @@
 # `legacy.title` and `legacy.description` into whatever replaces them. Set
 # `status: reviewed` once a person has been through this file; a re-export
 # then leaves it alone.
-status: 'needs-review'
+status: 'reviewed'
 path: '/how-it-works-the-costs-of-retirement-living/'
 type: 'post'
 title: 'How it works – the costs of retirement living'
-description: null
+description: 'Entry payments, ongoing fees and what happens when you leave: a plain guide to how retirement living is actually paid for.'
 date: '2023-07-04'
 ogImage: '/wp-content/uploads/2023/04/home2.jpeg'
 legacy:
@@ -31,7 +31,6 @@ legacy:
     - 'H3 Retirement living can be cheaper than living at home'
     - 'H3 Always get professional advice'
 ---
-# How it works – the costs of retirement living
 
 ## A simple guide to the costs of retirement living
 

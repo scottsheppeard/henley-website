@@ -4,11 +4,11 @@
 # `legacy.title` and `legacy.description` into whatever replaces them. Set
 # `status: reviewed` once a person has been through this file; a re-export
 # then leaves it alone.
-status: 'needs-review'
+status: 'reviewed'
 path: '/dietician/'
 type: 'post'
 title: 'We care about health at The Henley'
-description: 'Our lovely dietitian Jessica came to our healthy morning tea with nutritional information adding to our healthy Henley lifestyle. It is so important to understand what makes and keeps us healthy!'
+description: 'Jessica, our dietitian, came to the healthy morning tea to talk about what actually keeps you well.'
 date: '2023-05-30'
 ogImage: '/wp-content/uploads/2023/05/Dietician-2.jpg'
 legacy:
@@ -26,12 +26,5 @@ legacy:
   outline:
     - 'H1 We care about health at The Henley'
 ---
-# We care about health at The Henley
 
 Our lovely dietitian Jessica came to our healthy morning tea with nutritional information adding to our healthy Henley lifestyle. It is so important to understand what makes and keeps us healthy!
-
-![](data:image/svg+xml,%3Csvg%20xmlns='http://www.w3.org/2000/svg'%20viewBox='0%200%20225%20300'%3E%3C/svg%3E)
-
-![](data:image/svg+xml,%3Csvg%20xmlns='http://www.w3.org/2000/svg'%20viewBox='0%200%20300%20225'%3E%3C/svg%3E)
-
-![](data:image/svg+xml,%3Csvg%20xmlns='http://www.w3.org/2000/svg'%20viewBox='0%200%20300%20225'%3E%3C/svg%3E)

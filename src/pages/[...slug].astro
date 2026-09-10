@@ -1,0 +1,271 @@
+---
+/**
+ * An article.
+ *
+ * At the flat URL WordPress served it from — /art_classes/, not
+ * /news/art_classes/. Every one of these is in the migration manifest, half of
+ * them have a /?p=<id> shortlink redirecting to them, and they are what the
+ * site's inbound search traffic actually lands on. Moving them under /news/
+ * would be a redirect for every article and a rankings reset for no gain.
+ *
+ * This is a rest route at the root, so it is the lowest-priority match in the
+ * whole site: every real page beats it, and it only ever builds the paths
+ * getStaticPaths returns.
+ *
+ * `Article` structured data rather than `BlogPosting`: these are not a blog,
+ * they are a mix of resident news and evergreen guides, and Article is the type
+ * both read as.
+ */
+import type { GetStaticPaths } from 'astro';
+import { getCollection, render } from 'astro:content';
+import { Image } from 'astro:assets';
+
+import Base from '../layouts/Base.astro';
+import Gallery from '../components/Gallery.astro';
+import { POST_IMAGES } from '../post-images.ts';
+import { PHONE, PHONE_HREF } from '../site.ts';
+
+export const getStaticPaths = (async () => {
+  const posts = await getCollection('posts');
+
+  // Newest first, which is the order the index shows and the order "older" and
+  // "newer" at the foot of an article have to agree with.
+  const ordered = posts.sort((a, b) => b.data.date.getTime() - a.data.date.getTime());
+
+  return ordered.map((post, index) => ({
+    // `path` is '/art_classes/'; the rest param is the bit in between.
+    params: { slug: post.data.path.replace(/^\/|\/$/g, '') },
+    props: {
+      post,
+      newer: index > 0 ? ordered[index - 1] : undefined,
+      older: index < ordered.length - 1 ? ordered[index + 1] : undefined,
+    },
+  }));
+}) satisfies GetStaticPaths;
+
+const { post, newer, older } = Astro.props;
+const { Content } = await render(post);
+
+const images = POST_IMAGES[post.id];
+if (!images) {
+  // A post without a photograph would publish a hole in the index rather than
+  // fail, and nobody would see it for a month. Fail the build instead.
+  throw new Error(
+    `No entry in src/post-images.ts for the post "${post.id}". Add one, with alt text.`,
+  );
+}
+const { header, gallery } = images;
+
+const published = post.data.date;
+const readable = published.toLocaleDateString('en-AU', {
+  day: 'numeric',
+  month: 'long',
+  year: 'numeric',
+});
+
+const article = {
+  '@context': 'https://schema.org',
+  '@type': 'Article',
+  headline: post.data.title,
+  description: post.data.description,
+  datePublished: published.toISOString().slice(0, 10),
+  image: new URL(header.image.src, Astro.site).href,
+  mainEntityOfPage: new URL(Astro.url.pathname, Astro.site).href,
+  author: { '@type': 'Organization', name: 'The Henley on Broadwater' },
+  publisher: { '@type': 'Organization', name: 'The Henley on Broadwater' },
+};
+---
+
+<Base title={`${post.data.title} | The Henley on Broadwater`} description={post.data.description} ogImage={header.image.src}>
+  <script is:inline type="application/ld+json" slot="head" set:html={JSON.stringify(article)} />
+
+  <article>
+    <header class="article-head on-deep">
+      <div class="wrap wrap--narrow">
+        <p class="article-head__back"><a href="/news/">News</a></p>
+        <h1>{post.data.title}</h1>
+        <p class="article-head__date">
+          <time datetime={published.toISOString().slice(0, 10)}>{readable}</time>
+        </p>
+      </div>
+    </header>
+
+    <div class="band article-body">
+      <div class="wrap">
+        <figure class="article-figure">
+          <Image
+            src={header.image}
+            alt={header.alt}
+            widths={[640, 960, 1200]}
+            sizes="(max-width: 68rem) 100vw, 68rem"
+            format="avif"
+            loading="eager"
+          />
+          <figcaption>{header.caption}</figcaption>
+        </figure>
+      </div>
+
+      <div class="wrap wrap--narrow prose">
+        <Content />
+      </div>
+    </div>
+
+    {gallery && <Gallery photos={gallery} ground="linen" />}
+
+    <nav class="band band--linen article-nav" aria-label="More articles">
+      <div class="wrap">
+        <ul>
+          {
+            newer && (
+              <li class="article-nav__newer">
+                <span>Newer</span>
+                <a href={newer.data.path}>{newer.data.title}</a>
+              </li>
+            )
+          }
+          {
+            older && (
+              <li class="article-nav__older">
+                <span>Older</span>
+                <a href={older.data.path}>{older.data.title}</a>
+              </li>
+            )
+          }
+        </ul>
+        <p class="article-nav__all"><a href="/news/">All news</a></p>
+      </div>
+    </nav>
+  </article>
+
+  <section class="band band--deep on-deep" aria-labelledby="visit">
+    <div class="wrap">
+      <h2 id="visit">Come and see it</h2>
+      <p class="closing">
+        Photographs and articles only go so far. Most people decide after an hour here.
+      </p>
+      <div class="actions">
+        <a class="button" href="/contact/">Book a visit</a>
+        <a class="button button--quiet" href={PHONE_HREF}>Call {PHONE}</a>
+      </div>
+    </div>
+  </section>
+</Base>
+
+<style>
+  .article-head {
+    background: var(--color-broadwater-deep);
+    color: var(--color-linen);
+    padding-block: var(--space-2xl) calc(var(--space-2xl) + var(--radius-xl));
+  }
+
+  .article-head :global(h1) {
+    color: var(--color-paper);
+    font: var(--type-headline-lg);
+    letter-spacing: var(--type-headline-lg-letter-spacing);
+    margin-block-end: var(--space-sm);
+  }
+
+  .article-head__back {
+    font: var(--type-body-md);
+    margin-block-end: var(--space-md);
+  }
+
+  .article-head__date {
+    font: var(--type-body-md);
+    color: var(--color-warm-sand);
+    margin: 0;
+  }
+
+  /* The article head is a deep band, so the body gets the hero's handover. */
+  .article-body {
+    position: relative;
+    margin-block-start: calc(-1 * var(--radius-xl));
+    border-radius: var(--radius-xl) var(--radius-xl) 0 0;
+    background: var(--page-bg);
+  }
+
+  .article-figure {
+    margin: 0 0 var(--space-2xl);
+  }
+
+  .article-figure :global(img) {
+    width: 100%;
+    aspect-ratio: 16 / 9;
+    object-fit: cover;
+    border-radius: var(--radius-lg);
+  }
+
+  .article-figure figcaption {
+    font: var(--type-body-sm);
+    color: var(--color-on-surface-secondary);
+    padding-block-start: var(--space-sm);
+  }
+
+  /* Two destinations, each a whole title rather than an arrow and a word —
+     "Next ›" tells a reader nothing about whether they want to go there. */
+  .article-nav ul {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: var(--space-2xl);
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    max-width: none;
+  }
+
+  .article-nav li {
+    margin: 0;
+  }
+
+  .article-nav__older {
+    text-align: right;
+  }
+
+  /* When there is only one neighbour, it keeps its own side of the row. */
+  .article-nav__older:only-child {
+    grid-column: 2;
+  }
+
+  .article-nav span {
+    display: block;
+    font: var(--type-label-md);
+    color: var(--color-on-surface-secondary);
+    margin-block-end: var(--space-2xs);
+  }
+
+  .article-nav a {
+    font: var(--type-title-md);
+    letter-spacing: var(--type-title-md-letter-spacing);
+    text-decoration: none;
+  }
+
+  .article-nav a:hover {
+    text-decoration: underline;
+    text-underline-offset: 0.15em;
+  }
+
+  .article-nav__all {
+    margin-block: var(--space-2xl) 0;
+    padding-block-start: var(--space-lg);
+    border-block-start: 1px solid var(--color-border-emphasis);
+  }
+
+  .closing {
+    font: var(--type-body-lg);
+    color: var(--color-warm-sand);
+    max-width: 54ch;
+  }
+
+  @media (max-width: 48rem) {
+    .article-nav ul {
+      grid-template-columns: 1fr;
+      gap: var(--space-xl);
+    }
+
+    .article-nav__older,
+    .article-nav__older:only-child {
+      grid-column: 1;
+      text-align: left;
+    }
+  }
+</style>

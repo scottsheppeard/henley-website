@@ -4,11 +4,11 @@
 # `legacy.title` and `legacy.description` into whatever replaces them. Set
 # `status: reviewed` once a person has been through this file; a re-export
 # then leaves it alone.
-status: 'needs-review'
+status: 'reviewed'
 path: '/why-health-is-the-best-gift-you-can-give-yourself/'
 type: 'post'
 title: 'Why health is the best gift you can give yourself'
-description: null
+description: 'A 79-year-old who never seems to age, and the handful of ordinary habits behind it.'
 date: '2023-05-22'
 ogImage: '/wp-content/uploads/2023/04/health2.jpeg'
 legacy:
@@ -26,7 +26,6 @@ legacy:
     - 'H2 Her appearance is important'
     - 'H2 She is always ready to socialise'
 ---
-# Why health is the best gift you can give yourself
 
 One of the most amazing people I know is 79 years of age. There are many reasons why she is remarkable, but her glowing health is perhaps the most obvious.
 

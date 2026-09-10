@@ -4,11 +4,11 @@
 # `legacy.title` and `legacy.description` into whatever replaces them. Set
 # `status: reviewed` once a person has been through this file; a re-export
 # then leaves it alone.
-status: 'needs-review'
+status: 'reviewed'
 path: '/the-henley-private-aged-care-its-our-approach-that-sets-us-apart/'
 type: 'post'
 title: 'The Henley Private Aged Care – It’s our approach that sets us apart'
-description: null
+description: 'Twenty-one suites on a single floor, no set bed or mealtimes, and staff who are there for more than the care task.'
 date: '2023-05-22'
 ogImage: '/wp-content/uploads/2023/04/What-sets-us-apart-head.jpeg'
 legacy:
@@ -25,11 +25,10 @@ legacy:
     - 'H2 Restaurant quality food, where and when you want it'
     - 'H2 Affordable and accessible'
 ---
-# The Henley Private Aged Care – It’s our approach that sets us apart
 
 The Henley on Broadwater is the Gold Coast’s premier retirement living resort, located in a luxury tower block with stunning views of the Gold Coast, Broadwater and the Ocean. But it’s what’s situated within The Henley on Broadwater that is attracting attention and redefining aged care in Australia.Aged Care as a philosophy, not just a service
 
-The Henley Private Aged Care takes up an entire floor and of its own, and the moment you step out of the lift you know immediately, it’s different. It’s comfortable. No expense has been spared or corners cut in delivering a comfortable environment that immediately feels like a home away from home. There are only 12 suites, each with a self-contained kitchen and seating space for residents to entertain guests and family privately or just enjoy their own company. There’s also a lounge where Residents can mingle and a dedicated dining area where they can chat over a shared meal.
+The Henley Private Aged Care takes up an entire floor and of its own, and the moment you step out of the lift you know immediately, it’s different. It’s comfortable. No expense has been spared or corners cut in delivering a comfortable environment that immediately feels like a home away from home. There are only 21 suites, each with a self-contained kitchen and seating space for residents to entertain guests and family privately or just enjoy their own company. There’s also a lounge where Residents can mingle and a dedicated dining area where they can chat over a shared meal.
 
 All care at The Henley Private Aged Care follows the guiding principle of ‘Choice and Control’ that means that the Resident always decides how they live their own lives. There’s no set bed or mealtime – life carries on just as it did in their old home, but with the peace-of-mind of know they’re going to be looked after should the need arise.
 

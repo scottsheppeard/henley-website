@@ -4,11 +4,11 @@
 # `legacy.title` and `legacy.description` into whatever replaces them. Set
 # `status: reviewed` once a person has been through this file; a re-export
 # then leaves it alone.
-status: 'needs-review'
+status: 'reviewed'
 path: '/internationalwomensday/'
 type: 'post'
 title: 'International Women''s Day 2023'
-description: 'On International Women''s Day, our residents celebrated with a fabulous High Tea in the bistro.'
+description: 'The residents marked International Women’s Day with a high tea in the bistro.'
 date: '2023-05-29'
 ogImage: '/wp-content/uploads/2023/05/High-tea-3-scaled.jpg'
 legacy:
@@ -27,12 +27,6 @@ legacy:
   outline:
     - 'H1 International Women’s Day 2023'
 ---
-# International Women’s Day 2023
-
-![](/wp-content/uploads/2023/05/High-Tea-4.jpg)
 
 On International Women’s Day, the residents celebrated with a fabulous High Tea in The Henley Bistro. It always so wonderful to see our residents not only getting together, but celebrating occasions all within their own community.
 
-![](/wp-content/uploads/2023/05/High-Tea-1.jpg)
-
-![](/wp-content/uploads/2023/05/High-tea-3-300x225.jpg)

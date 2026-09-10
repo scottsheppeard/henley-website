@@ -4,11 +4,11 @@
 # `legacy.title` and `legacy.description` into whatever replaces them. Set
 # `status: reviewed` once a person has been through this file; a re-export
 # then leaves it alone.
-status: 'needs-review'
+status: 'reviewed'
 path: '/the-upside-of-downsizing-and-5-tips-to-make-the-move-easier-for-retirees/'
 type: 'post'
 title: 'The upside of downsizing... and 5 tips to make the move easier for retirees'
-description: null
+description: 'Five practical things that make leaving the family home easier, starting with the conversation you have with your children.'
 date: '2023-05-22'
 ogImage: '/wp-content/uploads/2023/04/img-living.jpeg'
 legacy:
@@ -27,7 +27,6 @@ legacy:
     - 'H2 4. Seek professional advice'
     - 'H2 5. Get involved in your new community'
 ---
-# The upside of downsizing… and 5 tips to make the move easier for retirees
 
 Fabulous new retirement resorts have made downsizing something to cherish, rather than dread, for many retirees.
 
