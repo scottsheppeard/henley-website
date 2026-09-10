@@ -52,7 +52,7 @@ P1 means resolve before production cutover and prioritise for any exposed receiv
 |---|---|---|---|---|
 | R01 | P1 | Escape error-page content | HTML-injection regression tests and rendered response check | Pending |
 | R02 | P1 | Make proxy trust consistent | Tests with runtime middleware plus container/proxy verification | Pending |
-| R03 | P1 | Preserve final WordPress enquiries through cutover | Corrected runbook and demonstrated final-enquiry reconciliation | Pending |
+| R03 | P1 | Preserve final WordPress enquiries through cutover | Corrected runbook and demonstrated final-enquiry reconciliation | Implemented; rehearsal pending |
 | R04 | P2 | Remove clock-dependent silent enquiry loss | Skewed-clock and no-JavaScript submissions are stored | Pending |
 | R05 | P2 | Restore and centralise the maintenance form URL | Both resident entry points reach the correct form | Pending |
 | R06 | P2 | Enforce the body limit on received bytes | Oversized streamed requests return 413 before parsing | Pending |
@@ -336,7 +336,7 @@ Record completion evidence in this table when implementation starts. Use test re
 
 | Slice / IDs | Commit(s) | Local checks | Nonprod / rehearsal evidence | Remaining work |
 |---|---|---|---|---|
-| A / R03 | — | — | — | Not started |
+| A / R03 | (slice A) | Reader inspected in henley-utils; `/webhooks/health` probe verified 200 against production 2026-09-10 | — | Drain rehearsal on nonprod (needs a WordPress-side synthetic enquiry and a `DRY_RUN` nightly run) |
 | B / receiver | — | — | — | Not started |
 | C / visitor journeys | — | — | — | Not started |
 | D / R09 | — | — | — | Not started |
