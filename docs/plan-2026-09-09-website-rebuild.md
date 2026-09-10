@@ -2,6 +2,11 @@
 
 Repo: `/mnt/persistent/dev/henley-website` (remote `scottsheppeard/henley-website`). Date: 2026-09-09.
 
+**Follow-up, 2026-09-10:** The [review remediation plan](plan-2026-09-10-review-remediation.md)
+records the findings from reviewing the built design sample, with implementation
+steps and acceptance checks for a later session. That remediation has not started;
+this document remains the overall rebuild plan.
+
 ## Changes from Codex review (one pass, all eight findings verified against the code)
 
 1. **Intake IDs**: table is `id INTEGER PRIMARY KEY AUTOINCREMENT`, `sqlite_sequence` seeded to 99999, test asserts first row is 100000. (Plain `INTEGER PRIMARY KEY` ignores `sqlite_sequence`.)
