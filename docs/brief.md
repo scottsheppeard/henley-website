@@ -135,7 +135,7 @@ resolving, but the content needs a decision.
 | `/private-aged-care/` | Rewrite | The other path's landing page. Its 8-question FAQ stays; the funding paragraph must be corrected (see below). |
 | `/supported-living/` | Rewrite | Edited July 2026, so the copy is current; restyle and tighten. |
 | `/location/` | Rewrite | Show the location properly rather than asserting it. |
-| `/the-henley-health-club/`, `/dining/` | Rewrite | Short amenity pages; candidates to fold into the apartment-living path if the GM prefers fewer, stronger pages. *Decision.* |
+| `/the-henley-health-club/`, `/dining/` | Rewrite | **Decided 2026-09-10 (Scott): both stay as pages.** Both URLs are indexed and footer-linked; folding later is a redirect, unfolding is a rebuild. Built. |
 | `/news/`, `/news/page/2/` | Keep | Both are live and indexed. Keep page 2 real or redirect it deliberately. |
 | `/contact/` | Rewrite | Details, the enquiry form, and a fast exit for existing residents. |
 | `/thank-you/` | Keep | URL retained: analytics and the Ads setup depend on it. |
@@ -147,13 +147,16 @@ resolving, but the content needs a decision.
 | Group | Disposition | Note |
 |---|---|---|
 | Nine evergreen articles (2023) | Keep, light edit | Australian spelling, brand vocabulary, honest dates. |
-| `making-the-most-of-your-homecare-package` | **Rewrite or archive** | It describes the Home Care Packages Program as current. Support at Home replaced HCP on 1 November 2025. Republishing it as current guidance would be wrong, and it is one of the pages an adult child is most likely to land on. *Decision needed before launch.* |
+| `making-the-most-of-your-homecare-package` | **Rewritten** | **Decided 2026-09-10 (Scott): rewrite for Support at Home**, not archive. Done. Grounded in Henley Care's Schedule of Fees (1 July 2026), which is already written in Support at Home terms — eight classifications, three service categories, the transitioned HCP levels. No dollar figures are repeated in the article; the schedule is what gets revised. Dated 2026-09-10, not 2023. |
 | Five 2023 resident-life posts | Keep with honest dates | *Decision (GM):* keep, refresh or retire. They date the site, but they are the only real evidence of resident life it has. |
 
 ## Claims confirmed by the business
 
 - **Twenty-one private aged care suites**, not twelve — sales team, 2026-09-10.
 - **Apartments are for people over 70**, not over 65 — sales team, 2026-09-10.
+- **The ground floor is being refurbished** and the Hub is the temporary room
+  running in the bistro's place — Scott, 2026-09-10. `/dining/` says so
+  plainly, and publishes no reopening date because none has been given.
 
 Both were wrong on the live WordPress site and are therefore wrong in every
 captured page and post under `src/content`. The built pages carry the correct
@@ -171,7 +174,25 @@ Nothing below ships until someone with authority signs it off:
 - The testimonials ("Phil & Jill"), which need current permission to publish.
 - Home Care Package funding language, per the Support at Home change above.
 - Stock photography licences (`iStock`, `AdobeStock`, `shutterstock`) and
-  resident photo permissions. Renovation renders must be labelled as renders.
+  resident photo permissions. Renovation renders must be labelled as renders —
+  **done**: every render on `/dining/` carries a badge on the image and the
+  page names the concept report and its revision date.
+- **The superlatives in the 2023 posts.** "The premier nursing home on the
+  Gold Coast", "the Gold Coast's premier retirement living resort" and "a level
+  of care that surpasses that provided by other providers" are the same class of
+  claim as "highest benchmarks in Australia" above, and they are published
+  wording, not new. They were left as they stand because the page matrix says
+  keep-with-light-edit; removing them is a content decision. Worth taking with
+  the rest of this list.
+- **Two claims first published by the rebuild**, both from the business's own
+  current material but neither confirmed by a person: that the health club's
+  resistance machines are air-pressure rather than weight stacks
+  (`/the-henley-health-club/`, from the 2021 gym shoot in
+  `assets/sharepoint/health-club/`), and that Support at Home funding is
+  treated differently at The Henley Private Aged Care because it is a private
+  household rather than a subsidised residential home (the Support at Home
+  article, which asks the reader to check with us and with My Aged Care rather
+  than asserting it).
 
 ## Questions the design sample must answer
 

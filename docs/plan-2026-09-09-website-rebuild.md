@@ -127,6 +127,40 @@ deliberately not, because it is the record of what the old site published.
 
 Remaining service pages, legal pages, news index with `/news/page/2/` kept as a real second page, 15 posts with prev/next, documents at legacy paths plus `/documents/*.pdf` aliases (`Cache-Control: no-cache` on aliases, long max-age on dated files), redirects from `redirects.json`, per-page meta and JSON-LD (`Organization`, `Article`), sitemap, robots, RSS, GTM + gtag snippet, CSP verified with GTM/Ads under it on nonprod once the blocking trigger exists, legacy asset list (`branding/`, `2025/09/lightspeed.png` and `sharepoint.png`, dated PDFs, referenced images) copied into `deploy/legacy-assets`, image pipeline (AVIF/WebP, hero ≤ 200 KB), keyboard/zoom/screen-reader pass, Lighthouse.
 
+**Built 2026-09-10 — the pages.** Every URL in the manifest now resolves from
+the built site: `/dining/`, `/location/`, `/supported-living/`,
+`/the-henley-health-club/`, `/privacy-policy/`, `/disclaimer/`, `/news/`,
+`/news/page/2/` and the fifteen articles at their flat WordPress paths, plus
+`/feed/` and `/news/feed/`. Article JSON-LD, per-page descriptions written for
+all fifteen posts, the Schedule of Fees at both its dated path and its
+`/documents/` alias. `/news/page/3/` 404s, as it did before.
+
+Three things this took that the plan did not anticipate:
+
+- **The posts had no images.** The capture stored WordPress's lazy-load `data:`
+  placeholders rather than the files. The originals came from the live site's
+  own uploads directory; see docs/decisions.md.
+- **The feeds are directories.** They build to `feed/index.xml` so that
+  `/feed/` — a directory address — can answer with XML. That needed `index.xml`
+  adding to nginx's `index` directive, which is the only deployment change in
+  the page work.
+- **`/dining/` is about a building site.** The ground floor refurbishment
+  (Scott, 2026-09-10) means the bistro cannot be photographed, so the page
+  leads with the concept renders, labelled as renders, and says the Hub is
+  temporary.
+
+**Still outstanding in Stage 3:** GTM + gtag snippet and the CSP verification
+under it; the legacy asset list into `deploy/legacy-assets`; the
+keyboard/zoom/screen-reader pass; Lighthouse; the strict URL gate run against a
+deployment rather than a local container.
+
+**Build cost.** 62 photographs and ~264 AVIF renditions make a cold build long
+— roughly a quarter of an hour, and the Docker build is always cold because it
+builds from a fresh context. Warm local rebuilds reuse the cache. If that
+becomes a problem for deploys, the lever is the `widths` arrays rather than the
+photographs: the index thumbnail and the article header of the same post
+currently ask for six distinct renditions where three would serve both.
+
 ### Stage 4 — Preview and acceptance, Stage 5 — Release
 As in review §7: private preview checks, then rollback material (`mysqldump` + files tarball to `/mnt/persistent/stor/henley-archives/`), NPM switch on hosts 5/11 keeping `/webhooks`, live checks incl. a controlled test enquiry, stop WordPress containers, confirm Search Console ownership via DNS TXT **before** Site Kit goes away.
 
