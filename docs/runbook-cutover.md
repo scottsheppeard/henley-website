@@ -13,18 +13,25 @@ the sequencing decisions belong with the code that assumes them.
 
 ## The one thing that must not be lost
 
-NPM host 5 (`thehenley.com.au`) carries a `/webhooks` location pointing at
+The NPM proxy host **`thehenley.com.au`** carries a `/webhooks` location pointing at
 `henley-webhooks:8000`. **Systems beyond this website depend on it.**
 Retargeting a host in NPM does not preserve custom locations automatically, and
 nothing about the website will look broken if it disappears — which is exactly
 why it is the first and last thing to check.
 
-Host 11 (`www`) does **not** have one and does not need one: everything on www
-is 301'd to the apex, so www callers arrive at host 5. An earlier version of
-this runbook said both hosts carried it; only host 5 does. Corrected 2026-09-10
-after reading the generated configs.
+`www.thehenley.com.au` does **not** have one and does not need one: everything
+on www is 301'd to the apex, so www callers arrive at `thehenley.com.au`. An
+earlier version of this runbook said both carried it, and referred to them by
+the numbers in `/data/nginx/proxy_host/*.conf` — which are invisible in the NPM
+dashboard. Both corrected 2026-09-10.
 
-It is not theoretical traffic. One day of host 5's access log:
+**NPM's dashboard lists hosts by domain name.** The numbers below are only
+useful when reading the generated configs on disk:
+`4.conf` = `dev.thehenley.com.au`, `5.conf` = `thehenley.com.au`.
+`www.thehenley.com.au` is no longer a proxy host at all — see the next
+section.
+
+It is not theoretical traffic. One day of that host's access log:
 
 | Calls | Client | Path |
 |---|---|---|
@@ -37,8 +44,8 @@ access log prints the *host-level* upstream in `[Sent-to …]`, so these lines s
 `wp-prod-henley` even though the location proxies to `henley-webhooks:8000`.
 Do not read that as evidence of where they went.
 
-Screenshot host 5's configuration before touching it. The location, verbatim
-from `/data/nginx/proxy_host/5.conf` on 2026-09-10, is:
+Screenshot `thehenley.com.au`'s configuration before touching it. The location,
+verbatim from `/data/nginx/proxy_host/5.conf` on 2026-09-10, is:
 
 ```nginx
 location /webhooks {
@@ -54,26 +61,32 @@ location /webhooks {
 
 ## The other thing nobody owns yet: www → apex
 
-`https://www.thehenley.com.au/contact/` 301s to the apex today, and **WordPress
-is what issues that redirect** — `wp-prod-henley` answers `Host:
-www.thehenley.com.au` with a 301 of its own. NPM host 11 is a plain proxy host
-with a single `location /`; it does no canonicalisation.
+`https://www.thehenley.com.au/contact/` 301'd to the apex, and **WordPress was
+what issued that redirect** — `wp-prod-henley` answers `Host:
+www.thehenley.com.au` with a 301 of its own. The NPM proxy host for www was a
+plain one with a single `location /`; it did no canonicalisation.
 
 The static site does not do it either, deliberately: `deploy/nginx.conf` says
 TLS, HSTS and the apex/www canonicalisation are NPM's job, and the container
 answers 200 to either hostname.
 
-So the moment WordPress stops, nothing redirects www — host 11 would start
-serving the whole site a second time under a second hostname. The canonical
+So the moment WordPress stopped, nothing would have redirected www — it would
+have started serving the whole site a second time under a second hostname. The canonical
 tags point at the apex, so it is duplicate content rather than an outage, but
 it is a contract the migration manifest records (`canonicalisation: www to
 apex`) and nobody currently keeps.
 
-**Fix it before cutover day, not on it.** In NPM, host 11 becomes a
-**Redirection Host** to `https://thehenley.com.au`, 301, preserving the path,
-reusing the existing `npm-10` certificate. Done today it is a no-op from
-outside — the same 301 to the same place — and it removes a dependency on
-WordPress while WordPress is still there to fall back on. Verify with:
+**DONE 2026-09-10, before cutover rather than on it.** Scott moved
+`www.thehenley.com.au` out of Proxy Hosts and recreated it as a **Redirection
+Host** → `https://thehenley.com.au`, 301, `$request_uri` preserved, reusing the
+`npm-10` certificate. WordPress is no longer in the path.
+
+Verified the same day: `/`, `/contact/`, `/?p=167` and a URL carrying UTM
+parameters all 301 to the apex with path and query intact, on both port 80 and
+443, in a single hop to a 200. Certificate renewal is safe — the redirection
+host template includes `letsencrypt-acme-challenge.conf` *before* the `return`,
+and a nonexistent challenge path answers 404 rather than redirecting, which is
+the proof that the challenge location still matches. Cert runs to 28 Nov 2026.
 
 ```bash
 curl -sS -o /dev/null -w '%{http_code} → %{redirect_url}\n' \
@@ -225,21 +238,21 @@ the WordPress reader, and what was actually built reads both sources.
    a wrong path or an unmounted volume looks like, and the failure is otherwise
    silent.
 
-4. **Switch NPM host 5** to `henley-website-prod:8080`, **re-adding
-   `/webhooks` → `henley-webhooks:8000`** (verbatim, above) and adding
-   `/api/enquiry` → `henley-website-forms-prod:8000`.
+4. **Retarget the `thehenley.com.au` proxy host** to
+   `henley-website-prod:8080`, **re-adding `/webhooks` → `henley-webhooks:8000`**
+   (verbatim, above) and adding `/api/enquiry` →
+   `henley-website-forms-prod:8000`.
 
-   Host 11 needs no retargeting if it has already become a Redirection Host as
-   described above. If it has not, do that first — it is the step that stops www
-   serving the site a second time once WordPress is gone.
+   `www.thehenley.com.au` needs nothing: it is a Redirection Host and has been
+   since 2026-09-10, so it is already independent of WordPress.
 
    On the `/api/enquiry` location, set `client_max_body_size 64k;` in its
    Advanced box. NPM's global is `client_max_body_size 2000m`, so without it NPM
    will accept two gigabytes from a client and stream them at a receiver whose
    limit is 16 KB. The receiver stops reading at the limit and answers 413, but
-   there is no reason to carry the upload that far. Copy host 4's settings,
-   which use `X-Forwarded-For $remote_addr` — an overwrite, and the shape the
-   receiver is happiest with.
+   there is no reason to carry the upload that far. Copy `dev.thehenley.com.au`'s
+   settings, which use `X-Forwarded-For $remote_addr` — an overwrite, and the
+   shape the receiver is happiest with.
 
 5. **Check, immediately:**
    ```bash
@@ -381,14 +394,14 @@ proxy_set_header X-Real-IP       $remote_addr;
 
 `$proxy_add_x_forwarded_for` **appends** the peer NPM observed to whatever the
 client sent, which is exactly the model `client_ip()` reads — the last field is
-NPM's own observation. There is **no proxy in front of NPM**: host 4's access
+NPM's own observation. There is **no proxy in front of NPM**: `dev.thehenley.com.au`'s access
 log records the real visitor address as the client (`[Client 120.22.158.141]`
 for a mobile visitor, `[Client 52.63.244.217]` for a request from this host),
 so the chain is one hop and the last field is the visitor. If a CDN or load
 balancer is ever put in front, this stops being true and both the receiver's
 parsing and this note need revisiting.
 
-**The `/api/enquiry` location is stricter still.** Added to host 4 on
+**The `/api/enquiry` location is stricter still.** Added to `dev.thehenley.com.au` on
 2026-09-10, it sets `X-Forwarded-For $remote_addr` — an **overwrite**, not an
 append — so whatever the client sent is discarded before the receiver sees it
 and the header holds exactly one address: the one NPM observed. `client_ip()`
@@ -398,7 +411,7 @@ same way. Verified end to end on nonprod the same day: four submissions with
 four invented first hops stored three rows, all carrying the real client
 address, with the fourth refused.
 
-~~Also outstanding on nonprod: host 4 has only `location /`.~~ **Added
+~~Also outstanding on nonprod: `dev.thehenley.com.au` has only `location /`.~~ **Added
 2026-09-10.** Host 4 now carries `/api/enquiry` →
 `henley-website-forms-nonprod:8000` and the receiver has been exercised through
 it. Configure the production hosts the same way, alongside `/webhooks`.
@@ -427,10 +440,11 @@ deployment until someone tries to bypass a rate limit.
 
 ## If it goes wrong
 
-Point NPM host 5 back at `wp-prod-henley:80`, restore the `/webhooks`
-location, and `docker start wp-prod-henley` (and `db-prod-henley` if the drain
-had already reached step 5c). Host 11 as a Redirection Host is correct either
-way and needs no rollback. Nothing in the cutover destroys WordPress state.
+Point the `thehenley.com.au` proxy host back at `wp-prod-henley:80`, restore
+the `/webhooks` location, and `docker start wp-prod-henley` (and
+`db-prod-henley` if the drain had already reached step 5c).
+`www.thehenley.com.au` as a Redirection Host is correct either way and needs no
+rollback. Nothing in the cutover destroys WordPress state.
 
 Enquiries taken through the new site in the meantime are still in the intake
 store and are still read by the nightly job, because `INTAKE_DB_PATH` stays
