@@ -416,11 +416,37 @@ address, with the fourth refused.
 `henley-website-forms-nonprod:8000` and the receiver has been exercised through
 it. Configure the production hosts the same way, alongside `/webhooks`.
 
-One thing that check taught, worth knowing before running it again: the per-IP
+Two things that check taught, worth knowing before running it again. The per-IP
 window lives in the worker's memory, so `docker restart` on the forms container
 is what resets it, and a *validation failure* spends a slot just as a stored
-submission does — the limiter runs before validation. Probe readiness with an
-oversized body, which is refused at the ASGI boundary and costs nothing.
+submission does — the limiter runs before validation.
+
+And probe readiness with an oversized body rather than a valid submission: it is
+refused at the ASGI boundary, before the limiter, so it costs nothing. **Size it
+between the two limits** — larger than the receiver's 16 KB and smaller than
+NPM's 64 KB. Too large and NPM answers the 413 itself and the receiver is never
+touched, which is a readiness check that passes while the receiver is still
+starting. The tell is the response body: the receiver's 413 carries the phone
+number, nginx's does not.
+
+## Two body limits, and why both
+
+`client_max_body_size 64k` on the `/api/enquiry` location, four times the
+receiver's own `MAX_BODY_BYTES` of 16 KB. The gap is deliberate, and measured
+through NPM on nonprod on 2026-09-10:
+
+| Request body | Answered by | What the visitor sees |
+|---|---|---|
+| ≤ 16 KB | receiver | accepted, 303 to the thank-you page |
+| 16–64 KB, declared or chunked | receiver | **our** 413 page, with the phone number and email on it |
+| > 64 KB, declared or chunked | nginx | a bare 413 |
+
+So the realistic case — somebody pastes far more than they meant to — still gets
+a page telling them how else to reach us, which is the entire reason that page
+exists. Only bodies four times over the limit, which no one types, are cut off
+at the proxy with nginx's own error. Without the location setting, NPM's global
+`client_max_body_size 2000m` applies and it will stream two gigabytes at a
+receiver whose limit is 16 KB.
 
 The value itself is the npm-attachment container's address **on this site's
 network**:

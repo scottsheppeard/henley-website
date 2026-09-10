@@ -68,7 +68,7 @@ P1 means resolve before production cutover and prioritise for any exposed receiv
 | F01 | Follow-up | Expire inactive rate-limit buckets | Deterministic time-based regression test | Done |
 | F02 | Follow-up | Decide whether a rejected submission should spend a per-IP slot | A visitor who mistypes twice keeps a third attempt | Open — raised 2026-09-10, not changed |
 | F03 | Follow-up | Give the www → apex redirect an owner that is not WordPress | `www` 301s to the apex with WordPress stopped | Done 2026-09-10 — `www.thehenley.com.au` is now an NPM Redirection Host; path, query, port 80/443 and ACME renewal all verified |
-| F04 | Follow-up | Bound the enquiry route's body at NPM | NPM refuses an oversized body rather than streaming it to the receiver | Open — `client_max_body_size 64k;` in the `/api/enquiry` location's Advanced box on `dev.thehenley.com.au`, and on `thehenley.com.au` at cutover |
+| F04 | Follow-up | Bound the enquiry route's body at NPM | NPM refuses an oversized body rather than streaming it to the receiver | Done on `dev.thehenley.com.au` 2026-09-10 and the 16 KB/64 KB boundary verified both ways; repeat on `thehenley.com.au` at cutover |
 
 ## 3. Resume instructions and working constraints
 
