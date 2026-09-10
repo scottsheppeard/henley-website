@@ -55,7 +55,7 @@ P1 means resolve before production cutover and prioritise for any exposed receiv
 | ID | Priority | Work item | Completion evidence | Status |
 |---|---|---|---|---|
 | R01 | P1 | Escape error-page content | HTML-injection regression tests and rendered response check | Done |
-| R02 | P1 | Make proxy trust consistent | Tests with runtime middleware plus container/proxy verification | Implemented; nonprod verification pending |
+| R02 | P1 | Make proxy trust consistent | Tests with runtime middleware plus container/proxy verification | Implemented and deployed to nonprod; through-NPM check blocked on the missing `/api/enquiry` location |
 | R03 | P1 | Preserve final WordPress enquiries through cutover | Corrected runbook and demonstrated final-enquiry reconciliation | Implemented; rehearsal pending |
 | R04 | P2 | Remove clock-dependent silent enquiry loss | Skewed-clock and no-JavaScript submissions are stored | Done |
 | R05 | P2 | Restore and centralise the maintenance form URL | Both resident entry points reach the correct form | Done |
@@ -344,7 +344,7 @@ Record completion evidence in this table when implementation starts. Use test re
 | B / receiver | (slice B) | 75 receiver tests green; all new regressions verified failing against the pre-fix receiver; `check-enquiry-flow.sh` green; `check-proxy-trust.sh` green (and 8 failures against the pre-fix image) | NPM's append behaviour and the absence of a hop in front of it confirmed on host 4 | Nonprod end-to-end: NPM host 4 has no `/api/enquiry` location yet, so the receiver has never been reached through NPM |
 | C / visitor journeys | (slice C) | Measured at 320/360/390/768/1280/1440: `#enquire` clearance −61px → +63px (mobile) and +27px → +111px (desktop); home offer and full booking button now inside the first screen at every size; passes at 150%/200% text, 200%/400% zoom and landscape, no horizontal overflow, focus rings visible. Maintenance form opened and confirmed as the live Henley form | — | Scott's design review of the revised hero crop; screenshots in the session scratchpad `shots-before/` and `shots-after/` |
 | D / R09 | (slice D) | `check-urls-fixture.sh`: a complete fixture passes strict 84/0/0, and each of 16 deliberate defects fails it for the right reason; sample mode keeps its outstanding count and disclaims itself. Strict correctly refuses the current partial site (33 passed, 49 failed, 0 outstanding) | Sample mode green against the site container: 53 passed, 0 failed, 49 outstanding | Strict passes only once Stage 3 exists — that is the gate working, not a defect |
-| E / deployment rehearsal | — | Receiver suite also green on Python 3.12, the image's version (75 passed), closing the version gap noted in §1 | — | Blocked, see below |
+| E / deployment rehearsal | `3111031` | Receiver suite green on Python 3.12, the image's version, as well as 3.11 | Nonprod rebuilt from `main` 2026-09-10 and verified: receiver logs `X-Forwarded-For is believed from 192.168.160.4`; `check-urls.sh --sample https://dev.thehenley.com.au` 53 passed / 0 failed / 49 outstanding; shortlinks and named redirects now return relative Locations through NPM; the six-viewport measurements match local exactly | Through-NPM receiver test still blocked on the missing `/api/enquiry` location; R03 drain rehearsal not run |
 
 ## 7. Completion and launch boundaries
 
@@ -365,13 +365,15 @@ Neither is a code change; both need someone with access this session did not hav
 1. **NPM host 4 has no `/api/enquiry` location.** `POST https://dev.thehenley.com.au/api/enquiry` is answered 404 by the static site, so the receiver has never been reached through NPM and the nonprod half of R02's acceptance cannot be run. Scott adds the location (→ `henley-website-forms-nonprod:8000`), re-reads `TRUSTED_PROXY_IPS` from npm-attachment on that network, and recreates the forms container. `scripts/check-proxy-trust.sh` already proves the same behaviour locally.
 2. **The R03 drain rehearsal touches live systems.** It needs a synthetic Gravity Forms entry either side of a simulated switch, and a `DRY_RUN=true` run of the nightly job — a write to the production WordPress database and a run of the real classifier. That is Scott's call and his to schedule; the procedure is written up in the runbook under "Draining WordPress".
 
-Also still outstanding, unchanged by this remediation: **the deployed nonprod containers are older than `main`.** Nothing on dev.thehenley.com.au carries the receiver fixes, the hero cap, the anchor offset, the resident link or `absolute_redirect off` until it is rebuilt.
+~~Also still outstanding: the deployed nonprod containers are older than `main`.~~ **Done 2026-09-10.** Both nonprod containers were rebuilt from `main` and verified; dev.thehenley.com.au now carries every change here.
+
+That rebuild found one more thing, which is why it was worth doing rather than deferring. The documented compose command never loaded `deploy/.env`: Compose reads `.env` from the directory it runs in, not from `deploy/`, and the file is gitignored so the shared checkout had none. The receiver came up trusting no proxy, and only the new startup warning said so. Fixed in `3111031` — `--env-file deploy/.env` everywhere, a tracked `deploy/.env.example`, and `npm ci` added to the sequence because a fresh checkout has no `node_modules` either.
 
 The original launch dependencies still apply: remaining pages and assets, privacy wording, held care/fee claims, resident photography permissions, business review of the sample, analytics configuration, ownership/maintenance arrangements, backups and the production cutover procedure. Refer to the existing brief and runbook for their current status rather than treating this plan as their approval.
 
 At handover, state whether the work is locally implemented, verified on nonprod, or ready for cutover. Those are different milestones. Leave the stream in place; Scott decides when to finish it.
 
-**As at 2026-09-10 this work is locally implemented and landed on `main`. It is not verified on nonprod and it is not ready for cutover.**
+**As at 2026-09-10 this work is implemented, landed on `main`, and deployed to nonprod, where the visitor-facing half is verified. The receiver has still never been reached through NPM, the R03 drain has not been rehearsed, and this is not ready for cutover.**
 
 ## 8. Suggested prompt for the next implementation session
 
