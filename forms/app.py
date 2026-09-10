@@ -8,16 +8,22 @@ nothing worth stealing: the nightly henley-utils job opens the same file
 read-only and does the classification, the Salesforce upsert and the reception
 digest from inside the network.
 
-Bot protection is a honeypot, a minimum fill time, per-IP and daily caps, and a
-body-size limit — no CAPTCHA. The reasoning is in docs/decisions.md; briefly,
-the live WordPress form already runs honeypot-only despite having a reCAPTCHA
-add-on installed, real volume is a handful a week, the downstream classifier
-already sorts spam from six categories, and leaving CAPTCHA out is what lets
-the form work as a plain POST with JavaScript disabled.
+Bot protection is a honeypot, per-IP and daily caps, and a body-size limit — no
+CAPTCHA. The reasoning is in docs/decisions.md; briefly, the live WordPress form
+already runs honeypot-only despite having a reCAPTCHA add-on installed, real
+volume is a handful a week, the downstream classifier already sorts spam from
+six categories, and leaving CAPTCHA out is what lets the form work as a plain
+POST with JavaScript disabled.
+
+There was a minimum-fill-time check as well. It compared a timestamp taken from
+the visitor's clock against ours, so a device five minutes fast discarded a real
+enquiry and answered with the success redirect anyway. See docs/decisions.md.
 """
 
 from __future__ import annotations
 
+import html
+import ipaddress
 import logging
 import os
 import re
@@ -30,6 +36,7 @@ from typing import Deque
 
 from fastapi import FastAPI, Form, Request
 from fastapi.responses import HTMLResponse, JSONResponse, RedirectResponse
+from starlette.types import ASGIApp, Message, Receive, Scope, Send
 
 logger = logging.getLogger("henley.forms")
 
@@ -47,11 +54,15 @@ CONTACT_EMAIL = os.environ.get("CONTACT_EMAIL", "info@thehenley.com.au")
 MAX_BODY_BYTES = int(os.environ.get("MAX_BODY_BYTES", 16 * 1024))
 MAX_PER_IP_PER_HOUR = int(os.environ.get("MAX_PER_IP_PER_HOUR", 3))
 MAX_PER_DAY = int(os.environ.get("MAX_PER_DAY", 100))
-MIN_FILL_SECONDS = float(os.environ.get("MIN_FILL_SECONDS", 3))
 
 # Only these peers may be believed about X-Forwarded-For. Anyone can send the
 # header; trusting it from an arbitrary peer would make every rate limit
 # bypassable by inventing an address per request.
+#
+# This is the only place proxy headers are interpreted. Uvicorn's own
+# --proxy-headers rewriting is turned off in the Dockerfile: it runs before this
+# and rewrites request.client from a header it was told to trust from anywhere,
+# which silently replaced the peer this logic depends on.
 TRUSTED_PROXIES = {
     ip.strip() for ip in os.environ.get("TRUSTED_PROXY_IPS", "").split(",") if ip.strip()
 }
@@ -106,17 +117,55 @@ def initialise(path: Path = DB_PATH) -> None:
 # ── Request helpers ──────────────────────────────────────────────────────────
 
 
+def normalise_ip(value: str) -> str | None:
+    """An address in its canonical form, or None if it is not an address.
+
+    Proxies vary in what they write: some append a port, some bracket IPv6, and
+    anything at all can arrive in the hops a client made up. Parsing rather than
+    trusting means a malformed value is recognised as malformed instead of being
+    stored as a rate-limit key nobody can collide with.
+    """
+    candidate = value.strip()
+    if not candidate:
+        return None
+    if candidate.startswith("["):            # [2001:db8::1]:443
+        candidate = candidate[1:].partition("]")[0]
+    elif candidate.count(":") == 1:          # 203.0.113.9:443
+        candidate = candidate.split(":", 1)[0]
+    try:
+        return str(ipaddress.ip_address(candidate))
+    except ValueError:
+        return None
+
+
 def client_ip(request: Request) -> str:
     """The visitor's address, believing X-Forwarded-For only from the proxy."""
     peer = request.client.host if request.client else "unknown"
-    if peer in TRUSTED_PROXIES:
-        forwarded = request.headers.get("x-forwarded-for", "")
-        # The proxy appends the peer it saw, so the last entry is the one it
-        # observed rather than one the client made up.
-        hops = [hop.strip() for hop in forwarded.split(",") if hop.strip()]
-        if hops:
-            return hops[-1]
-    return peer
+    if peer not in TRUSTED_PROXIES:
+        # Either a direct connection, or a proxy nobody configured. Its own
+        # address is the only thing about it we know first-hand.
+        return peer
+
+    forwarded = request.headers.get("x-forwarded-for", "").strip()
+    if not forwarded:
+        # No chain to read. The health check and anything else reaching the
+        # proxy without one lands here, so it is not worth a warning.
+        return peer
+
+    # The proxy appends the peer it saw, so the *last* entry is the one it
+    # observed rather than one the client made up. Deliberately the last field,
+    # not the last parseable field: a client can put anything before the
+    # proxy's entry but cannot put anything after it, so a trailing hop that
+    # does not parse means the proxy did not append — and skipping back past it
+    # would hand the decision to whatever the client wrote instead.
+    observed = normalise_ip(forwarded.rsplit(",", 1)[-1])
+    if observed is None:
+        logger.warning(
+            "trusted proxy %s sent an X-Forwarded-For whose last hop is not an "
+            "address; using the peer instead", peer
+        )
+        return peer
+    return observed
 
 
 def clean(value: str | None, field: str) -> str | None:
@@ -136,20 +185,43 @@ def checked(value: str | None) -> bool:
 # ── Rate limiting ────────────────────────────────────────────────────────────
 
 _recent: dict[str, Deque[float]] = {}
+_last_sweep: float = 0.0
+
+# A full sweep is O(addresses seen in the last hour), which is a handful. Doing
+# it once an hour rather than once a request keeps it that way even if someone
+# points a botnet at the form for an afternoon.
+SWEEP_INTERVAL = 3600.0
+
+
+def _sweep(now: float) -> None:
+    """Forget addresses whose window has emptied, whether or not they came back.
+
+    The per-address prune below only runs for the address in front of us, so
+    without this a bucket for an address that never returns is never touched
+    again — it is not empty, so the "drop empty queues" pass never sees it.
+    """
+    global _last_sweep
+    if now - _last_sweep < SWEEP_INTERVAL:
+        return
+    _last_sweep = now
+    for address in list(_recent):
+        window = _recent[address]
+        while window and now - window[0] > 3600:
+            window.popleft()
+        if not window:
+            del _recent[address]
 
 
 def within_ip_limit(ip: str, now: float | None = None) -> bool:
     """At most MAX_PER_IP_PER_HOUR submissions from one address per hour."""
     now = time.time() if now is None else now
+    _sweep(now)
     window = _recent.setdefault(ip, deque())
     while window and now - window[0] > 3600:
         window.popleft()
     if len(window) >= MAX_PER_IP_PER_HOUR:
         return False
     window.append(now)
-    # Bound the table: an address with nothing in its window is not remembered.
-    for address in [a for a, w in _recent.items() if not w]:
-        del _recent[address]
     return True
 
 
@@ -166,7 +238,9 @@ def within_daily_limit(connection: sqlite3.Connection) -> bool:
 
 def _reset_rate_limits() -> None:
     """Test helper: forget every in-memory window."""
+    global _last_sweep
     _recent.clear()
+    _last_sweep = 0.0
 
 
 # ── Responses ────────────────────────────────────────────────────────────────
@@ -183,7 +257,18 @@ def problem(message: str, status: int) -> HTMLResponse:
 
     A visitor who has just typed out an enquiry and been told "something went
     wrong" should not have to go and find the phone number.
+
+    `message` is plain text and is escaped here, at the one boundary where text
+    becomes HTML. One of these messages quotes the address the visitor typed
+    back at them, and an email field is a text field on the server whatever the
+    browser did with it — so an unescaped message is a script element on a page
+    we served.
     """
+    phone_href = html.escape("tel:" + CONTACT_PHONE.replace(" ", ""), quote=True)
+    phone_text = html.escape(CONTACT_PHONE)
+    email_href = html.escape("mailto:" + CONTACT_EMAIL, quote=True)
+    email_text = html.escape(CONTACT_EMAIL)
+
     return HTMLResponse(
         f"""<!doctype html>
 <html lang="en-AU">
@@ -205,10 +290,10 @@ def problem(message: str, status: int) -> HTMLResponse:
 <body>
 <main>
   <h1>We could not send your enquiry</h1>
-  <p>{message}</p>
+  <p>{html.escape(message)}</p>
   <div class="contact">
-    <p>Please call us on <a href="tel:{CONTACT_PHONE.replace(' ', '')}">{CONTACT_PHONE}</a>
-       or email <a href="mailto:{CONTACT_EMAIL}">{CONTACT_EMAIL}</a> and we will pick it up
+    <p>Please call us on <a href="{phone_href}">{phone_text}</a>
+       or email <a href="{email_href}">{email_text}</a> and we will pick it up
        from there.</p>
   </div>
   <p><a href="/contact/">Back to the contact page</a></p>
@@ -220,12 +305,102 @@ def problem(message: str, status: int) -> HTMLResponse:
     )
 
 
+# ── Body limit ───────────────────────────────────────────────────────────────
+
+
+class LimitBodySize:
+    """Refuse an oversized body at the ASGI boundary, before anything parses it.
+
+    Content-Length is a claim, not a measurement — a chunked request carries no
+    length at all — so the declared value is only an early shortcut. The real
+    check counts the bytes as they arrive and stops at the limit, rather than
+    reading the whole body and measuring it afterwards, which is the same as not
+    having a limit.
+
+    The budget is the encoded request, not the message someone typed: form
+    encoding and non-ASCII characters both cost more bytes than characters.
+
+    It buffers an accepted body — 16 KB, once — and replays it to the
+    application, so the endpoint below sees an ordinary request.
+    """
+
+    def __init__(self, app: ASGIApp) -> None:
+        self.app = app
+
+    async def __call__(self, scope: Scope, receive: Receive, send: Send) -> None:
+        if scope["type"] != "http":
+            await self.app(scope, receive, send)
+            return
+
+        # Read per request, so reloading the module or overriding the value in a
+        # test applies to the middleware as well as to the endpoint.
+        limit = MAX_BODY_BYTES
+
+        declared = _header(scope, b"content-length")
+        if declared is not None and declared.isdigit() and int(declared) > limit:
+            await self._refuse(scope, send)
+            return
+
+        body = bytearray()
+        buffered: list[Message] = []
+        while True:
+            message = await receive()
+            if message["type"] == "http.disconnect":
+                # Nothing to answer: hand it on so the application unwinds.
+                buffered.append(message)
+                break
+            body += message.get("body", b"")
+            if len(body) > limit:
+                await self._refuse(scope, send)
+                return
+            if not message.get("more_body", False):
+                buffered.append({"type": "http.request", "body": bytes(body), "more_body": False})
+                break
+
+        async def replay() -> Message:
+            if buffered:
+                return buffered.pop(0)
+            return await receive()
+
+        await self.app(scope, replay, send)
+
+    async def _refuse(self, scope: Scope, send: Send) -> None:
+        """One response, and the body still arriving is simply never read."""
+        response = problem("That enquiry was too long to send.", status=413)
+        await response(scope, _closed, send)
+
+
+def _header(scope: Scope, name: bytes) -> str | None:
+    for key, value in scope.get("headers", []):
+        if key.lower() == name:
+            return value.decode("latin-1")
+    return None
+
+
+async def _closed() -> Message:
+    """A receive channel for a response that does not read the request."""
+    return {"type": "http.disconnect"}
+
+
 # ── Application ──────────────────────────────────────────────────────────────
 
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     initialise()
+    if TRUSTED_PROXIES:
+        logger.info(
+            "X-Forwarded-For is believed from %s", ", ".join(sorted(TRUSTED_PROXIES))
+        )
+    else:
+        # An empty list is what a missed deployment step looks like, and it looks
+        # exactly like a working one: every submission is attributed to the
+        # proxy, so the per-IP limit becomes a site-wide limit of three an hour.
+        logger.warning(
+            "TRUSTED_PROXY_IPS is empty. X-Forwarded-For will be ignored and every "
+            "request through a proxy shares one rate-limit bucket. Set it to the "
+            "proxy's address on this network and recreate this container."
+        )
     yield
 
 
@@ -236,6 +411,8 @@ app = FastAPI(
     openapi_url=None,
     lifespan=lifespan,
 )
+
+app.add_middleware(LimitBodySize)
 
 
 @app.get("/healthz")
@@ -263,24 +440,11 @@ async def enquiry(
     # Named to look like a field worth filling and hidden from people in CSS.
     # A browser leaves it empty; a bot filling every input does not.
     company: str = Form(default=""),
-    # Milliseconds since the page loaded, set by JavaScript. Absent when
-    # JavaScript is off, in which case the check is skipped rather than
-    # failing a legitimate no-JS visitor.
-    started_at: str = Form(default=""),
 ):
     if company.strip():
         # Answer as though it worked. Telling a bot why it failed only helps it.
         logger.info("honeypot triggered from %s", client_ip(request))
         return accepted()
-
-    if started_at.strip():
-        try:
-            elapsed = (time.time() * 1000 - float(started_at)) / 1000
-            if elapsed < MIN_FILL_SECONDS:
-                logger.info("submitted in %.1fs from %s", elapsed, client_ip(request))
-                return accepted()
-        except ValueError:
-            pass  # An unparseable value proves nothing either way.
 
     ip = client_ip(request)
     if not within_ip_limit(ip):
@@ -337,12 +501,3 @@ async def enquiry(
 
     logger.info("enquiry %s stored from %s", cursor.lastrowid, ip)
     return accepted()
-
-
-@app.middleware("http")
-async def limit_body_size(request: Request, call_next):
-    """Refuse oversized bodies before they are parsed."""
-    declared = request.headers.get("content-length")
-    if declared and declared.isdigit() and int(declared) > MAX_BODY_BYTES:
-        return problem("That enquiry was too long to send.", status=413)
-    return await call_next(request)

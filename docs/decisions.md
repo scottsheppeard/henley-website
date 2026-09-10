@@ -205,8 +205,8 @@ recoverable later even though the visitor never typed it.
 
 ## Bot protection
 
-**Honeypot, a minimum fill-time, per-IP and daily caps and a body-size limit at
-launch. No CAPTCHA.** Recorded as a recommendation Scott can overturn.
+**Honeypot, per-IP and daily caps and a body-size limit at launch. No CAPTCHA.**
+Recorded as a recommendation Scott can overturn.
 
 The live WordPress form has a reCAPTCHA add-on installed but serves no
 reCAPTCHA script, so today's effective protection is already the honeypot alone.
@@ -217,6 +217,39 @@ JavaScript — reCAPTCHA v3 and Turnstile both require client-side JS, so keepin
 one would have meant either breaking the no-JS path or shipping a promise the
 page cannot keep. If spam becomes a classifier-cost problem, Turnstile can go
 behind the same endpoint later.
+
+### The minimum fill-time is gone (2026-09-10)
+
+It was in the list above and it has been removed. The form sent a timestamp
+taken from `Date.now()` on the visitor's device; the receiver subtracted it from
+*our* clock. A device running five minutes fast therefore produced a negative
+elapsed time, failed the three-second floor, and was answered with the same 303
+and thank-you page a successful enquiry gets — while nothing was stored. The
+visitor was told their enquiry had reached the team. It had not.
+
+That is the wrong failure to accept for the protection on offer. The value was
+optional, client-supplied and trivially forgeable, so it stopped only the bots
+that were not trying; and it discarded real enquiries from wrong clocks,
+autofill, password managers and assistive tools, all of which submit quickly.
+No monotonic client timer was substituted: a timing signal that cannot be
+trusted should not be the thing that decides whether an enquiry exists.
+
+What remains is the honeypot, the corrected per-IP limit, the daily cap and the
+body-size limit — and, importantly, a success redirect that now means a stored
+row. `sent=1` in the URL still proves only that the browser was redirected; the
+stored row is the receipt, and downstream delivery is `sf_pushed` /
+`non_sales_notified` in henley-utils.
+
+### X-Forwarded-For has one owner (2026-09-10)
+
+`TRUSTED_PROXY_IPS` in the receiver, and nothing else. The container also ran
+uvicorn with `--proxy-headers --forwarded-allow-ips '*'`, which rewrote
+`request.client` from a header anybody could send, before the receiver's own
+logic saw the peer — so the per-IP cap was bypassable by inventing a first hop
+per request. The Dockerfile now says `--no-proxy-headers`, the receiver parses
+the last hop and validates it as an address, and a malformed chain falls back to
+the peer rather than to whatever the client wrote. `scripts/check-proxy-trust.sh`
+proves it through a real proxy, because no in-process test could.
 
 ## Favicon
 

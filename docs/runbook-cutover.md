@@ -283,8 +283,35 @@ through it deliberately.
 ## Trusted proxy address
 
 `TRUSTED_PROXY_IPS` is the receiver's whole basis for believing
-`X-Forwarded-For`, and therefore for its rate limits meaning anything. It is
-the npm-attachment container's address **on this site's network**:
+`X-Forwarded-For`, and therefore for its rate limits meaning anything.
+
+**How NPM sets the header, confirmed 2026-09-10.** Every proxy host includes
+`conf.d/include/proxy.conf`, which does:
+
+```nginx
+proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+proxy_set_header X-Real-IP       $remote_addr;
+```
+
+`$proxy_add_x_forwarded_for` **appends** the peer NPM observed to whatever the
+client sent, which is exactly the model `client_ip()` reads — the last field is
+NPM's own observation. There is **no proxy in front of NPM**: host 4's access
+log records the real visitor address as the client (`[Client 120.22.158.141]`
+for a mobile visitor, `[Client 52.63.244.217]` for a request from this host),
+so the chain is one hop and the last field is the visitor. If a CDN or load
+balancer is ever put in front, this stops being true and both the receiver's
+parsing and this note need revisiting.
+
+**Also outstanding on nonprod:** host 4 currently has only `location /`. The
+`/api/enquiry` → `henley-website-forms-nonprod:8000` location has not been
+added, so `POST https://dev.thehenley.com.au/api/enquiry` is answered 404 by the
+static site. The receiver has never been exercised through NPM. Add that
+location before the "test enquiry through dev" item above, and run
+`scripts/check-proxy-trust.sh` first — it proves the same behaviour locally
+without waiting for NPM.
+
+The value itself is the npm-attachment container's address **on this site's
+network**:
 
 ```bash
 docker inspect -f \

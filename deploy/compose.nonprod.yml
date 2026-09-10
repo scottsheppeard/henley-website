@@ -55,11 +55,21 @@ services:
     user: '1000:1000'
     environment:
       INTAKE_DB_PATH: /data/intake.sqlite
-      # X-Forwarded-For is believed only from NPM. Anyone can send the header,
-      # and trusting it generally would make every rate limit bypassable by
-      # inventing an address per request. Set this to the npm-attachment
-      # container's address on this network after the first `up`:
-      #   docker inspect -f '{{range .NetworkSettings.Networks}}{{.IPAddress}} {{end}}' npm-attachment
+      # X-Forwarded-For is believed only from NPM, and only by the receiver —
+      # uvicorn runs with --no-proxy-headers so nothing else gets a vote.
+      # Anyone can send the header, and trusting it generally would make every
+      # rate limit bypassable by inventing an address per request.
+      #
+      # This is the npm-attachment container's address ON THIS NETWORK. Read it
+      # after the first `up`, and again after every NPM recreation — adding any
+      # network to npm-attachment reassigns them:
+      #   docker inspect -f '{{range $$n, $$c := .NetworkSettings.Networks}}{{$$n}} {{$$c.IPAddress}}{{"\n"}}{{end}}' npm-attachment
+      #
+      # Empty is not a default, it is a misconfiguration: every visitor is then
+      # attributed to the proxy and three-an-hour becomes a site-wide limit.
+      # The receiver logs a warning at startup when this is unset —
+      # `docker logs <container> | head` is the check. Verified with
+      # scripts/check-proxy-trust.sh.
       TRUSTED_PROXY_IPS: ${TRUSTED_PROXY_IPS:-}
       CONTACT_PHONE: '07 5591 2111'
       CONTACT_EMAIL: info@thehenley.com.au

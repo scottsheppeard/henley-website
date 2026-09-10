@@ -37,8 +37,16 @@ EXPOSE 8000
 # One worker on purpose. The store is a single SQLite file and the load is a
 # handful of enquiries a week; a second worker would add write contention and
 # split the in-memory per-IP rate limit in half without buying any throughput.
+#
+# --no-proxy-headers, deliberately. This ran with --proxy-headers
+# --forwarded-allow-ips '*', which rewrote request.client from X-Forwarded-For
+# sent by anybody, before app.py's own TRUSTED_PROXY_IPS logic could see the
+# real peer. Two mechanisms disagreeing about who to believe is one mechanism
+# too many, and the one that won was the one that believed everyone: four
+# submissions with different invented first hops all counted as different
+# visitors. The receiver owns this decision now — see client_ip() in app.py.
 CMD ["uvicorn", "app:app", "--host", "0.0.0.0", "--port", "8000", "--workers", "1", \
-     "--proxy-headers", "--forwarded-allow-ips", "*"]
+     "--no-proxy-headers"]
 
 HEALTHCHECK --interval=60s --timeout=5s --start-period=10s --retries=3 \
   CMD python -c "import urllib.request,sys; sys.exit(0 if urllib.request.urlopen('http://127.0.0.1:8000/healthz', timeout=4).status == 200 else 1)"

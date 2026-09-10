@@ -9,9 +9,8 @@
  * with one of them optional.
  *
  * It is an ordinary HTML form posting to an ordinary endpoint. With JavaScript
- * disabled it works exactly the same, minus the fill-time check — which is why
- * there is no CAPTCHA. The one line of script sets a timestamp; nothing else on
- * this page needs it.
+ * disabled it works exactly the same — which is why there is no CAPTCHA, and
+ * why there is no script here at all.
  */
 import { PATHS, PHONE, PHONE_HREF, EMAIL } from '../site.ts';
 
@@ -85,7 +84,6 @@ const preselected = interest ? PATHS[interest].interest : null;
   </div>
 
   <input type="hidden" name="page_path" value={Astro.url.pathname} />
-  <input type="hidden" name="started_at" value="" />
 
   <button class="button" type="submit">Send my enquiry</button>
 
@@ -94,15 +92,6 @@ const preselected = interest ? PATHS[interest].interest : null;
     <a href="/privacy-policy/">privacy policy</a>, or email <a href={`mailto:${EMAIL}`}>{EMAIL}</a>.
   </p>
 </form>
-
-<script>
-  // Records when the page finished loading, so the receiver can tell a person
-  // filling in a form from a script posting instantly. Its absence is fine:
-  // with JavaScript off the check is skipped rather than failing the visitor.
-  for (const field of document.querySelectorAll<HTMLInputElement>('input[name="started_at"]')) {
-    field.value = String(Date.now());
-  }
-</script>
 
 <style>
   .enquiry {

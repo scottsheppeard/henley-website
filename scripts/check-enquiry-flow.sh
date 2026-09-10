@@ -84,11 +84,16 @@ print(f"\nfields in the built form: {sorted(set(fields))}\n")
 
 for required in ("name", "email", "phone", "enquiry_text",
                  "interest_apartment", "interest_aged_care",
-                 "page_path", "started_at", "company"):
+                 "page_path", "company"):
     check(required in fields, f"the form still sends `{required}`")
 
 check("referral_source" not in fields,
       "the form no longer asks 'How did you hear about us?'")
+
+# The fill-time check compared the visitor's clock with ours, so a device five
+# minutes fast lost a real enquiry behind the success redirect. Both halves went.
+check("started_at" not in fields,
+      "the form no longer sends a client timestamp")
 
 action = re.search(r"<form[^>]*action=\"([^\"]+)\"", page).group(1)
 check(action == "/api/enquiry", f"the form posts to /api/enquiry (found {action})")
@@ -136,13 +141,18 @@ submission.update({
     "enquiry_text": "Could I see a two-bedroom apartment?",
     "interest_apartment": "Apartment Living",
     "page_path": "/luxury-retirement-living/",
-    "started_at": "",       # as a no-JavaScript browser sends it
     "company": "",          # honeypot, left empty by a real browser
 })
 status, headers = post(submission)
 check(status == 303, f"a real submission is accepted (303, got {status})")
 check(headers.get("location") == "/thank-you/?sent=1",
       f"it redirects to /thank-you/?sent=1 (got {headers.get('location')})")
+
+# ── A browser holding a cached copy of the old page ──────────────────────────
+stale = dict(submission, email="cached@example.com",
+             started_at=str(int(__import__("time").time() * 1000) + 300_000))
+status, _ = post(stale)
+check(status == 303, "a cached page's client timestamp is accepted, not silently dropped")
 
 # ── And a bot filling every field, as bots do ────────────────────────────────
 bot = dict(submission, email="bot@example.com", company="Acme Pty Ltd")
@@ -155,7 +165,9 @@ connection = sqlite3.connect(f"file:{work / 'intake.sqlite'}?mode=ro", uri=True)
 connection.row_factory = sqlite3.Row
 rows = [dict(r) for r in connection.execute("SELECT * FROM enquiries ORDER BY id")]
 
-check(len(rows) == 1, f"only the real submission was stored (found {len(rows)})")
+check(len(rows) == 2, f"the real submission and the cached-page one were stored (found {len(rows)})")
+check([r["email"] for r in rows] == ["margaret@example.com", "cached@example.com"],
+      "the honeypot submission is the only one missing")
 if rows:
     row = rows[0]
     check(row["id"] == 100000, f"the first id is 100000 (got {row['id']})")
