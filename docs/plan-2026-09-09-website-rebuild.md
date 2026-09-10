@@ -77,7 +77,8 @@ henley-website/
   scripts/build-tokens.ts    DESIGN.md → src/styles/tokens.css
   scripts/build-manifest.sh  live site → source/migration-manifest.json
   scripts/export-content.ts  capture + manifest → src/content/* markdown (one-off, kept)
-  scripts/check-urls.sh      manifest → status/redirect assertions against an env
+  scripts/check-urls.sh      manifest → status/content/redirect-destination assertions;
+                            --strict is the release gate, --sample the Stage 3 report
   src/{layouts,components,pages,content,styles,fonts}
   public/                    favicon, robots.txt
   forms/                     receiver: app.py, schema.sql, tests/, Dockerfile
@@ -134,7 +135,7 @@ As in review §7: private preview checks, then rollback material (`mysqldump` + 
 - Stage 0: `npm run check` and `npm run build` green in the worktree; keystone stream test suite green; `stream list` shows `website-rebuild`; `build-tokens` snapshot test passes; `migration-manifest.json` has 27 page/post URLs plus `/news/page/2/` and `/feed/` and 26 shortlink ids; `export-content` produces 27 content files.
 - Stage 1: `dev.thehenley.com.au` serves the sample with `noindex`; 360px and desktop layouts reviewed; axe/keyboard pass on the four pages; the form submits to the nonprod receiver and the row (id ≥ 100000, UTC timestamp) is visible from a read-only host connection; receiver tests green.
 - Stage 2: henley-utils `pytest` green including the new tests; `DRY_RUN=true` nightly run logs a classified synthetic entry with the correct Salesforce payload and digest; failure path returns the contact-details error page.
-- Stage 3+: `scripts/check-urls.sh` asserts every manifest URL returns 200 or its intended 301 on nonprod; GTM preview shows tel/mailto conversions firing under the CSP.
+- Stage 3+: `scripts/check-urls.sh --strict` asserts every manifest URL returns 200 or its intended 301 on nonprod, *and* that each redirect's destination resolves to the right kind of resource; `scripts/check-urls-fixture.sh` proves the gate fails on each defect it claims to catch. GTM preview shows tel/mailto conversions firing under the CSP.
 
 ## 7. Open items for Scott (not blocking Stage 0–2)
 

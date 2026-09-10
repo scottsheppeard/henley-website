@@ -90,8 +90,14 @@ the WordPress reader, and what was actually built reads both sources.
       `branding/` tree used by every staff email signature, and
       `2025/09/lightspeed.png` + `sharepoint.png` used by henley-utils
       notification emails).
-- [ ] `scripts/check-urls.sh https://dev.thehenley.com.au` green with zero
-      outstanding.
+- [ ] `scripts/check-urls.sh --strict https://dev.thehenley.com.au` green.
+      Strict is the gate: it requires every manifest URL, both feeds,
+      `/news/page/2/`, both documents at both addresses, and every redirect's
+      *destination*, and it checks that what came back is the right kind of
+      thing rather than a 200. `--sample` is the progress report during Stage 3
+      and is not launch acceptance.
+- [ ] `scripts/check-urls-fixture.sh` green, so the gate itself is known to
+      fail on the defects it claims to catch.
 - [ ] The Village Comparison Document is linked prominently from every page
       (footer) and from the apartment pages, at
       `/documents/village-comparison-document.pdf`, and the file behind the
@@ -157,7 +163,7 @@ the WordPress reader, and what was actually built reads both sources.
 
 5. **Check, immediately:**
    ```bash
-   scripts/check-urls.sh https://thehenley.com.au
+   scripts/check-urls.sh --strict https://thehenley.com.au
    curl -sS -w '\nHTTP %{http_code}\n' https://thehenley.com.au/webhooks/health
    ```
    Expect `{"status":"healthy",…}` and HTTP 200 from the second. Then submit
@@ -266,8 +272,8 @@ through it deliberately.
 ## After
 
 - [ ] Resubmit the sitemap in Search Console and watch Coverage for a fortnight.
-      `scripts/check-urls.sh` catches what we predicted; Search Console catches
-      what we did not.
+      `scripts/check-urls.sh --strict` catches what we predicted; Search Console
+      catches what we did not.
 - [ ] **`DB_*` stays set, and `db-prod-henley` stays running, until the drain
       reconciliation above is clean** — expect around 8 days, because the
       reader's window is 7, but elapsed time is not the gate and never was.

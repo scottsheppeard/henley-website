@@ -21,6 +21,8 @@
     "test:update": "UPDATE_SNAPSHOTS=1 node --test scripts/*.test.ts",
     "check:enquiry": "scripts/check-enquiry-flow.sh",
     "check:proxy": "scripts/check-proxy-trust.sh",
+    "check:urls": "scripts/check-urls.sh",
+    "check:urls:fixture": "scripts/check-urls-fixture.sh",
     "assets": "scripts/build-assets.sh",
     "check": "npm run tokens && astro check && npm test",
     "astro": "astro"
