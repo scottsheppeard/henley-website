@@ -54,6 +54,9 @@ replica/
   README.md            # how to refresh, how to verify, what is deliberately removed
 deploy/
   Dockerfile.replica   # nginx:alpine serving replica/site — no build stage
+  nginx.replica.conf
+  robots-tag.nonprod.conf
+  robots-tag.prod.conf
   security-headers.replica.conf
   compose.*.yml        # `site` builds Dockerfile.replica; the Astro image is renamed
 ```
@@ -64,13 +67,17 @@ not built by either compose file until the redesign stream takes `dev` back.
 
 ### 2. The export
 
-`replica/export.py` (Python 3, stdlib plus `requests` and `beautifulsoup4`,
-pinned in `replica/requirements.txt`) fetches from the live origin
-`https://thehenley.com.au`:
+`replica/export.py` (Python 3.11, standard library only — a parser would
+re-serialise markup it must not touch, so the rules are regexes over the
+served text; tests run with `forms/.venv`, which already has pytest) fetches
+from the live origin `https://thehenley.com.au`:
 
 - the 27 sitemap URLs from `source/migration-manifest.json`;
 - `/news/page/2/`, `/feed/`, `/news/feed/`, `/sitemap-index.xml` and the
   sitemaps it lists, `/robots.txt`;
+- Yoast's child sitemaps are written as `sitemap-pages.xml` and
+  `sitemap-posts.xml` and the index rewritten to name them, because the
+  existing redirects send the old names to the index;
 - a 404 page, fetched from a path that does not exist, saved as `404.html`.
 
 For each HTML and CSS document it collects same-origin asset references —
@@ -104,7 +111,10 @@ Removed:
 - the emoji detection `<script>` and its `<style>`;
 - `<meta name="generator">` for WordPress, Elementor and WP Rocket;
 - the Site Kit and WPCode HTML comments that name the plugins;
-- the Gravity Forms scripts and inline initialisers (contact page only — see §4).
+- the Gravity Forms scripts and inline initialisers (contact page only — see §4);
+- the `Comments Feed` alternate link; Site Kit's `google-adsense-platform-*`
+  meta tags; the two rotating `"nonce"` values in inline configuration,
+  normalised to zeros.
 
 Kept verbatim: Elementor markup, its CSS and JS, jQuery, the theme's child
 CSS and JS, Yoast title/meta/canonical/OG/Twitter/JSON-LD, both GTM containers
@@ -153,7 +163,8 @@ with no build stage: `COPY replica/site /usr/share/nginx/html`. Same
 unprivileged nginx, same port 8080, same health check, same `nginx -t` at
 build.
 
-`deploy/nginx.conf` changes:
+`deploy/nginx.replica.conf` is a copy of `deploy/nginx.conf` with these
+changes (the Astro site keeps its own file):
 - the `/_astro/` location is removed;
 - a `^~ /wp-content/` location serves theme, plugin and Elementor assets with
   `Cache-Control: public, max-age=31536000` (not `immutable`: versions are
@@ -164,6 +175,8 @@ build.
   exercise. The Elementor and plugin assets under `/wp-content/plugins/` and
   `/wp-content/themes/` are static files and are served; nothing under
   `/wp-content/` is executable.
+- `/wp-includes/js/` is served as static files, since jQuery and two
+  WordPress scripts live there; the rest of `/wp-includes/` stays 410.
 
 `deploy/security-headers.replica.conf` replaces the CSP for the replica. The
 Astro CSP names self-hosted fonts and no third-party script hosts; the
@@ -176,12 +189,13 @@ The other four headers are unchanged.
 
 **F05 is fixed here.** Nonprod becomes a full duplicate of production, so the
 `X-Robots-Tag: noindex, nofollow` header must actually be served. It comes
-from the container, not NPM: `deploy/nginx.conf` gains a `map` on an
-environment-derived variable (`SITE_ENV=nonprod` in `compose.nonprod.yml`,
-rendered by nginx's `envsubst` template mechanism into the conf) that adds
-the header in every location that already includes the security headers file.
-`check-urls.sh --strict` gains an assertion that the header is present on
-nonprod and absent on prod.
+from the container, not NPM: `Dockerfile.replica` takes `ARG SITE_ENV` and
+copies `deploy/robots-tag.${SITE_ENV}.conf` to `/etc/nginx/conf.d/robots-tag.conf`,
+which `security-headers.replica.conf` includes — so the header rides with the
+other security headers into every location. The nonprod compose file passes
+`SITE_ENV: nonprod`; prod passes `prod`, whose file is empty.
+`check-urls.sh --noindex` asserts the header is present and `--indexable`
+that it is absent.
 
 ### 6. Verification
 

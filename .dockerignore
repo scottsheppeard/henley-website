@@ -16,3 +16,6 @@ docs/
 *.png
 !public/**/*.png
 !src/**/*.png
+!replica/site/**/*.png
+replica/screenshots/
+replica/tests/

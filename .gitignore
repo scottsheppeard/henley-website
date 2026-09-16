@@ -41,3 +41,10 @@ assets/**
 !assets/*/
 !assets/*/README.md
 !assets/*/*-inventory.md
+
+# Replica (stream/replica). The export is committed, including its PNG
+# favicons, which the blanket *.png rule above would otherwise drop.
+!replica/site/**/*.png
+replica/screenshots/
+replica/__pycache__/
+replica/tests/__pycache__/
