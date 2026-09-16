@@ -46,7 +46,7 @@ while [[ $# -gt 0 ]]; do
     --sample) MODE="sample"; shift ;;
     --noindex) ROBOTS="noindex"; shift ;;
     --indexable) ROBOTS="indexable"; shift ;;
-    -h|--help) sed -n '2,30p' "$0" | sed 's/^# \?//'; exit 0 ;;
+    -h|--help) sed -n '2,36p' "$0" | sed 's/^# \?//'; exit 0 ;;
     -*) echo "check-urls.sh: unknown option $1" >&2; exit 2 ;;
     *) BASE="$1"; shift ;;
   esac
