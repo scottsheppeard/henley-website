@@ -6,11 +6,12 @@
 # matter.
 #
 #   cd /mnt/persistent/dev/henley-website
-#   docker compose --env-file deploy/.env -f deploy/compose.prod.yml up -d --build
+#   docker compose --env-file deploy/.env.prod -f deploy/compose.prod.yml up -d --build
 #
-# --env-file is not optional. Compose reads `.env` from the directory it runs
-# in, not from deploy/, so without it TRUSTED_PROXY_IPS arrives empty and the
-# receiver believes no proxy at all — see deploy/.env.example.
+# --env-file is not optional. `deploy/.env.prod` holds production's
+# TRUSTED_PROXY_IPS; `deploy/.env` remains nonprod. Without the production file
+# the receiver believes no proxy at all — see deploy/.env.example and
+# docs/runbook-cutover.md.
 #
 # The site image needs no build step: replica/site is committed. Refresh it
 # with `forms/.venv/bin/python replica/export.py` and commit before deploying
@@ -22,8 +23,9 @@
 #   # add it to /home/admin/henley-aws/docker-compose.yml under the
 #   # npm-attachment service and the networks: block, then recreate NPM
 #
-# At cutover, hosts 5 (thehenley.com.au) and 11 (www) move to
-# henley-website-prod:8080, each keeping TWO extra locations:
+# At cutover, the apex host 5 (thehenley.com.au) moves to
+# henley-website-prod:8080 and keeps TWO extra locations. `www` is already a
+# Redirection Host and needs no upstream change:
 #
 #   /webhooks    -> henley-webhooks:8000     ALREADY THERE. Systems beyond this
 #                                            website depend on it. Losing it is
@@ -76,8 +78,9 @@ services:
       # rate limit bypassable by inventing an address per request.
       #
       # This is the npm-attachment container's address ON THIS NETWORK. Read it
-      # after the first `up`, and again after every NPM recreation — adding any
-      # network to npm-attachment reassigns them:
+      # after NPM has this network and before production Compose starts, and
+      # again after every NPM recreation — adding any network to npm-attachment
+      # reassigns them:
       #   docker inspect -f '{{range $$n, $$c := .NetworkSettings.Networks}}{{$$n}} {{$$c.IPAddress}}{{"\n"}}{{end}}' npm-attachment
       #
       # Empty is not a default, it is a misconfiguration: every visitor is then

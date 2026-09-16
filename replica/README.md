@@ -32,6 +32,20 @@ explanation. After Task 11b, references to retired
 origin and made local: restored images are an intentional screenshot difference
 from the broken live page, not a fidelity failure.
 
+When removing assets, do not audit an in-place refresh: the exporter writes the
+current output but does not remove stale files already in its output directory.
+Export to a fresh directory and manifest, then review that complete candidate
+before replacing `site/`:
+
+    audit_dir=$(mktemp -d)
+    forms/.venv/bin/python replica/export.py --out "$audit_dir/site" --manifest "$audit_dir/manifest.json"
+    git diff --no-index --stat replica/site "$audit_dir/site" || true
+    git diff --no-index --stat replica/manifest.json "$audit_dir/manifest.json" || true
+
+The fresh manifest audits files emitted in that run; it does not prove that an
+in-place `site/` directory contains no stale files. Review the candidate and
+its manifest before deliberately replacing the committed export.
+
 ## Verify a deployment
 
     scripts/check-urls.sh --strict --noindex https://dev.thehenley.com.au        # --indexable for prod
