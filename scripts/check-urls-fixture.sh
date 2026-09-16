@@ -59,6 +59,7 @@ SECURITY_HEADERS = {
     "X-Content-Type-Options": "nosniff",
     "Referrer-Policy": "strict-origin-when-cross-origin",
     "Permissions-Policy": "geolocation=(), microphone=()",
+    "X-Robots-Tag": "noindex, nofollow",
 }
 
 LONG_CACHE = "public, max-age=31536000, immutable"
@@ -150,6 +151,8 @@ elif BREAK == "csp-without-ads":
     SECURITY_HEADERS["Content-Security-Policy"] = "default-src 'self'"
 elif BREAK == "wordpress-path-404":
     RETIRED = tuple(p for p in RETIRED if p != "/wp-login.php")
+elif BREAK == "indexable-nonprod":
+    SECURITY_HEADERS.pop("X-Robots-Tag")
 elif BREAK:
     raise SystemExit(f"fixture: unknown BREAK {BREAK!r}")
 
@@ -284,6 +287,32 @@ expect_failure alias-never-revalidates 'revalidates'
 expect_failure missing-security-header 'header referrer-policy'
 expect_failure csp-without-ads         'CSP allows googleadservices.com'
 expect_failure wordpress-path-404      '/wp-login.php — expected 410'
+
+# ── The robots header, both ways ────────────────────────────────────────────
+echo
+echo "the robots header:"
+start_fixture ""
+if scripts/check-urls.sh --strict --noindex "http://127.0.0.1:$PORT" >"$WORK/noindex.log" 2>&1; then
+  check ok "--noindex passes when the header is there"
+else
+  check no "--noindex failed against a site that sends the header"
+fi
+start_fixture "indexable-nonprod"
+if scripts/check-urls.sh --strict --noindex "http://127.0.0.1:$PORT" >"$WORK/indexable.log" 2>&1; then
+  check no "--noindex passed a site without the header"
+elif grep -q "X-Robots-Tag: noindex" "$WORK/indexable.log"; then
+  check ok "--noindex fails when the header is missing"
+else
+  check no "--noindex failed, but not for the header"
+fi
+start_fixture ""
+if scripts/check-urls.sh --strict --indexable "http://127.0.0.1:$PORT" >"$WORK/prod-noindex.log" 2>&1; then
+  check no "--indexable passed a site that sends noindex"
+else
+  grep -q "x-robots-tag present" "$WORK/prod-noindex.log" \
+    && check ok "--indexable fails when noindex leaks into production" \
+    || check no "--indexable failed, but not for the header"
+fi
 
 # ── An expectation nobody wrote down is not a pass ───────────────────────────
 #

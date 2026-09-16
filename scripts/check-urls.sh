@@ -29,15 +29,23 @@
 #   scripts/check-urls.sh --sample https://dev.thehenley.com.au
 #   scripts/check-urls.sh --strict https://thehenley.com.au
 #   scripts/check-urls.sh http://localhost:8080          # strict
+#
+#   --noindex    Also require X-Robots-Tag: noindex on every checked page —
+#                nonprod is a full duplicate of production and this header is
+#                what keeps it out of the index. --indexable requires its
+#                absence. Neither: the header is not checked.
 set -euo pipefail
 
 MODE="strict"
+ROBOTS=""
 BASE=""
 
 while [[ $# -gt 0 ]]; do
   case "$1" in
     --strict) MODE="strict"; shift ;;
     --sample) MODE="sample"; shift ;;
+    --noindex) ROBOTS="noindex"; shift ;;
+    --indexable) ROBOTS="indexable"; shift ;;
     -h|--help) sed -n '2,30p' "$0" | sed 's/^# \?//'; exit 0 ;;
     -*) echo "check-urls.sh: unknown option $1" >&2; exit 2 ;;
     *) BASE="$1"; shift ;;
@@ -49,7 +57,7 @@ BASE="${BASE:-http://localhost:8080}"
 # the checker at a deliberately malformed manifest to prove it refuses one.
 REPO_ROOT="${CHECK_URLS_ROOT:-$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)}"
 
-BASE="$BASE" MODE="$MODE" REPO_ROOT="$REPO_ROOT" python3 - <<'PY'
+BASE="$BASE" MODE="$MODE" ROBOTS="$ROBOTS" REPO_ROOT="$REPO_ROOT" python3 - <<'PY'
 import json
 import os
 import re
@@ -458,6 +466,25 @@ else:
     # firing silently.
     for host in ("googletagmanager.com", "googleadservices.com", "google-analytics.com"):
         record(host in raw, f"CSP allows {host}")
+
+# ── Robots header ───────────────────────────────────────────────────────────
+#
+# Checked on two pages and an asset, because the header is added inside the
+# security-headers include and the F05 lesson is that a location declaring
+# any add_header of its own silently drops the inherited ones.
+robots = os.environ.get("ROBOTS")
+if robots:
+    print(f"\nrobots header ({robots}):")
+    for path in ("/", "/contact/", "/robots.txt"):
+        raw = subprocess.run(
+            ["curl", "-sSI", "--max-time", TIMEOUT, f"{base}{path}"],
+            capture_output=True, text=True,
+        ).stdout.lower()
+        present = "x-robots-tag: noindex" in raw
+        if robots == "noindex":
+            record(present, f"{path} carries X-Robots-Tag: noindex")
+        else:
+            record(not present, f"{path} carries no X-Robots-Tag", "x-robots-tag present")
 
 # ── Verdict ─────────────────────────────────────────────────────────────────
 if pending:
