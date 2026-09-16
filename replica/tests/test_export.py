@@ -188,3 +188,58 @@ def test_rewrite_origin_on_the_captured_contact_page_leaves_no_absolute_asset_ou
 def test_rewrite_css_makes_every_absolute_reference_relative():
     css = ".a{background:url(https://thehenley.com.au/wp-content/uploads/x.jpg)} .b{background:url('https://thehenley.com.au/wp-content/uploads/y.jpg')}"
     assert export.rewrite_css(css) == ".a{background:url(/wp-content/uploads/x.jpg)} .b{background:url('/wp-content/uploads/y.jpg')}"
+
+
+# ── The contact form ─────────────────────────────────────────────────────────
+
+import re as _re
+
+
+def _inputs(form: str) -> dict[str, str]:
+    """name -> value for every input and textarea in a form."""
+    found = {}
+    for tag in _re.findall(r"<(?:input|textarea)\b[^>]*>", form):
+        name = _re.search(r"\bname=['\"]([^'\"]+)['\"]", tag)
+        value = _re.search(r"\bvalue=['\"]([^'\"]*)['\"]", tag)
+        if name:
+            found[name.group(1)] = value.group(1) if value else ""
+    return found
+
+
+def test_replace_form_swaps_the_gravity_form_for_the_receivers(capture, form_html):
+    out = export.clean_html(export.replace_form(capture("contact"), form_html))
+
+    forms = _re.findall(r"<form\b[^>]*>.*?</form>", out, _re.S)
+    assert len(forms) == 1
+    form = forms[0]
+    assert _re.search(r"<form\b[^>]*\baction=['\"]/api/enquiry['\"]", form)
+    assert _re.search(r"<form\b[^>]*\bmethod=['\"]post['\"]", form, _re.I)
+
+    inputs = _inputs(form)
+    assert set(inputs) == {"name", "email", "phone", "interest_apartment",
+                           "interest_aged_care", "enquiry_text", "company", "page_path"}
+    assert inputs["interest_apartment"] == "Apartment Living"
+    assert inputs["interest_aged_care"] == "Private Aged Care"
+    assert inputs["page_path"] == "/contact/"
+    assert "referral_source" not in form
+    assert "How did you hear about us" not in out
+
+    # Gravity's CSS stays so the form looks the same; its JS and iframe go.
+    assert _re.search(r"<link\b[^>]*plugins/gravityforms/[^>]*\.css", out)
+    assert "gform_ajax_frame" not in out
+    for script in _re.findall(r"<script\b[^>]*>.*?</script>", out, _re.S):
+        assert "gform" not in script
+    assert "gravityformsrecaptcha" not in out
+
+    # The honeypot is hidden by Gravity's own class, not by anything new.
+    assert _re.search(r"gform_validation_container[^>]*>.*?name=['\"]company['\"]", form, _re.S)
+
+
+def test_replace_form_refuses_a_page_without_a_gravity_form(capture, form_html):
+    with pytest.raises(export.ExportError):
+        export.replace_form(capture("home"), form_html)
+
+
+def test_only_the_contact_page_embeds_a_form(capture):
+    for slug in ("home", "dining", "location", "thank-you", "news", "privacy-policy"):
+        assert not export.GFORM_BLOCK_RE.search(capture(slug)), slug

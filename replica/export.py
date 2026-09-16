@@ -222,3 +222,25 @@ def clean_html(text: str) -> str:
     remove first (so a removed tag's URL is never rewritten), then normalise,
     then relativise."""
     return rewrite_origin(normalise_nonces(remove_wordpress_tags(text)))
+
+
+# ── The contact form ─────────────────────────────────────────────────────────
+#
+# Gravity Forms renders the form, a hidden iframe for its AJAX submit, and an
+# inline initialiser, in that order. All three go; replica/form.html goes in
+# their place. Gravity's stylesheets stay (the removal rules only take scripts),
+# which is what makes the replacement look the same.
+
+GFORM_BLOCK_RE = re.compile(
+    r"<div class='gf_browser_[^']*gform_wrapper[^>]*>.*?</form>\s*</div>"
+    r"(?:\s*<iframe[^>]*gform_ajax_frame_\d+[^>]*>.*?</iframe>)?"
+    r"(?:\s*<script>.*?</script>)?",
+    re.S,
+)
+
+
+def replace_form(text: str, form_html: str) -> str:
+    replaced, count = GFORM_BLOCK_RE.subn(lambda _m: form_html, text, count=1)
+    if count != 1:
+        raise ExportError("no Gravity Forms block to replace; refusing to ship the page without a form")
+    return replaced
