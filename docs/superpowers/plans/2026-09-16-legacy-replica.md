@@ -1,5 +1,7 @@
 # Like-for-like replica of thehenley.com.au — implementation plan
 
+**Status — 2026-09-17:** Tasks 1–13, including 11b, are implemented, landed and verified on dev. Production cutover remains pending Scott’s review and the runbook prerequisites. See [verification and deployment evidence](../../2026-09-17-replica-verification.md); historical step checkboxes below are not the current status.
+
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
 **Goal:** Serve a static, self-contained copy of the live WordPress site from nginx, with the contact form posting to the existing enquiry receiver, verified indistinguishable from today's site, deployed to dev.thehenley.com.au as the cutover candidate.
@@ -1952,14 +1954,15 @@ Fill in as tasks complete. Test results and artefact locations only; never enqui
 
 | Task | Commit | Local evidence | Nonprod evidence | Outstanding |
 |---|---|---|---|---|
-| 1–5 export rules | | `pytest replica/tests`: N passed | — | |
-| 6 export | | counts; two runs byte-identical; size | — | |
-| 7 image + config | | `check-urls.sh --strict` against the local container: N/0/0 | | |
-| 8 robots gate | | fixture: 3 new checks ok | | |
-| 9 enquiry flow | | `SITE_DIR=replica/site check-enquiry-flow.sh`: no FAIL | | |
-| 10 fidelity | | table; explained differences | | |
-| 11 console | | 0 findings; hosts added | | |
-| 13 nonprod | | | strict --noindex; console; compare; enquiry sequence | |
+| 1–5 export rules | `6d7331f` | 30 exporter tests pass | Deployed files match manifest | — |
+| 6 export | `6d7331f` | 339 files, 301 assets, 62MB; repeat export identical apart from timestamp | All 339 hashes verified | Refresh before production |
+| 7 image + config | `eebf832`, `8ded512` | Strict URL gate 87/0/0 | 87/0/0, including noindex | — |
+| 8 robots gate | `b52f54f`, `32b6c2c` | Fixtures pass | Dev noindex verified | Production indexability at cutover |
+| 9 enquiry flow | `1339d2e` | Receiver 77 tests pass | Seven checks pass; two synthetic rows removed | Nightly reader dry run, live drain |
+| 10 fidelity | `3b5d54d`, `6d7331f` | All 56 comparisons reviewed | All 56 reviewed; intended form difference and intermittent loading documented | Scott visual review |
+| 11 / 11b console | `eebf832` | Regression fixtures pass; 58 combinations covered | 58 covered with zero fatal after two timeout rechecks | Inherited tracking warnings remain |
+| 12 docs | `195a941`, `eebf832` | README, decisions, spec and cutover aligned | Verification report records deployed evidence | Production prerequisites in report |
+| 13 nonprod | `8ded512` | Landing checks and 29-page build pass | Site-only deployment 17 Sep; strict gate, console, screenshots and enquiry checks complete | Production cutover pending |
 
 Explained screenshot differences (path, width, cause):
 

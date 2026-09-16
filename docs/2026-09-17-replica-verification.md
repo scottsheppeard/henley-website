@@ -77,9 +77,66 @@ under `replica/screenshots/` and the plan's `.superpowers/sdd/` workspace.
 
 ## Deployment and final gates
 
-Pending at the time this record was started. Complete this section with the
-landed commit, image, public URL/header/browser checks and enquiry cleanup
-evidence before declaring the dev candidate verified.
+`stream land replica --repo henley-website --yes` landed and registered
+`8ded51264441` on main. Its required checks passed: Astro 0 errors/0 warnings,
+15 Node tests and a complete 29-page Astro build. The first build attempt was
+interrupted before any main update to restore the prior worktree's image
+cache: Astro sources were unchanged and all 84 overlapping cache files were
+byte-identical. The normal landing checks and build were then rerun; none
+were skipped.
+
+At 09:05 Brisbane, the `site` service alone was rebuilt using the nonprod
+Compose file and `deploy/.env`. Deployed image:
+`sha256:3df129a8fef4500c86b889c5c781666af75b93e2c122761f2ac1bd5705d0bb6f`.
+The site is healthy; the forms receiver's image/start time remain unchanged.
+WordPress production continues running.
+
+| Public dev check | Result |
+| --- | --- |
+| Strict URL and noindex checks through NPM | 87 passed, 0 failed, 0 outstanding |
+| Deployed artifact integrity | All 339 file hashes match the export; nginx and policy bytes match source |
+| Chunked 20KB POST | Receiver's helpful 413 response |
+| Browser form submission | Stored, redirected to `/thank-you/?sent=1`, thank-you heading visible |
+| Invalid email containing a script element | Escaped 400 response |
+| Valid POST with invented forwarding address | Stored, 303 redirect |
+| Fourth request with a different invented address | Helpful 429; no extra row |
+| Honeypot after the rate limit | 303; no row |
+| Stored data and cleanup | Exactly two synthetic rows, IDs 100011/100012, same actual client address and `/contact/`; both deleted; zero marker rows remain |
+
+The browser submission used the first hourly test slot, then invalid-email
+and forged-header valid requests used the other two. This exercised all the
+planned behaviours without restarting the receiver or waiting for another
+hourly slot. No real enquiry was removed.
+
+Public console coverage is 58 page/width combinations with zero fatal findings
+across the full run and exact isolated rechecks. Desktop passed 29/29 on the
+first run. Mobile initially had two 30-second network-idle timeouts
+(`/internationalwomensday/` and `/how-it-works-the-costs-of-retirement-living/`);
+both passed isolated rechecks. External tracking/network warnings remain
+visible and nonfatal; no CSP or local-asset failures were suppressed.
+
+Public screenshot coverage is all 28 pages at 390 and 1280: initially 48/56
+within 0.5%, with eight comparisons reviewed:
+
+| Page / width | Evidence and disposition |
+| --- | --- |
+| Contact, both | Intentional shorter form, as agreed in the spec |
+| Privacy policy, 390 | Fallback font on live initially; rerun reversed which origin used the fallback. External font loading remains intermittent |
+| Location, 1280 | Isolated rerun matched 0.00% at both widths |
+| Private aged care, 390 | Isolated rerun matched 0.00% at both widths |
+| Supported living, 1280 | Inspected live screenshot lacked styles and logo while candidate rendered correctly; rerun timed out waiting for network idle |
+| Private aged care approach article, 1280 | Isolated desktop rerun matched 0.00%; initial mobile matched. Rerun mobile showed incomplete stylesheet loading on both origins, confirmed in both screenshots |
+| Amazing artists, 1280 | Inspected live screenshot had a blank grey hero; candidate displayed the correct photo. Rest of layout and page heights matched |
+
+These are explained comparisons, not a claim that every raw screenshot run
+exited successfully. No thresholds were raised. Intermittent external font
+and page-loading behaviour remains a limitation for Scott's visual review.
+Restoring dev-host images also makes those URLs available to the still-running
+WordPress site; its appearance can therefore improve without a production
+container deployment.
+
+Raw public logs are retained in the local SDD workspace alongside the local
+evidence. Dev verification is complete; production approval is still pending.
 
 ## Production prerequisites
 
