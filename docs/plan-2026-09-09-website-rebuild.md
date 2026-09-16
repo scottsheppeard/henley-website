@@ -1,5 +1,12 @@
 # The Henley website rebuild — assessment of the GPT review and plan to start building
 
+> **2026-09-16 — this is the redesign plan.** The work is split: leaving
+> WordPress is `stream/replica`, which prepares a like-for-like static export
+> for cutover; the pages, brief approvals and Stage 3 items below belong to
+> `stream/website-rebuild`. The redesign does not currently have a review URL.
+> This change does not remove the shared enquiry, proxy-trust, webhook, URL-gate
+> or drain-rehearsal safety gates from the replica cutover.
+
 Repo: `/mnt/persistent/dev/henley-website` (remote `scottsheppeard/henley-website`). Date: 2026-09-09.
 
 **Follow-up, 2026-09-10:** The [review remediation plan](plan-2026-09-10-review-remediation.md)

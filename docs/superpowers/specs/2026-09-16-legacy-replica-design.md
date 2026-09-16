@@ -94,6 +94,12 @@ Cross-origin references (Google Fonts, Typekit kit `azk7leu`, Font Awesome kit
 Forms maintenance form) are left exactly as they are. They are dependencies
 the live site already has; the replica neither adds nor removes any.
 
+**2026-09-17 correction:** asset references under `dev.thehenley.com.au`
+are treated as local assets, fetched from the production origin and made
+root-relative in HTML, inline configuration and CSS. These old references
+are broken on the live site; restoring the intended images is a documented
+exception to visual fidelity, not a new external dependency.
+
 The export is rerun the evening before cutover and the diff of
 `replica/site/` and `manifest.json` reviewed, so any WordPress edit made after
 this stream's first export is carried across. `manifest.json` records the
@@ -221,8 +227,13 @@ All of these are gates for landing the deploy slice, and again at cutover:
    thank-you page, the honeypot discards, the fourth submission from one
    address is 429, a script element in the email field comes back escaped.
    Rows are removed afterwards.
-6. **Console.** Zero CSP violations and zero failed requests on every page at
-   both widths.
+6. **Console.** Zero CSP violations, local resource failures and runtime
+   errors on every page at both widths. External network failures are
+   reported separately for review: the inherited `GTM-M3MV9VG` container
+   returned 404 on production during the September 16 check. Keep the tag
+   pending Scott's decision; do not relax the CSP or hide local failures to
+   make that external failure disappear. The deliberate 404 page probe is
+   expected to return 404.
 7. **Headers.** `X-Robots-Tag` present on dev, and the strict gate proves it.
 
 ### 7. Cutover
@@ -244,8 +255,16 @@ unchanged. The R03 drain rehearsal remains deferred by Scott's decision of
 - A content editing workflow. Edits are made to the exported HTML in git and
   redeployed; `README.md` documents the two-command path.
 - The redesign stream's open items (brief approvals, GTM/CSP under the new
-  design, legacy asset copy for the new site, accessibility pass,
+  design, accessibility pass,
   Lighthouse). They stay in `docs/plan-2026-09-09-website-rebuild.md`.
+
+Existing email-image URLs are a production migration dependency even when
+no website page references them. Before cutover, inventory and preserve
+the `branding/` assets used by staff signatures and the notification images
+`2025/09/lightspeed.png` and `2025/09/sharepoint.png`. They are not yet
+covered by the page-driven exporter or its strict URL gate; dev review can
+proceed, but production must not retire their current host without proof
+that the replacement serves them.
 
 ### 9. Risks carried knowingly
 

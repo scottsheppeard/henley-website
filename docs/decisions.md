@@ -8,6 +8,30 @@ site does is [the baseline](2026-09-09-rebuild-baseline-and-proposal.md).
 
 ---
 
+## Two streams: leave WordPress first, redesign second (2026-09-16)
+
+The rebuild is split. `stream/replica` is preparing a static export of the
+current site for cutover; `stream/website-rebuild` continues as the redesign.
+The replica is not deployed yet, and the redesign has no review URL until the
+replica is stable and `dev.thehenley.com.au` can be retargeted. The replica
+specification is `docs/superpowers/specs/2026-09-16-legacy-replica-design.md`.
+
+The enquiry receiver, id floor, timestamp format, bot protection, proxy trust,
+webhook preservation, URL gate and drain procedure apply to the replica without
+relaxation. The redesign owns its brief, paths, photography and form design.
+The replica keeps the old form's visible fields except “How did you hear about
+us?”, Scott's 2026-09-16 choice, and retains Gravity's CSS classes.
+
+The replica is a short-lived, git-maintained bridge. It preserves the live
+dependencies on Typekit, Font Awesome, gtag and both GTM containers. Task 11b
+will make retired `dev.thehenley.com.au` upload references local production
+assets, repairing a live broken-image defect. It will also make CSP and
+local-resource/runtime failures fatal in the console gate while reporting the
+known dead `GTM-M3MV9VG` tracking failures separately and nonfatally. Removing
+or consolidating those dependencies remains a redesign decision.
+
+---
+
 ## The primary button on the deep ground
 
 **On Broadwater Deep the primary button is Warm Sand with Deep text, not the

@@ -4,10 +4,12 @@ Moving thehenley.com.au from WordPress to the static site. Written while the
 pieces were being built, so it records what is actually true rather than what
 was planned.
 
-**Not yet ready to run.** Stage 3 (the remaining 22 pages, the news index and
-feeds, the documents, the legacy assets) has to be finished, and the design
-sample signed off, before any of this is worth doing. It is here now because
-the sequencing decisions belong with the code that assumes them.
+**Not yet ready to run.** The replica must first be refreshed, deployed to
+nonprod, and pass the acceptance checks below. The older Astro redesign's
+Stage 3 is no longer this cutover's blocker; it remains work for
+`stream/website-rebuild`. The sequencing decisions here still apply because
+they protect enquiries, webhooks, and externally linked legacy assets during
+the replica cutover.
 
 ---
 
@@ -157,40 +159,43 @@ the WordPress reader, and what was actually built reads both sources.
 
 ## Before the day
 
-- [ ] Stage 3 complete: all 27 URLs, `/news/page/2/`, `/feed/`, `/news/feed/`,
-      the two PDFs at their `/wp-content/uploads/` paths plus the
-      `/documents/` aliases, and the audited legacy asset copy (the
-      `branding/` tree used by every staff email signature, and
-      `2025/09/lightspeed.png` + `sharepoint.png` used by henley-utils
-      notification emails).
-- [ ] `scripts/check-urls.sh --strict https://dev.thehenley.com.au` green.
+- [ ] The replica export is fresh: run `forms/.venv/bin/python
+      replica/export.py` the evening before, review and commit its diff, and
+      rebuild nonprod from it. This is the last copy from WordPress; a
+      WordPress edit after it is not in the replica.
+- [ ] `scripts/check-urls.sh --strict --noindex https://dev.thehenley.com.au`
+      is green.
       Strict is the gate: it requires every manifest URL, both feeds,
       `/news/page/2/`, both documents at both addresses, and every redirect's
-      *destination*, and it checks that what came back is the right kind of
-      thing rather than a 200. `--sample` is the progress report during Stage 3
-      and is not launch acceptance.
+      *destination*, and checks that what came back is the right kind of thing
+      rather than merely a 200.
 - [ ] `scripts/check-urls-fixture.sh` green, so the gate itself is known to
       fail on the defects it claims to catch.
-- [ ] The Village Comparison Document is linked prominently from every page
-      (footer) and from the apartment pages, at
-      `/documents/village-comparison-document.pdf`, and the file behind the
-      alias is the current revision. Section 74(6)(a) of the Retirement
-      Villages Act; see `docs/village-comparison-document.md`.
-- [ ] The design sample signed off by the GM, and `docs/brief.md`'s held
-      claims either evidenced or removed.
+- [ ] `scripts/with-node.sh node replica/compare.mjs https://thehenley.com.au
+      https://dev.thehenley.com.au` has only the known shorter `/contact/` form
+      and, after Task 11b, reviewed restored-image differences from the retired
+      dev hostname. Any other difference is investigated.
+- [ ] `scripts/with-node.sh node replica/console-check.mjs
+      https://dev.thehenley.com.au` has zero CSP violations and zero
+      local-resource/runtime errors. External tracking failures are recorded
+      separately; the known dead `GTM-M3MV9VG` container is nonfatal and remains
+      preserved pending Scott's decision.
+- [ ] **Before production cutover**, retain the external email assets at their
+      legacy paths: `wp-content/uploads/2025/09/lightspeed.png`,
+      `wp-content/uploads/2025/09/sharepoint.png`, and the `branding/` tree
+      used by staff signatures. No collection evidence exists yet; verify the
+      required files and paths before the production switch.
 - [ ] **Search Console ownership secured by DNS TXT**, verified *before* Site
       Kit is removed. Site Kit's verification is an OAuth grant tied to the
       WordPress install; switching it off can take ownership with it, and
       re-verifying afterwards is much harder than verifying now.
-- [ ] Scott adds the GTM trigger for the `enquiry_submitted` event the
-      thank-you page pushes, and a blocking trigger on the two Ads conversions
-      for `environment=nonprod` so preview traffic never counts.
 - [ ] A test enquiry through dev lands in the nonprod intake store, and a
       `DRY_RUN=true` run of the nightly job classifies it and logs the
       Salesforce payload it would send.
-- [ ] **The drain rehearsal below has been run end to end on nonprod**, with a
-      synthetic enquiry either side of a simulated switch, one sales and one
-      non-sales case, and one forced failure that the catch-up recovers.
+- [ ] **The drain rehearsal is deferred.** On 2026-09-10 Scott judged the few
+      enquiries not worth holding work up for, so the drain will first be
+      performed on cutover day. The live drain boundary and reconciliation in
+      “Draining WordPress” remain required; deferral does not waive them.
 
 ## Cutover
 
@@ -209,23 +214,28 @@ the WordPress reader, and what was actually built reads both sources.
    ```bash
    docker network create henley-website-prod-net   # once
    cd /mnt/persistent/dev/henley-website
-   scripts/with-node.sh npm ci                     # a fresh checkout has none
-   scripts/with-node.sh npm run tokens
-   cp deploy/.env.example deploy/.env              # then set TRUSTED_PROXY_IPS
-   docker compose --env-file deploy/.env -f deploy/compose.prod.yml up -d --build
+   # Attach henley-website-prod-net to npm-attachment in
+   # /home/admin/henley-aws/docker-compose.yml, then recreate NPM.
+   test -f deploy/.env.prod || cp deploy/.env.example deploy/.env.prod
+   prod_npm_ip="$(docker inspect -f '{{(index .NetworkSettings.Networks "henley-website-prod-net").IPAddress}}' npm-attachment)"
+   nonprod_npm_ip="$(docker inspect -f '{{(index .NetworkSettings.Networks "henley-website-nonprod-net").IPAddress}}' npm-attachment)"
+   test -n "$prod_npm_ip" && test -n "$nonprod_npm_ip"
+   sed -i -E "s|^TRUSTED_PROXY_IPS=.*$|TRUSTED_PROXY_IPS=$prod_npm_ip|" deploy/.env.prod
+   if ! grep -qx "TRUSTED_PROXY_IPS=$nonprod_npm_ip" deploy/.env; then
+     sed -i -E "s|^TRUSTED_PROXY_IPS=.*$|TRUSTED_PROXY_IPS=$nonprod_npm_ip|" deploy/.env
+     docker compose --env-file deploy/.env -f deploy/compose.nonprod.yml up -d forms
+   fi
+   docker compose --env-file deploy/.env.prod -f deploy/compose.prod.yml up -d --build
    ```
    `--env-file` is not optional: Compose reads `.env` from the directory it is
-   run in, not from `deploy/`, and `deploy/.env` is gitignored so a fresh
-   checkout has none. Without both, the receiver starts trusting no proxy —
-   which looks exactly like a working deployment until someone tries to bypass
-   a rate limit. This happened on nonprod on 2026-09-10 and the startup warning
-   is what caught it.
-   Attach `henley-website-prod-net` to `npm-attachment` in
-   `/home/admin/henley-aws/docker-compose.yml`, recreate NPM, then set
-   `TRUSTED_PROXY_IPS` to the npm-attachment address on that network and
-   recreate the forms container. See "Trusted proxy address" below: an empty
-   value is a misconfiguration, not a default, and the receiver says so at
-   startup.
+   run in, not from `deploy/`. `deploy/.env` remains the nonprod file. Create
+   `deploy/.env.prod` from the example only when it is absent, then set its
+   `TRUSTED_PROXY_IPS` for the production network. The commands inspect the
+   named production and nonprod networks directly; do not copy an address from
+   the other network. If NPM recreation changed the nonprod address, they update
+   only `deploy/.env` and recreate its forms service before production begins.
+   They set `deploy/.env.prod` before starting any production container. An
+   empty value is a misconfiguration, not a default.
 
 3. **Turn on the intake source, before the switch.**
    Set `INTAKE_DB_PATH=/mnt/persistent/stor/henley-website-prod/intake.sqlite`
@@ -256,12 +266,15 @@ the WordPress reader, and what was actually built reads both sources.
 
 5. **Check, immediately:**
    ```bash
-   scripts/check-urls.sh --strict https://thehenley.com.au
+   scripts/check-urls.sh --strict --indexable https://thehenley.com.au
    curl -sS -w '\nHTTP %{http_code}\n' https://thehenley.com.au/webhooks/health
    ```
    Expect `{"status":"healthy",…}` and HTTP 200 from the second. Then submit
    one real enquiry through the live form and confirm the row appears in the
-   production intake store.
+   production intake store. Compare the new production against the nonprod
+   replica with `scripts/with-node.sh node replica/compare.mjs
+   https://dev.thehenley.com.au https://thehenley.com.au`; expect every page
+   `ok` because both use the same export.
 
 6. **Stop the WordPress web application only.** This is the moment WordPress
    can no longer receive a submission, and it is the start of the drain.
@@ -374,8 +387,11 @@ through it deliberately.
       drops out on its own.
 - [ ] Remove the two agency administrator accounts (`admin_max` / Rouken,
       `alex@pupdigital.com.au`) from anything they still reach.
-- [ ] Confirm the Ads click conversions and the new `enquiry_submitted` event
-      are both firing on the live site, in GTM preview.
+- [ ] Confirm the existing Ads click conversions are firing on the live site in
+      GTM preview.
+- [ ] Once production is stable, retarget NPM host 4
+      (`dev.thehenley.com.au`) to the redesign container so
+      `stream/website-rebuild` has its review URL again.
 - [ ] The root-owned PHP `core` dump dated 2026-09-07 in the old web root goes
       with the WordPress files, not into the archive.
 
@@ -449,20 +465,23 @@ at the proxy with nginx's own error. Without the location setting, NPM's global
 receiver whose limit is 16 KB.
 
 The value itself is the npm-attachment container's address **on this site's
-network**:
+network**. Inspect the named networks directly so an address is never copied
+from the wrong network:
 
 ```bash
-docker inspect -f \
-  '{{range $n, $c := .NetworkSettings.Networks}}{{$n}} {{$c.IPAddress}}{{"\n"}}{{end}}' \
-  npm-attachment
+docker inspect -f '{{(index .NetworkSettings.Networks "henley-website-prod-net").IPAddress}}' npm-attachment
+docker inspect -f '{{(index .NetworkSettings.Networks "henley-website-nonprod-net").IPAddress}}' npm-attachment
 ```
 
-Put it in `deploy/.env` and recreate the forms container. **It changes when
-npm-attachment is recreated**, which happens every time a network is added to
-it — including in step 2 above. Re-read it and recreate the forms container
-after any NPM change, and check `docker logs henley-website-forms-prod | head`:
-an empty list is a misconfiguration that looks exactly like a working
-deployment until someone tries to bypass a rate limit.
+Put the production-network address in `deploy/.env.prod` and use it for every
+production Compose command. Put the nonprod-network address in `deploy/.env`.
+**Both addresses can change when `npm-attachment` is recreated**, including
+when step 2 adds the production network. After any NPM recreation, re-read the
+addresses on both named networks, update only their corresponding environment
+files, and recreate the matching forms container when its value changed. Then check
+`docker logs henley-website-forms-prod | head`: an empty list is a
+misconfiguration that looks exactly like a working deployment until someone
+tries to bypass a rate limit.
 
 ## If it goes wrong
 
