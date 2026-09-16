@@ -244,3 +244,149 @@ def replace_form(text: str, form_html: str) -> str:
     if count != 1:
         raise ExportError("no Gravity Forms block to replace; refusing to ship the page without a form")
     return replaced
+
+
+# ── Sitemaps ─────────────────────────────────────────────────────────────────
+
+def rewrite_sitemap(text: str) -> str:
+    """Yoast's index names its children; those names are redirected to the
+    index by the existing rules, so they are renamed here. Page <loc>s keep
+    the production origin — that is what a sitemap is for."""
+    text = text.replace(f"{ORIGIN}/post-sitemap.xml", f"{ORIGIN}/sitemap-posts.xml")
+    text = text.replace(f"{ORIGIN}/page-sitemap.xml", f"{ORIGIN}/sitemap-pages.xml")
+    return text.replace(f'href="{ORIGIN}/main-sitemap.xsl"', 'href="/main-sitemap.xsl"')
+
+
+# ── Fetching ─────────────────────────────────────────────────────────────────
+
+def fetch(url: str, expect: int = 200) -> bytes:
+    """One GET, three attempts on transport errors and 5xx, and the body only
+    if the status is the one expected. A 200 for a page that should 404, or a
+    404 for a page that should exist, is an export that must not ship."""
+    request = urllib.request.Request(url, headers={"User-Agent": USER_AGENT, "Accept": "*/*"})
+    last_error: Exception | None = None
+    for attempt in range(3):
+        try:
+            with urllib.request.urlopen(request, timeout=30) as response:
+                status, body = response.status, response.read()
+        except urllib.error.HTTPError as error:
+            status, body = error.code, error.read()
+            if status >= 500:
+                last_error = error
+                time.sleep(2 * (attempt + 1))
+                continue
+        except (urllib.error.URLError, TimeoutError, ConnectionError) as error:
+            last_error = error
+            time.sleep(2 * (attempt + 1))
+            continue
+        if status != expect:
+            raise ExportError(f"{url}: expected {expect}, got {status}")
+        return body
+    raise ExportError(f"{url}: {last_error}")
+
+
+# ── The run ──────────────────────────────────────────────────────────────────
+
+def _is_fetchable_asset(path: str) -> bool:
+    """find_assets matches any /wp-content/ or /wp-includes/ reference, but a
+    handful of those are not files: WordPress's speculationrules script lists
+    glob patterns ("/wp-content/uploads/*") and Gravity Forms' inline config
+    stores bare base paths ("/wp-content/plugins/gravityforms") for building
+    other URLs in JS. Neither is fetchable, and both are prefixes of real
+    asset paths, so writing them as files would block the real ones."""
+    name = path.rsplit("/", 1)[-1]
+    return "." in name and "*" not in path
+
+
+def run(origin: str, out: Path, manifest_path: Path, form_path: Path | None = None,
+        form_html: str | None = None) -> None:
+    if form_html is None:
+        form_html = (form_path or HERE / "form.html").read_text(encoding="utf-8")
+    source = json.loads(MANIFEST_SOURCE.read_text(encoding="utf-8"))
+
+    records: list[dict] = []
+    assets: set[str] = set()
+
+    def write(file: str, data: bytes, url_path: str, kind: str) -> None:
+        target = out / file
+        target.parent.mkdir(parents=True, exist_ok=True)
+        target.write_bytes(data)
+        records.append({"file": file, "url": origin + url_path, "kind": kind,
+                        "bytes": len(data), "sha256": hashlib.sha256(data).hexdigest()})
+
+    pages = [(entry["path"], page_file(entry["path"])) for entry in source["urls"]] + EXTRA_PAGES
+    for url_path, file in pages:
+        text = fetch(origin + url_path).decode("utf-8")
+        if url_path == "/contact/":
+            text = replace_form(text, form_html)
+        elif GFORM_BLOCK_RE.search(text):
+            raise ExportError(f"{url_path} embeds a Gravity Form; only /contact/ is expected to")
+        assets |= find_assets(text)
+        write(file, clean_html(text).encode("utf-8"), url_path, "page")
+        print(f"  page   {url_path}")
+
+    text = fetch(origin + NOT_FOUND_PROBE, expect=404).decode("utf-8")
+    assets |= find_assets(text)
+    write("404.html", clean_html(text).encode("utf-8"), NOT_FOUND_PROBE, "404")
+    print("  404    (WordPress's 404 template)")
+
+    for url_path, file in FEEDS:
+        write(file, fetch(origin + url_path), url_path, "feed")
+        print(f"  feed   {url_path}")
+
+    for url_path, file in SITEMAPS:
+        body = fetch(origin + url_path)
+        if file.endswith(".xml"):
+            body = rewrite_sitemap(body.decode("utf-8")).encode("utf-8")
+        write(file, body, url_path, "sitemap")
+        print(f"  sitemap {url_path} -> /{file}")
+
+    write(ROBOTS[1], fetch(origin + ROBOTS[0]), ROBOTS[0], "robots")
+
+    pending = sorted(p for p in assets if _is_fetchable_asset(p))
+    seen: set[str] = set()
+    while pending:
+        path = pending.pop(0)
+        if path in seen:
+            continue
+        seen.add(path)
+        body = fetch(origin + path)
+        if path.endswith(".css"):
+            css_text = body.decode("utf-8")
+            for extra in sorted(find_css_assets(css_text, path)):
+                if extra not in seen and _is_fetchable_asset(extra):
+                    pending.append(extra)
+            body = rewrite_css(css_text).encode("utf-8")
+        write(asset_file(path), body, path, "asset")
+    print(f"  assets {len(seen)}")
+
+    records.sort(key=lambda r: r["file"])
+    manifest_path.write_text(json.dumps({
+        "$comment": "Generated by replica/export.py. Every file in replica/site, where it came from, and its hash.",
+        "origin": origin,
+        "fetched_at": datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ"),
+        "counts": {kind: sum(1 for r in records if r["kind"] == kind)
+                   for kind in ("page", "404", "feed", "sitemap", "robots", "asset")},
+        "files": records,
+    }, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
+
+
+def main(argv: list[str] | None = None) -> int:
+    parser = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
+    parser.add_argument("--origin", default=ORIGIN)
+    parser.add_argument("--out", type=Path, default=HERE / "site")
+    parser.add_argument("--manifest", type=Path, default=HERE / "manifest.json")
+    parser.add_argument("--form", type=Path, default=HERE / "form.html")
+    args = parser.parse_args(argv)
+    try:
+        print(f"exporting {args.origin} -> {args.out}")
+        run(args.origin, args.out, args.manifest, args.form)
+    except ExportError as error:
+        print(f"export failed: {error}", file=sys.stderr)
+        return 1
+    print("done")
+    return 0
+
+
+if __name__ == "__main__":
+    sys.exit(main())

@@ -1,6 +1,9 @@
 """Tests for replica/export.py — every rule that changes what WordPress served."""
 from __future__ import annotations
 
+import hashlib
+import json
+
 import pytest
 
 import export
@@ -243,3 +246,91 @@ def test_replace_form_refuses_a_page_without_a_gravity_form(capture, form_html):
 def test_only_the_contact_page_embeds_a_form(capture):
     for slug in ("home", "dining", "location", "thank-you", "news", "privacy-policy"):
         assert not export.GFORM_BLOCK_RE.search(capture(slug)), slug
+
+
+# ── Sitemaps ─────────────────────────────────────────────────────────────────
+
+def test_rewrite_sitemap_renames_children_and_localises_the_stylesheet():
+    index = ('<?xml version="1.0" encoding="UTF-8"?><?xml-stylesheet type="text/xsl" '
+             'href="https://thehenley.com.au/main-sitemap.xsl"?>'
+             '<sitemapindex><sitemap><loc>https://thehenley.com.au/post-sitemap.xml</loc></sitemap>'
+             '<sitemap><loc>https://thehenley.com.au/page-sitemap.xml</loc></sitemap></sitemapindex>')
+    out = export.rewrite_sitemap(index)
+    assert 'href="/main-sitemap.xsl"' in out
+    assert "<loc>https://thehenley.com.au/sitemap-posts.xml</loc>" in out
+    assert "<loc>https://thehenley.com.au/sitemap-pages.xml</loc>" in out
+    assert "post-sitemap.xml" not in out and "page-sitemap.xml" not in out
+
+
+def test_rewrite_sitemap_keeps_page_locations_absolute():
+    pages = ('<?xml version="1.0"?><urlset><url><loc>https://thehenley.com.au/dining/</loc></url></urlset>')
+    assert export.rewrite_sitemap(pages) == pages
+
+
+# ── The run, against a fake origin ───────────────────────────────────────────
+
+def test_run_writes_pages_assets_feeds_and_a_manifest(tmp_path, monkeypatch, capture, form_html):
+    """Drive run() with a fake fetch so the whole orchestration is exercised
+    without the network: page files land where nginx expects, assets are
+    followed through CSS, and the manifest hashes what was written."""
+    contact = capture("contact")
+    home = capture("home")
+    responses = {
+        "/": (200, home.encode()),
+        "/contact/": (200, contact.encode()),
+        "/news/page/2/": (200, home.replace('href="https://thehenley.com.au/"', 'href="https://thehenley.com.au/news/page/2/"', 1).encode()),
+        export.NOT_FOUND_PROBE: (404, b"<html><head><link rel=\"canonical\" href=\"https://thehenley.com.au/404/\" /></head><body>404</body></html>"),
+        "/feed/": (200, b"<?xml version=\"1.0\"?><rss/>"),
+        "/news/feed/": (200, b"<?xml version=\"1.0\"?><rss/>"),
+        "/sitemap_index.xml": (200, b"<?xml version=\"1.0\"?><sitemapindex><sitemap><loc>https://thehenley.com.au/page-sitemap.xml</loc></sitemap></sitemapindex>"),
+        "/page-sitemap.xml": (200, b"<?xml version=\"1.0\"?><urlset/>"),
+        "/post-sitemap.xml": (200, b"<?xml version=\"1.0\"?><urlset/>"),
+        "/main-sitemap.xsl": (200, b"<xsl/>"),
+        "/robots.txt": (200, b"User-agent: *\n"),
+    }
+    css = b".x{background:url(../img/a.png)}"
+    fetched: list[str] = []
+
+    def fake_fetch(url, expect=200):
+        path = url[len(export.ORIGIN):]
+        fetched.append(path)
+        if path in responses:
+            status, body = responses[path]
+        elif path.endswith(".css"):
+            status, body = 200, css
+        else:
+            status, body = 200, b"binary"
+        if status != expect:
+            raise export.ExportError(f"{path}: {status}")
+        return body
+
+    monkeypatch.setattr(export, "fetch", fake_fetch)
+    manifest_source = tmp_path / "manifest-source.json"
+    manifest_source.write_text('{"urls":[{"path":"/"},{"path":"/contact/"}]}')
+    monkeypatch.setattr(export, "MANIFEST_SOURCE", manifest_source)
+
+    out = tmp_path / "site"
+    manifest = tmp_path / "manifest.json"
+    export.run(export.ORIGIN, out, manifest, form_html=form_html)
+
+    assert (out / "index.html").exists()
+    assert (out / "contact/index.html").exists()
+    assert (out / "news/page/2/index.html").exists()
+    assert (out / "404.html").exists()
+    assert (out / "feed/index.xml").read_bytes() == responses["/feed/"][1]
+    assert (out / "sitemap-index.xml").exists() and (out / "sitemap-pages.xml").exists()
+    assert (out / "robots.txt").exists()
+    assert (out / "wp-content/themes/thehenley/style.css").exists()
+    # The CSS's relative image was followed.
+    assert (out / "wp-content/themes/img/a.png").exists()
+    # Pages went through the whole clean, and the contact page got the form.
+    assert "api.w.org" not in (out / "index.html").read_text()
+    assert "action='/api/enquiry'" in (out / "contact/index.html").read_text()
+
+    record = json.loads(manifest.read_text())
+    files = {entry["file"]: entry for entry in record["files"]}
+    assert files["robots.txt"]["sha256"] == hashlib.sha256(b"User-agent: *\n").hexdigest()
+    assert files["contact/index.html"]["url"] == "https://thehenley.com.au/contact/"
+    assert record["origin"] == export.ORIGIN
+    # Every fetch was made once.
+    assert len(fetched) == len(set(fetched))
