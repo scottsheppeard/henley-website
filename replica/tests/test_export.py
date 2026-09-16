@@ -306,7 +306,13 @@ def test_run_writes_pages_assets_feeds_and_a_manifest(tmp_path, monkeypatch, cap
 
     monkeypatch.setattr(export, "fetch", fake_fetch)
     manifest_source = tmp_path / "manifest-source.json"
-    manifest_source.write_text('{"urls":[{"path":"/"},{"path":"/contact/"}]}')
+    manifest_source.write_text(json.dumps({
+        "urls": [{"path": "/"}, {"path": "/contact/"}],
+        "documents": [{
+            "path": "/wp-content/uploads/2023/07/schedule-of-fees.pdf",
+            "alias": "/documents/schedule-of-fees.pdf",
+        }],
+    }))
     monkeypatch.setattr(export, "MANIFEST_SOURCE", manifest_source)
 
     out = tmp_path / "site"
@@ -327,12 +333,21 @@ def test_run_writes_pages_assets_feeds_and_a_manifest(tmp_path, monkeypatch, cap
     assert "api.w.org" not in (out / "index.html").read_text()
     assert "action='/api/enquiry'" in (out / "contact/index.html").read_text()
 
+    # The stable alias is a copy of the dated file, byte for byte, not a
+    # redirect — see docs/village-comparison-document.md.
+    dated = out / "wp-content/uploads/2023/07/schedule-of-fees.pdf"
+    alias = out / "documents/schedule-of-fees.pdf"
+    assert dated.exists() and alias.exists()
+    assert dated.read_bytes() == alias.read_bytes()
+
     record = json.loads(manifest.read_text())
     files = {entry["file"]: entry for entry in record["files"]}
     assert files["robots.txt"]["sha256"] == hashlib.sha256(b"User-agent: *\n").hexdigest()
     assert files["contact/index.html"]["url"] == "https://thehenley.com.au/contact/"
+    assert files["documents/schedule-of-fees.pdf"]["kind"] == "document"
     assert record["origin"] == export.ORIGIN
-    # Every fetch was made once.
+    # Every fetch was made once: the alias is written from bytes already on
+    # disk, not fetched a second time.
     assert len(fetched) == len(set(fetched))
 
 
