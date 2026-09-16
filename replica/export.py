@@ -321,13 +321,15 @@ def run(origin: str, out: Path, manifest_path: Path, form_path: Path | None = No
             text = replace_form(text, form_html)
         elif GFORM_BLOCK_RE.search(text):
             raise ExportError(f"{url_path} embeds a Gravity Form; only /contact/ is expected to")
-        assets |= find_assets(text)
-        write(file, clean_html(text).encode("utf-8"), url_path, "page")
+        cleaned = clean_html(text)
+        assets |= find_assets(cleaned)
+        write(file, cleaned.encode("utf-8"), url_path, "page")
         print(f"  page   {url_path}")
 
     text = fetch(origin + NOT_FOUND_PROBE, expect=404).decode("utf-8")
-    assets |= find_assets(text)
-    write("404.html", clean_html(text).encode("utf-8"), NOT_FOUND_PROBE, "404")
+    cleaned = clean_html(text)
+    assets |= find_assets(cleaned)
+    write("404.html", cleaned.encode("utf-8"), NOT_FOUND_PROBE, "404")
     print("  404    (WordPress's 404 template)")
 
     for url_path, file in FEEDS:

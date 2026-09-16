@@ -334,3 +334,48 @@ def test_run_writes_pages_assets_feeds_and_a_manifest(tmp_path, monkeypatch, cap
     assert record["origin"] == export.ORIGIN
     # Every fetch was made once.
     assert len(fetched) == len(set(fetched))
+
+
+def test_run_discovers_assets_on_the_cleaned_page_not_the_raw_one(tmp_path, monkeypatch, capture, form_html):
+    """clean_html removes Gravity Forms' <script> tags from the served contact
+    page but leaves its <link> stylesheets; asset discovery must run after
+    that removal, or the export fetches and ships six scripts nginx never
+    actually serves to a visitor."""
+    contact = capture("contact")
+    responses = {
+        "/contact/": (200, contact.encode()),
+        export.NOT_FOUND_PROBE: (404, b"<html><body>404</body></html>"),
+        "/feed/": (200, b"<?xml version=\"1.0\"?><rss/>"),
+        "/news/feed/": (200, b"<?xml version=\"1.0\"?><rss/>"),
+        "/sitemap_index.xml": (200, b"<?xml version=\"1.0\"?><sitemapindex/>"),
+        "/page-sitemap.xml": (200, b"<?xml version=\"1.0\"?><urlset/>"),
+        "/post-sitemap.xml": (200, b"<?xml version=\"1.0\"?><urlset/>"),
+        "/main-sitemap.xsl": (200, b"<xsl/>"),
+        "/robots.txt": (200, b"User-agent: *\n"),
+    }
+
+    def fake_fetch(url, expect=200):
+        path = url[len(export.ORIGIN):]
+        if path in responses:
+            status, body = responses[path]
+        elif path.endswith(".css"):
+            status, body = 200, b".x{color:red}"
+        else:
+            status, body = 200, b"binary"
+        if status != expect:
+            raise export.ExportError(f"{path}: {status}")
+        return body
+
+    monkeypatch.setattr(export, "fetch", fake_fetch)
+    manifest_source = tmp_path / "manifest-source.json"
+    manifest_source.write_text('{"urls":[{"path":"/contact/"}]}')
+    monkeypatch.setattr(export, "MANIFEST_SOURCE", manifest_source)
+
+    out = tmp_path / "site"
+    manifest = tmp_path / "manifest.json"
+    export.run(export.ORIGIN, out, manifest, form_html=form_html)
+
+    record = json.loads(manifest.read_text())
+    files = [entry["file"] for entry in record["files"]]
+    assert not any(f.startswith("wp-content/plugins/gravityforms/") and f.endswith(".js") for f in files)
+    assert any(f.startswith("wp-content/plugins/gravityforms/") and f.endswith(".css") for f in files)
