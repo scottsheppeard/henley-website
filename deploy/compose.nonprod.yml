@@ -1,18 +1,15 @@
 # henley-website — nonprod (dev.thehenley.com.au)
 #
 #   cd /mnt/persistent/dev/henley-website
-#   scripts/with-node.sh npm ci                      # a fresh checkout has none
-#   scripts/with-node.sh npm run tokens              # writes src/styles/tokens.css
 #   docker compose --env-file deploy/.env -f deploy/compose.nonprod.yml up -d --build
 #
 # --env-file is not optional. Compose reads `.env` from the directory it runs
 # in, not from deploy/, so without it TRUSTED_PROXY_IPS arrives empty and the
 # receiver believes no proxy at all — see deploy/.env.example.
 #
-# `npm run tokens` first, always: the site image builds from this repo without
-# the brand kit mounted, so tokens.css has to already be in the build context.
-# The Dockerfile fails with that message rather than building a site with no
-# colours in it.
+# The site image needs no build step: replica/site is committed. Refresh it
+# with `forms/.venv/bin/python replica/export.py` and commit before deploying
+# (replica/README.md).
 #
 # The network is created once, by hand, and attached to Nginx Proxy Manager:
 #
@@ -30,7 +27,9 @@ services:
     container_name: henley-website-nonprod
     build:
       context: ..
-      dockerfile: deploy/Dockerfile
+      dockerfile: deploy/Dockerfile.replica
+      args:
+        SITE_ENV: nonprod
     image: henley-website:nonprod
     restart: unless-stopped
     networks:

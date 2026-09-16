@@ -1,0 +1,40 @@
+# thehenley.com.au — serve the replica.
+#
+# No build stage: replica/site is the site, committed, produced by
+# replica/export.py. The image is nginx and a directory of files. Nothing in
+# it can execute, and nothing in it needs Node, Python or the brand kit.
+#
+#   docker build -f deploy/Dockerfile.replica --build-arg SITE_ENV=nonprod -t henley-website:nonprod .
+
+FROM nginx:alpine
+
+# nonprod serves X-Robots-Tag: noindex; prod serves nothing extra. Chosen
+# here, at build, because the runtime user cannot write /etc/nginx/conf.d
+# and an envsubst that fails does so silently.
+ARG SITE_ENV=prod
+
+# Runs unprivileged. nginx:alpine ships an `nginx` user; the config listens on
+# 8080 rather than 80 so no capability is needed to bind it.
+RUN rm -f /etc/nginx/conf.d/default.conf \
+ && mkdir -p /var/cache/nginx/client_body /var/cache/nginx/proxy \
+             /var/cache/nginx/fastcgi /var/cache/nginx/uwsgi /var/cache/nginx/scgi \
+ && chown -R nginx:nginx /var/cache/nginx
+
+COPY deploy/nginx.replica.conf /etc/nginx/nginx.conf
+COPY deploy/redirects.conf deploy/redirects-map.conf /etc/nginx/conf.d/
+COPY deploy/security-headers.replica.conf /etc/nginx/conf.d/security-headers.conf
+COPY deploy/robots-tag.${SITE_ENV}.conf /etc/nginx/conf.d/robots-tag.conf
+COPY replica/site /usr/share/nginx/html
+
+# Fail the build rather than the deploy if the config is malformed. `nginx -t`
+# creates the pid file as root; left behind, the runtime user cannot open it.
+RUN nginx -t -c /etc/nginx/nginx.conf \
+ && rm -f /var/cache/nginx/nginx.pid
+
+USER nginx
+EXPOSE 8080
+
+HEALTHCHECK --interval=60s --timeout=5s --start-period=5s --retries=3 \
+  CMD wget -q -O /dev/null http://127.0.0.1:8080/nginx-health || exit 1
+
+CMD ["nginx", "-g", "daemon off;"]
