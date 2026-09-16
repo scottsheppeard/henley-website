@@ -66,6 +66,19 @@ def test_find_assets_reads_every_syntax_elementor_uses():
     }
 
 
+def test_find_assets_treats_retired_dev_host_wordpress_files_as_production_assets():
+    text = '''
+    <img src="https://dev.thehenley.com.au/wp-content/uploads/2023/04/broken-on-dev.jpg">
+    <script src="https:\\/\\/dev.thehenley.com.au\\/wp-includes\\/js\\/jquery.js"></script>
+    <a href="https://dev.thehenley.com.au/contact/">a retired site URL, not an asset</a>
+    <img src="https://example.com/wp-content/uploads/not-ours.jpg">
+    '''
+    assert export.find_assets(text) == {
+        "/wp-content/uploads/2023/04/broken-on-dev.jpg",
+        "/wp-includes/js/jquery.js",
+    }
+
+
 def test_find_assets_on_the_captured_home_page(capture):
     found = export.find_assets(capture("home"))
     assert "/wp-content/themes/thehenley/style.css" in found
@@ -213,9 +226,30 @@ def test_rewrite_origin_on_the_captured_contact_page_leaves_no_absolute_asset_ou
     assert "https:\\/\\/thehenley.com.au\\/wp-content" not in stripped
 
 
+def test_rewrite_origin_repairs_retired_dev_assets_in_the_captured_private_aged_care_page(capture):
+    source = capture("private-aged-care")
+    assert "https://dev.thehenley.com.au/wp-content/uploads/2023/04/Private_Aged_Care@2x-scaled.jpg" in source
+
+    out = export.rewrite_origin(source)
+    assert "https://dev.thehenley.com.au/wp-content" not in out
+    assert 'href="/wp-content/uploads/2023/04/Private_Aged_Care@2x-scaled.jpg"' in out
+
+
+def test_rewrite_origin_repairs_json_escaped_dev_assets_but_preserves_foreign_urls_and_metadata():
+    text = '''<meta property="og:image" content="https://dev.thehenley.com.au/wp-content/uploads/keep.jpg">
+    <script>const image = "https:\\/\\/dev.thehenley.com.au\\/wp-content\\/uploads\\/fix.jpg";</script>
+    <a href="https://dev.thehenley.com.au/contact/">keep retired site URL</a>
+    <img src="https://example.com/wp-content/uploads/foreign.jpg">'''
+    out = export.rewrite_origin(text)
+    assert 'content="https://dev.thehenley.com.au/wp-content/uploads/keep.jpg"' in out
+    assert '"\\/wp-content\\/uploads\\/fix.jpg"' in out
+    assert 'href="https://dev.thehenley.com.au/contact/"' in out
+    assert 'src="https://example.com/wp-content/uploads/foreign.jpg"' in out
+
+
 def test_rewrite_css_makes_every_absolute_reference_relative():
-    css = ".a{background:url(https://thehenley.com.au/wp-content/uploads/x.jpg)} .b{background:url('https://thehenley.com.au/wp-content/uploads/y.jpg')}"
-    assert export.rewrite_css(css) == ".a{background:url(/wp-content/uploads/x.jpg)} .b{background:url('/wp-content/uploads/y.jpg')}"
+    css = ".a{background:url(https://thehenley.com.au/wp-content/uploads/x.jpg)} .b{background:url('https://dev.thehenley.com.au/wp-content/uploads/y.jpg')} .c{src:url(https:\\/\\/dev.thehenley.com.au\\/wp-content\\/uploads\\/z.jpg)} .d{background:url(https://example.com/wp-content/uploads/foreign.jpg)}"
+    assert export.rewrite_css(css) == ".a{background:url(/wp-content/uploads/x.jpg)} .b{background:url('/wp-content/uploads/y.jpg')} .c{src:url(\\/wp-content\\/uploads\\/z.jpg)} .d{background:url(https://example.com/wp-content/uploads/foreign.jpg)}"
 
 
 # ── The contact form ─────────────────────────────────────────────────────────

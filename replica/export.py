@@ -83,7 +83,15 @@ def asset_file(url_path: str) -> str:
 # srcset, data-lazy-src, data-lazy-srcset, inline style attributes and
 # JSON-escaped data-settings; a URL is a URL wherever it sits.
 
-ASSET_ABS_RE = re.compile(r"https?://thehenley\.com\.au(/wp-(?:content|includes)/[^\s\"'<>(),\\]+)")
+# ``dev.thehenley.com.au`` was the former review WordPress host.  A handful
+# of live pages still name it for uploaded images, although that host now 404s.
+# These are the same files at production, so treat only its WordPress assets as
+# local assets.  Other dev URLs remain foreign references.
+ASSET_HOSTS = (HOST, "dev.thehenley.com.au")
+ASSET_ABS_RE = re.compile(
+    r"https?://(?:thehenley\.com\.au|dev\.thehenley\.com\.au)"
+    r"(/wp-(?:content|includes)/[^\s\"'<>(),\\]+)"
+)
 ASSET_REL_RE = re.compile(r"(?<![\w./:-])(/wp-(?:content|includes)/[^\s\"'<>(),\\]+)")
 
 
@@ -120,7 +128,7 @@ def find_css_assets(css_text: str, css_path: str) -> set[str]:
         if ref.startswith(("data:", "#")):
             continue
         split = urlsplit(urljoin(ORIGIN + css_path, ref))
-        if split.netloc and split.netloc != HOST:
+        if split.netloc and split.netloc not in ASSET_HOSTS:
             continue
         path = _asset_path(split.path)
         if path and path.startswith(("/wp-content/", "/wp-includes/")):
@@ -210,18 +218,25 @@ ORIGIN_THEN_SLASH_RE = re.compile(r"https?://thehenley\.com\.au(?=/)")
 # Site URLs (home_url, ajaxurl) stay: code concatenates onto them and their
 # endpoints answer 410 on the replica anyway.
 ORIGIN_ESCAPED_ASSET_RE = re.compile(r"https?:\\/\\/thehenley\.com\.au(?=\\/wp-(?:content|includes)\\/)")
+DEV_ORIGIN_ASSET_RE = re.compile(r"https?://dev\.thehenley\.com\.au(?=/wp-(?:content|includes)/)")
+DEV_ORIGIN_ESCAPED_ASSET_RE = re.compile(
+    r"https?:\\/\\/dev\.thehenley\.com\.au(?=\\/wp-(?:content|includes)\\/)"
+)
 
 
 def _relativise(span: str) -> str:
     span = ORIGIN_THEN_QUOTE_RE.sub("/", span)      # href="https://thehenley.com.au" -> href="/"
     span = ORIGIN_THEN_SLASH_RE.sub("", span)       # https://thehenley.com.au/x -> /x
-    return ORIGIN_ESCAPED_ASSET_RE.sub("", span)    # https:\/\/thehenley.com.au\/wp-content\/x -> \/wp-content\/x
+    span = ORIGIN_ESCAPED_ASSET_RE.sub("", span)    # https:\/\/thehenley.com.au\/wp-content\/x -> \/wp-content\/x
+    span = DEV_ORIGIN_ASSET_RE.sub("", span)        # retired dev host's assets live at production
+    return DEV_ORIGIN_ESCAPED_ASSET_RE.sub("", span)
 
 
 def rewrite_origin(text: str) -> str:
     """Same-origin references become root-relative, so dev serves its own copy
-    of every asset and page rather than reaching back to production. The
-    JSON-escaped form (https:\\/\\/…) is left alone on purpose."""
+    of every asset and page rather than reaching back to production.  Assets
+    accidentally left on the retired dev host are treated the same way; other
+    dev-host and foreign URLs are retained."""
     out: list[str] = []
     position = 0
     for match in PROTECTED_RE.finditer(text):
@@ -233,7 +248,7 @@ def rewrite_origin(text: str) -> str:
 
 
 def rewrite_css(text: str) -> str:
-    return ORIGIN_THEN_SLASH_RE.sub("", text)
+    return DEV_ORIGIN_ESCAPED_ASSET_RE.sub("", DEV_ORIGIN_ASSET_RE.sub("", ORIGIN_THEN_SLASH_RE.sub("", text)))
 
 
 def clean_html(text: str) -> str:
