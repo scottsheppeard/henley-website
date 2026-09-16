@@ -88,3 +88,103 @@ def test_find_css_assets_resolves_relative_references():
         "/wp-content/uploads/2023/04/hero.jpg",
         "/wp-content/plugins/elementor/assets/lib/x.css",
     }
+
+
+# ── What is removed, and what must survive ───────────────────────────────────
+
+REMOVED_MARKERS = [
+    'rel="https://api.w.org/"',
+    'rel="EditURI"',
+    "rel='shortlink'",
+    "json+oembed",
+    "xml+oembed",
+    'title="JSON" type="application/json"',
+    "Comments Feed",
+    'name="generator"',
+    "google-adsense-platform",
+    "wp-emoji-styles-inline-css",
+    "_wpemojiSettings",
+]
+
+KEPT_MARKERS = [
+    "GTM-PGSH3HF7",
+    "GTM-M3MV9VG",
+    "gtag/js?id=GT-TXH3QGV",
+    'rel="canonical" href="https://thehenley.com.au/"',
+    'class="yoast-schema-graph"',
+    '<meta property="og:url" content="https://thehenley.com.au/" />',
+    'rel="alternate" type="application/rss+xml" title="The Henley on Broadwater &raquo; Feed"',
+    "elementor-frontend-css",
+    "use.typekit.net/azk7leu.css",
+    "kit.fontawesome.com/6ec9d3cb9f.js",
+    "wp-rocket/assets/js/lazyload",  # WP Rocket's lazy-load JS stays; the images depend on it
+]
+
+
+def test_remove_wordpress_tags_on_the_captured_home_page(capture):
+    cleaned = export.remove_wordpress_tags(capture("home"))
+    for marker in REMOVED_MARKERS:
+        assert marker not in cleaned, marker
+    for marker in KEPT_MARKERS:
+        assert marker in cleaned, marker
+
+
+def test_remove_wordpress_tags_leaves_the_body_untouched(capture):
+    original = capture("dining")
+    cleaned = export.remove_wordpress_tags(original)
+    body = lambda t: t[t.index("<body"):]
+    assert body(cleaned) == body(original)
+
+
+def test_nonces_are_normalised():
+    text = 'a {"nonce":"1066da9f37"} b {"nonce":"26d020178b"} c'
+    assert export.normalise_nonces(text) == 'a {"nonce":"0000000000"} b {"nonce":"0000000000"} c'
+
+
+# ── Root-relative references ─────────────────────────────────────────────────
+
+def test_rewrite_origin_makes_assets_and_links_relative_but_keeps_metadata_absolute():
+    text = """<head>
+<link rel="canonical" href="https://thehenley.com.au/dining/" />
+<meta property="og:image" content="https://thehenley.com.au/wp-content/uploads/2023/04/home1.jpeg" />
+<link rel="alternate" type="application/rss+xml" title="Feed" href="https://thehenley.com.au/feed/" />
+<script type="application/ld+json">{"@id":"https://thehenley.com.au/#website"}</script>
+<link rel='stylesheet' href='https://thehenley.com.au/wp-content/themes/thehenley/style.css?ver=1.0.4' />
+<link rel="preload" as="image" href="https://thehenley.com.au/wp-content/uploads/2023/04/home1.jpeg">
+</head><body>
+<a href="https://thehenley.com.au"><img src="https://thehenley.com.au/wp-content/uploads/logo.svg"></a>
+<a href="https://thehenley.com.au/contact/">Contact</a>
+<img data-lazy-srcset="https://thehenley.com.au/wp-content/uploads/a-300.jpg 300w, https://thehenley.com.au/wp-content/uploads/a-768.jpg 768w">
+<script>var cfg = {"home_url":"https:\\/\\/thehenley.com.au","ajaxurl":"https:\\/\\/thehenley.com.au\\/wp-admin\\/admin-ajax.php"};</script>
+<div data-settings='{"background_image":{"url":"https:\\/\\/thehenley.com.au\\/wp-content\\/uploads\\/bg.jpeg"}}'></div>
+</body>"""
+    out = export.rewrite_origin(text)
+    assert '<link rel="canonical" href="https://thehenley.com.au/dining/" />' in out
+    assert 'content="https://thehenley.com.au/wp-content/uploads/2023/04/home1.jpeg"' in out
+    assert 'href="https://thehenley.com.au/feed/"' in out
+    assert '"@id":"https://thehenley.com.au/#website"' in out
+    assert "href='/wp-content/themes/thehenley/style.css?ver=1.0.4'" in out
+    assert 'href="/wp-content/uploads/2023/04/home1.jpeg"' in out
+    assert '<a href="/"><img src="/wp-content/uploads/logo.svg"></a>' in out
+    assert '<a href="/contact/">' in out
+    assert 'data-lazy-srcset="/wp-content/uploads/a-300.jpg 300w, /wp-content/uploads/a-768.jpg 768w"' in out
+    # JSON-escaped *site* URLs in inline configuration are left alone: code
+    # concatenates onto them, and their endpoints answer 410 here regardless.
+    # JSON-escaped *asset* URLs (Elementor's data-settings backgrounds and its
+    # Pro modules) are relativised, or dev would fetch them from production.
+    assert '"home_url":"https:\\/\\/thehenley.com.au"' in out
+    assert '"ajaxurl":"https:\\/\\/thehenley.com.au\\/wp-admin\\/admin-ajax.php"' in out
+    assert '{"url":"\\/wp-content\\/uploads\\/bg.jpeg"}' in out
+
+
+def test_rewrite_origin_on_the_captured_contact_page_leaves_no_absolute_asset_outside_metadata(capture):
+    out = export.rewrite_origin(capture("contact"))
+    stripped = export.PROTECTED_RE.sub("", out)
+    assert "https://thehenley.com.au/wp-content" not in stripped
+    assert "https://thehenley.com.au/wp-includes" not in stripped
+    assert "https:\\/\\/thehenley.com.au\\/wp-content" not in stripped
+
+
+def test_rewrite_css_makes_every_absolute_reference_relative():
+    css = ".a{background:url(https://thehenley.com.au/wp-content/uploads/x.jpg)} .b{background:url('https://thehenley.com.au/wp-content/uploads/y.jpg')}"
+    assert export.rewrite_css(css) == ".a{background:url(/wp-content/uploads/x.jpg)} .b{background:url('/wp-content/uploads/y.jpg')}"
