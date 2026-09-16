@@ -1,0 +1,30 @@
+.elementor-564 .elementor-element.elementor-element-8293530 > .elementor-background-overlay{background-color:var( --e-global-color-text );opacity:0.2;transition:background 0.3s, border-radius 0.3s, opacity 0.3s;}.elementor-564 .elementor-element.elementor-element-8293530:not(.elementor-motion-effects-element-type-background), .elementor-564 .elementor-element.elementor-element-8293530 > .elementor-motion-effects-container > .elementor-motion-effects-layer{background-position:17px -223px;background-size:cover;}.elementor-564 .elementor-element.elementor-element-8293530{transition:background 0.3s, border 0.3s, border-radius 0.3s, box-shadow 0.3s;padding:150px 30px 180px 30px;}.elementor-widget-theme-post-title .elementor-heading-title{font-family:var( --e-global-typography-primary-font-family ), Sans-serif;font-weight:var( --e-global-typography-primary-font-weight );color:var( --e-global-color-primary );}.elementor-564 .elementor-element.elementor-element-157022a{text-align:center;}.elementor-564 .elementor-element.elementor-element-157022a .elementor-heading-title{color:var( --e-global-color-e955d39 );}.elementor-564 .elementor-element.elementor-element-1da5d93 > .elementor-container{max-width:700px;}.elementor-564 .elementor-element.elementor-element-1da5d93{padding:30px 30px 80px 30px;}.elementor-widget-theme-post-content{color:var( --e-global-color-text );font-family:var( --e-global-typography-text-font-family ), Sans-serif;font-weight:var( --e-global-typography-text-font-weight );}.elementor-widget-post-navigation span.post-navigation__prev--label{color:var( --e-global-color-text );}.elementor-widget-post-navigation span.post-navigation__next--label{color:var( --e-global-color-text );}.elementor-widget-post-navigation span.post-navigation__prev--label, .elementor-widget-post-navigation span.post-navigation__next--label{font-family:var( --e-global-typography-secondary-font-family ), Sans-serif;font-weight:var( --e-global-typography-secondary-font-weight );}.elementor-widget-post-navigation span.post-navigation__prev--title, .elementor-widget-post-navigation span.post-navigation__next--title{color:var( --e-global-color-secondary );font-family:var( --e-global-typography-secondary-font-family ), Sans-serif;font-weight:var( --e-global-typography-secondary-font-weight );}.elementor-564 .elementor-element.elementor-element-91b0133 > .elementor-widget-container{margin:40px 0px 0px 0px;}@media(max-width:1024px){.elementor-564 .elementor-element.elementor-element-8293530:not(.elementor-motion-effects-element-type-background), .elementor-564 .elementor-element.elementor-element-8293530 > .elementor-motion-effects-container > .elementor-motion-effects-layer{background-position:0px 0px;}}@media(max-width:767px){.elementor-564 .elementor-element.elementor-element-8293530:not(.elementor-motion-effects-element-type-background), .elementor-564 .elementor-element.elementor-element-8293530 > .elementor-motion-effects-container > .elementor-motion-effects-layer{background-position:0px 0px;}.elementor-564 .elementor-element.elementor-element-8293530{padding:60px 20px 70px 20px;}.elementor-564 .elementor-element.elementor-element-1da5d93{padding:20px 20px 50px 20px;}}/* Start custom CSS for theme-post-content, class: .elementor-element-b620a16 */.elementor-564 .elementor-element.elementor-element-b620a16 h2 {
+    font-size: 28px;
+    font-family: "quincy-cf";
+    color: #507CAB;
+    margin-top: 1em;
+}
+.elementor-564 .elementor-element.elementor-element-b620a16 h3 {
+    font-size: 23px;
+    font-family: "quincy-cf";
+    color: #BA8F58;
+    margin-top: 1em;
+}
+.elementor-564 .elementor-element.elementor-element-b620a16 h4 {
+    font-size: 19px;
+    font-family: "quincy-cf";
+    color: #507CAB;
+    margin-top: 1em;
+}
+.elementor-564 .elementor-element.elementor-element-b620a16 h5 {
+    font-size: 16px;
+    font-family: "quincy-cf";
+    color: #BA8F58;
+    margin-top: 1em;
+}
+.elementor-564 .elementor-element.elementor-element-b620a16 h6 {
+    font-size: 13px;
+    text-transform: uppercase;
+    color: #507CAB;
+    margin-top: 1em;
+}/* End custom CSS */

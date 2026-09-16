@@ -43,8 +43,14 @@ assets/**
 !assets/*/*-inventory.md
 
 # Replica (stream/replica). The export is committed, including its PNG
-# favicons, which the blanket *.png rule above would otherwise drop.
+# favicons, which the blanket *.png rule above would otherwise drop, and the
+# wp-includes/wp-content "dist" asset directories WordPress itself names,
+# which the Astro dist/ rule above would otherwise drop (git will not look
+# inside an ignored directory, so both the directory and its contents need
+# re-including).
 !replica/site/**/*.png
+!replica/site/**/dist/
+!replica/site/**/dist/**
 replica/screenshots/
 replica/__pycache__/
 replica/tests/__pycache__/
