@@ -93,6 +93,31 @@ def test_find_css_assets_resolves_relative_references():
     }
 
 
+def test_find_js_assets_resolves_webpack_chunk_filenames_against_the_runtimes_own_directory():
+    # Elementor Pro's webpack runtime never names its per-widget chunks in the
+    # page HTML — find_assets never sees "archive-posts.<hash>.bundle.min.js"
+    # — it looks them up from a hash map baked into webpack-pro.runtime.min.js
+    # itself and loads them relative to wherever that runtime script was
+    # fetched from. A missing chunk is a widget whose JS never runs: the News
+    # grid's "cover" thumbnail crop depends on archive-posts's chunk adding a
+    # class the widget's CSS is gated on, so without it every thumbnail box
+    # renders too tall with the image stuck at its natural, uncropped height.
+    js = (
+        '292===e?"accordion.36aa4c8c4eba17bc8e03.bundle.min.js":'
+        '345===e?"archive-posts.16a93245d08246e5e540.bundle.min.js":e'
+    )
+    found = export.find_js_assets(js, "/wp-content/plugins/elementor-pro/assets/js/webpack-pro.runtime.min.js")
+    assert found == {
+        "/wp-content/plugins/elementor-pro/assets/js/accordion.36aa4c8c4eba17bc8e03.bundle.min.js",
+        "/wp-content/plugins/elementor-pro/assets/js/archive-posts.16a93245d08246e5e540.bundle.min.js",
+    }
+
+
+def test_find_js_assets_ignores_non_chunk_strings():
+    js = '"hello world" "not-a-chunk.js" "almost.deadbeef.min.js" e.p="/wp-content/plugins/elementor/assets/js/"'
+    assert export.find_js_assets(js, "/wp-content/plugins/elementor/assets/js/webpack.runtime.min.js") == set()
+
+
 # ── What is removed, and what must survive ───────────────────────────────────
 
 REMOVED_MARKERS = [
@@ -394,3 +419,53 @@ def test_run_discovers_assets_on_the_cleaned_page_not_the_raw_one(tmp_path, monk
     files = [entry["file"] for entry in record["files"]]
     assert not any(f.startswith("wp-content/plugins/gravityforms/") and f.endswith(".js") for f in files)
     assert any(f.startswith("wp-content/plugins/gravityforms/") and f.endswith(".css") for f in files)
+
+
+def test_run_follows_webpack_chunk_references_from_js_files(tmp_path, monkeypatch, capture, form_html):
+    """A widget's chunk is never named in the page HTML — only inside the
+    webpack runtime JS the page does link to — so run() must scan fetched .js
+    files for further same-origin references the way it already does for
+    .css, or the chunk (and whatever behaviour its CSS is gated on) never
+    ships."""
+    home = capture("home").replace(
+        "</head>",
+        "<script src='https://thehenley.com.au/wp-content/plugins/elementor-pro/assets/js/webpack-pro.runtime.min.js'></script></head>",
+        1,
+    )
+    runtime_js = b'345===e?"archive-posts.16a93245d08246e5e540.bundle.min.js":e'
+    responses = {
+        "/": (200, home.encode()),
+        export.NOT_FOUND_PROBE: (404, b"<html><body>404</body></html>"),
+        "/feed/": (200, b"<?xml version=\"1.0\"?><rss/>"),
+        "/news/feed/": (200, b"<?xml version=\"1.0\"?><rss/>"),
+        "/sitemap_index.xml": (200, b"<?xml version=\"1.0\"?><sitemapindex/>"),
+        "/page-sitemap.xml": (200, b"<?xml version=\"1.0\"?><urlset/>"),
+        "/post-sitemap.xml": (200, b"<?xml version=\"1.0\"?><urlset/>"),
+        "/main-sitemap.xsl": (200, b"<xsl/>"),
+        "/robots.txt": (200, b"User-agent: *\n"),
+        "/wp-content/plugins/elementor-pro/assets/js/webpack-pro.runtime.min.js": (200, runtime_js),
+    }
+
+    def fake_fetch(url, expect=200):
+        path = url[len(export.ORIGIN):]
+        if path in responses:
+            status, body = responses[path]
+        elif path.endswith(".css"):
+            status, body = 200, b".x{color:red}"
+        else:
+            status, body = 200, b"binary"
+        if status != expect:
+            raise export.ExportError(f"{path}: {status}")
+        return body
+
+    monkeypatch.setattr(export, "fetch", fake_fetch)
+    manifest_source = tmp_path / "manifest-source.json"
+    manifest_source.write_text('{"urls":[{"path":"/"}]}')
+    monkeypatch.setattr(export, "MANIFEST_SOURCE", manifest_source)
+
+    out = tmp_path / "site"
+    manifest = tmp_path / "manifest.json"
+    export.run(export.ORIGIN, out, manifest, form_html=form_html)
+
+    assert (out / "wp-content/plugins/elementor-pro/assets/js/webpack-pro.runtime.min.js").exists()
+    assert (out / "wp-content/plugins/elementor-pro/assets/js/archive-posts.16a93245d08246e5e540.bundle.min.js").exists()

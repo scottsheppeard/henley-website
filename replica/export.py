@@ -128,6 +128,25 @@ def find_css_assets(css_text: str, css_path: str) -> set[str]:
     return found
 
 
+# Elementor and Elementor Pro split every widget's interactive behaviour into
+# its own webpack chunk ("archive-posts.<hash>.bundle.min.js",
+# "toggle.<hash>.bundle.min.js", ...) and load it, only when a widget on the
+# page needs it, from a hash-to-filename map baked into the runtime script
+# itself (webpack.runtime.min.js / webpack-pro.runtime.min.js) — never as a
+# URL in the page HTML, so find_assets never sees it. The runtime resolves
+# each chunk relative to its own directory (webpack's auto publicPath, set
+# from the currently executing script's URL), which is what this resolves
+# against too.
+JS_CHUNK_RE = re.compile(r'"([\w-]+\.[0-9a-f]{16,40}\.bundle\.min\.js)"')
+
+
+def find_js_assets(js_text: str, js_path: str) -> set[str]:
+    """Same-origin chunk files a webpack runtime dynamically imports, resolved
+    against the runtime script's own directory."""
+    base = js_path.rsplit("/", 1)[0] + "/"
+    return {base + match.group(1) for match in JS_CHUNK_RE.finditer(js_text)}
+
+
 # ── Post-processing ──────────────────────────────────────────────────────────
 #
 # Each entry is one thing WordPress adds that has no meaning without WordPress
@@ -364,6 +383,11 @@ def run(origin: str, out: Path, manifest_path: Path, form_path: Path | None = No
                 if extra not in seen and _is_fetchable_asset(extra):
                     pending.append(extra)
             body = rewrite_css(css_text).encode("utf-8")
+        elif path.endswith(".js"):
+            js_text = body.decode("utf-8")
+            for extra in sorted(find_js_assets(js_text, path)):
+                if extra not in seen and _is_fetchable_asset(extra):
+                    pending.append(extra)
         write(asset_file(path), body, path, "asset")
     print(f"  assets {len(seen)}")
 
