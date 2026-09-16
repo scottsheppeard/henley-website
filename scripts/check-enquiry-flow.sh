@@ -13,13 +13,18 @@
 # things henley-utils depends on and neither side's own tests can see together:
 # the id floor and the timestamp format.
 #
-# Usage: scripts/check-enquiry-flow.sh   (builds the site if dist/ is missing)
+# Usage: scripts/check-enquiry-flow.sh   (SITE_DIR=replica/site for the replica; builds dist/ if missing otherwise)
 set -euo pipefail
 
 REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 cd "$REPO_ROOT"
 
 PORT="${PORT:-8099}"
+
+# Which built site to read the form from. `dist` is the Astro build (built on
+# demand); `replica/site` is the committed export, never built here.
+SITE_DIR="${SITE_DIR:-dist}"
+
 WORK="$(mktemp -d)"
 RECEIVER_PID=""
 
@@ -29,7 +34,8 @@ cleanup() {
 }
 trap cleanup EXIT
 
-[[ -f dist/contact/index.html ]] || {
+[[ -f "$SITE_DIR/contact/index.html" ]] || {
+  [[ "$SITE_DIR" == "dist" ]] || { echo "$SITE_DIR/contact/index.html is missing" >&2; exit 1; }
   echo "building the site ..."
   scripts/with-node.sh npm run build >/dev/null
 }
@@ -50,7 +56,7 @@ for _ in $(seq 1 40); do
 done
 curl -sf "http://127.0.0.1:$PORT/healthz" >/dev/null || { echo "receiver did not start" >&2; exit 1; }
 
-WORK="$WORK" PORT="$PORT" REPO_ROOT="$REPO_ROOT" forms/.venv/bin/python - <<'PY'
+WORK="$WORK" PORT="$PORT" REPO_ROOT="$REPO_ROOT" SITE_DIR="$SITE_DIR" forms/.venv/bin/python - <<'PY'
 import html
 import os
 import re
@@ -74,12 +80,12 @@ def check(condition, message):
 
 
 # ── What the built page actually asks for ────────────────────────────────────
-page = (root / "dist/contact/index.html").read_text()
-form = re.search(r"<form[^>]*action=\"/api/enquiry\"[^>]*>(.*?)</form>", page, re.S)
+page = (root / (os.environ["SITE_DIR"] + "/contact/index.html")).read_text()
+form = re.search(r"<form[^>]*action=[\"']/api/enquiry[\"'][^>]*>(.*?)</form>", page, re.S)
 if not form:
-    sys.exit("no enquiry form found in dist/contact/index.html")
+    sys.exit(f"no enquiry form found in {os.environ['SITE_DIR']}/contact/index.html")
 
-fields = re.findall(r"<(?:input|textarea)[^>]*\bname=\"([^\"]+)\"", form.group(1))
+fields = re.findall(r"<(?:input|textarea)[^>]*\bname=[\"']([^\"']+)[\"']", form.group(1))
 print(f"\nfields in the built form: {sorted(set(fields))}\n")
 
 for required in ("name", "email", "phone", "enquiry_text",
@@ -95,15 +101,15 @@ check("referral_source" not in fields,
 check("started_at" not in fields,
       "the form no longer sends a client timestamp")
 
-action = re.search(r"<form[^>]*action=\"([^\"]+)\"", page).group(1)
+action = re.search(r"<form[^>]*action=[\"']([^\"']+)[\"']", page).group(1)
 check(action == "/api/enquiry", f"the form posts to /api/enquiry (found {action})")
 
-method = re.search(r"<form[^>]*method=\"([^\"]+)\"", page).group(1)
+method = re.search(r"<form[^>]*method=[\"']([^\"']+)[\"']", page).group(1)
 check(method.lower() == "post", "the form uses POST")
 
 # The checkbox values are data, not labels: the classifier and Salesforce read
 # these exact strings.
-values = dict(re.findall(r"name=\"(interest_[a-z_]+)\"\s+value=\"([^\"]+)\"", form.group(1)))
+values = dict(re.findall(r"name=[\"'](interest_[a-z_]+)[\"'][^>]*\bvalue=[\"']([^\"']+)[\"']", form.group(1)))
 check(values.get("interest_apartment") == "Apartment Living",
       "interest_apartment still sends the exact string 'Apartment Living'")
 check(values.get("interest_aged_care") == "Private Aged Care",
