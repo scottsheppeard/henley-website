@@ -182,6 +182,14 @@ def test_nonces_are_normalised():
     assert export.normalise_nonces(text) == 'a {"nonce":"0000000000"} b {"nonce":"0000000000"} c'
 
 
+def test_elementor_click_tracking_nonce_is_normalised():
+    """Elementor's floating-buttons config carries its nonce under its own key.
+    WordPress caches every page but the 404 template, so this one rotated on
+    every export of 404.html alone."""
+    text = '"nonces":{"floatingButtonsClickTracking":"f33cf9b9c5"},"swiperClass"'
+    assert export.normalise_nonces(text) == '"nonces":{"floatingButtonsClickTracking":"0000000000"},"swiperClass"'
+
+
 # ── Root-relative references ─────────────────────────────────────────────────
 
 def test_rewrite_origin_makes_assets_and_links_relative_but_keeps_metadata_absolute():
@@ -503,3 +511,108 @@ def test_run_follows_webpack_chunk_references_from_js_files(tmp_path, monkeypatc
 
     assert (out / "wp-content/plugins/elementor-pro/assets/js/webpack-pro.runtime.min.js").exists()
     assert (out / "wp-content/plugins/elementor-pro/assets/js/archive-posts.16a93245d08246e5e540.bundle.min.js").exists()
+
+
+def _run_with_preserved(tmp_path, monkeypatch, capture, form_html, preserved, webroot_files):
+    """Drive run() with a fake fetch and a fake web root holding
+    `webroot_files` (relative paths -> bytes), with `preserved` in the
+    migration manifest. Returns (out, manifest record)."""
+    home = capture("home")
+    contact = capture("contact")
+    responses = {
+        "/": home.encode(),
+        "/contact/": contact.encode(),
+        "/news/page/2/": home.replace('href="https://thehenley.com.au/"', 'href="https://thehenley.com.au/news/page/2/"', 1).encode(),
+        "/feed/": b"<?xml version=\"1.0\"?><rss/>",
+        "/news/feed/": b"<?xml version=\"1.0\"?><rss/>",
+        "/sitemap_index.xml": b"<?xml version=\"1.0\"?><sitemapindex/>",
+        "/page-sitemap.xml": b"<?xml version=\"1.0\"?><urlset/>",
+        "/post-sitemap.xml": b"<?xml version=\"1.0\"?><urlset/>",
+        "/main-sitemap.xsl": b"<xsl/>",
+        "/robots.txt": b"User-agent: *\n",
+    }
+
+    def fake_fetch(url, expect=200):
+        path = url[len(export.ORIGIN):]
+        if path == export.NOT_FOUND_PROBE:
+            return b"<html><head><link rel=\"canonical\" href=\"https://thehenley.com.au/404/\" /></head><body>404</body></html>"
+        return responses.get(path, b"binary")
+
+    monkeypatch.setattr(export, "fetch", fake_fetch)
+    manifest_source = tmp_path / "manifest-source.json"
+    manifest_source.write_text(json.dumps({
+        "urls": [{"path": "/"}, {"path": "/contact/"}],
+        "documents": [{
+            "path": "/wp-content/uploads/2026/07/fees.pdf",
+            "alias": "/documents/schedule-of-fees.pdf",
+        }],
+        "preserved": preserved,
+    }))
+    monkeypatch.setattr(export, "MANIFEST_SOURCE", manifest_source)
+
+    webroot = tmp_path / "webroot"
+    for relative, data in webroot_files.items():
+        target = webroot / relative
+        target.parent.mkdir(parents=True, exist_ok=True)
+        target.write_bytes(data)
+
+    out = tmp_path / "site"
+    manifest = tmp_path / "manifest.json"
+    export.run(export.ORIGIN, out, manifest, form_html=form_html, webroot=webroot)
+    return out, json.loads(manifest.read_text())
+
+
+def test_run_preserves_legacy_files_from_the_web_root(tmp_path, monkeypatch, capture, form_html):
+    """Files no page links to, but outside links still fetch (staff email
+    signatures, dated VCD and fee PDFs), are copied from the WordPress web
+    root on disk and recorded in the manifest as `preserved`."""
+    preserved = [
+        {"glob": "wp-content/uploads/branding/**/*", "reason": "signatures",
+         "samples": ["/wp-content/uploads/branding/Facebook.png"]},
+        {"glob": "wp-content/uploads/*/*/*.pdf", "reason": "dated revisions",
+         "samples": ["/wp-content/uploads/2023/05/old-vcd.pdf"]},
+    ]
+    files = {
+        "wp-content/uploads/branding/Facebook.png": b"\x89PNG fb",
+        "wp-content/uploads/branding/Portrait/scott-152.jpg": b"\xff\xd8 jpg",
+        "wp-content/uploads/2023/05/old-vcd.pdf": b"%PDF-old",
+        # Already fetched by the page-driven export; must not be written twice.
+        "wp-content/uploads/2026/07/fees.pdf": b"%PDF-current",
+        # Not matched by any glob: not preserved.
+        "wp-content/uploads/2023/05/photo.jpg": b"\xff\xd8 no",
+    }
+    out, record = _run_with_preserved(tmp_path, monkeypatch, capture, form_html, preserved, files)
+
+    assert (out / "wp-content/uploads/branding/Facebook.png").read_bytes() == b"\x89PNG fb"
+    assert (out / "wp-content/uploads/branding/Portrait/scott-152.jpg").exists()
+    assert (out / "wp-content/uploads/2023/05/old-vcd.pdf").read_bytes() == b"%PDF-old"
+    assert not (out / "wp-content/uploads/2023/05/photo.jpg").exists()
+
+    by_file = {entry["file"]: entry for entry in record["files"]}
+    assert by_file["wp-content/uploads/branding/Facebook.png"]["kind"] == "preserved"
+    assert by_file["wp-content/uploads/branding/Facebook.png"]["url"] == "https://thehenley.com.au/wp-content/uploads/branding/Facebook.png"
+    # The current fees PDF was fetched as an asset; the glob also matches it,
+    # but the fetched copy stands and it is recorded once.
+    assert by_file["wp-content/uploads/2026/07/fees.pdf"]["kind"] == "asset"
+    assert sum(1 for entry in record["files"] if entry["file"] == "wp-content/uploads/2026/07/fees.pdf") == 1
+    assert record["counts"]["preserved"] == 3
+
+
+def test_run_refuses_a_preserved_glob_that_matches_nothing(tmp_path, monkeypatch, capture, form_html):
+    """A typo in a glob would otherwise silently drop every file it was meant
+    to keep, and nothing on the site would look wrong."""
+    preserved = [{"glob": "wp-content/uploads/brandng/**/*", "reason": "typo", "samples": []}]
+    with pytest.raises(export.ExportError, match="brandng"):
+        _run_with_preserved(tmp_path, monkeypatch, capture, form_html, preserved,
+                            {"wp-content/uploads/branding/Logo.png": b"x"})
+
+
+def test_run_refuses_a_preserved_sample_the_glob_did_not_match(tmp_path, monkeypatch, capture, form_html):
+    """The samples are the addresses the URL gate asserts; a glob that no
+    longer covers one is a gate that would fail on the day, so fail now."""
+    preserved = [{"glob": "wp-content/uploads/branding/*.png", "reason": "shallow",
+                  "samples": ["/wp-content/uploads/branding/Portrait/scott-152.jpg"]}]
+    with pytest.raises(export.ExportError, match="scott-152"):
+        _run_with_preserved(tmp_path, monkeypatch, capture, form_html, preserved,
+                            {"wp-content/uploads/branding/Logo.png": b"x",
+                             "wp-content/uploads/branding/Portrait/scott-152.jpg": b"y"})

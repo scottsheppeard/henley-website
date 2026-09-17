@@ -9,7 +9,8 @@
     "posts": 16,
     "extra_urls": 9,
     "shortlinks": 25,
-    "documents": 2
+    "documents": 2,
+    "preserved": 4
   },
   "canonicalisation": [
     {
@@ -596,6 +597,42 @@
         "/"
       ],
       "note": "Dated file stays immutable and long-cached; the alias always points at the current revision and must revalidate."
+    }
+  ],
+  "preserved": [
+    {
+      "glob": "wp-content/uploads/branding/**/*",
+      "reason": "Brand asset library. Staff email signatures load the logo, Facebook icon and portrait from here on every message: about 2,300 requests in the month to 2026-09-17, none from any page on the site.",
+      "samples": [
+        "/wp-content/uploads/branding/Raster_PNG/Email_Signature_Transparent/logo-email-broadwater-deep-344w.png",
+        "/wp-content/uploads/branding/Facebook.png",
+        "/wp-content/uploads/branding/Portrait/scott-152.jpg",
+        "/wp-content/uploads/branding/Logo.png"
+      ]
+    },
+    {
+      "glob": "wp-content/uploads/*/*/*.pdf",
+      "reason": "Every dated Schedule of Fees and Village Comparison Document revision. Old emails, search results and third-party sites link the superseded ones: about 110 requests in the month to 2026-09-17. The two current revisions are also the aliased documents above.",
+      "samples": [
+        "/wp-content/uploads/2026/03/Henley-Form-3-VCD-March-2026-.pdf",
+        "/wp-content/uploads/2026/02/Henley-Form-3-VCD-1-January-2026.pdf",
+        "/wp-content/uploads/2026/01/SCHEDULE-OF-FEES-Henley-Care-1-November-2025.pdf",
+        "/wp-content/uploads/2023/05/Henley-Form-3-VCD-17-Jan-2023.pdf"
+      ]
+    },
+    {
+      "glob": "wp-content/uploads/2025/09/lightspeed.png",
+      "reason": "Image embedded in automated notification emails; no page links it.",
+      "samples": [
+        "/wp-content/uploads/2025/09/lightspeed.png"
+      ]
+    },
+    {
+      "glob": "wp-content/uploads/2025/09/sharepoint.png",
+      "reason": "Image embedded in automated notification emails; no page links it.",
+      "samples": [
+        "/wp-content/uploads/2025/09/sharepoint.png"
+      ]
     }
   ]
 }

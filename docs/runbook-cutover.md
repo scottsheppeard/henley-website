@@ -180,11 +180,15 @@ the WordPress reader, and what was actually built reads both sources.
       local-resource/runtime errors. External tracking failures are recorded
       separately; the known dead `GTM-M3MV9VG` container is nonfatal and remains
       preserved pending Scott's decision.
-- [ ] **Before production cutover**, retain the external email assets at their
-      legacy paths: `wp-content/uploads/2025/09/lightspeed.png`,
-      `wp-content/uploads/2025/09/sharepoint.png`, and the `branding/` tree
-      used by staff signatures. No collection evidence exists yet; verify the
-      required files and paths before the production switch.
+- [x] **Legacy email and document assets preserved** (2026-09-17). A month of
+      the production proxy log showed files WordPress served that no page
+      links to: the `branding/` tree behind every staff email signature
+      (~2,300 requests), 14 superseded dated VCD and fee PDFs (~110), and the
+      two notification images. The migration manifest's `preserved` section
+      now names them; `replica/export.py` copies every match from the
+      WordPress web root on disk (227 files, 17 MB) and
+      `scripts/check-urls.sh --strict` asserts the hot paths. The web root
+      must remain on disk for as long as the export is refreshed.
 - [ ] **Search Console ownership secured by DNS TXT**, verified *before* Site
       Kit is removed. Site Kit's verification is an OAuth grant tied to the
       WordPress install; switching it off can take ownership with it, and

@@ -168,10 +168,17 @@ def outstanding(path, detail):
 # SPA-ish fallback, an HTML error page, or the home page for a path it does not
 # recognise, and the old check counted every one of those as a pass.
 
+IMAGE_MAGIC = {
+    ".png": b"\x89PNG", ".jpg": b"\xff\xd8", ".jpeg": b"\xff\xd8", ".svg": b"<",
+}
+
+
 def kind_of(path):
     clean = path.split("?", 1)[0]
     if clean.endswith(".pdf"):
         return "pdf"
+    if any(clean.lower().endswith(ext) for ext in IMAGE_MAGIC):
+        return "image"
     if clean.endswith("/feed/") or clean.endswith("/feed"):
         return "feed"
     if clean.endswith(".xml"):
@@ -195,6 +202,14 @@ def content_is_right(path, response):
             return False, f"content-type {response.content_type or 'missing'}, not a PDF"
         if not response.body.startswith(b"%PDF-"):
             return False, "body does not begin %PDF-"
+        return True, ""
+
+    if kind == "image":
+        ext = "." + path.split("?", 1)[0].rsplit(".", 1)[-1].lower()
+        if "image/" not in response.content_type:
+            return False, f"content-type {response.content_type or 'missing'}, not an image"
+        if not response.body.lstrip().startswith(IMAGE_MAGIC[ext]):
+            return False, f"body is not a {ext} image"
         return True, ""
 
     if kind in {"feed", "sitemap"}:
@@ -283,6 +298,17 @@ def expect_ok(path, want_status, label, want_target=None, check_content=True):
 
     return record(True, label)
 
+
+# ── Preserved files: nothing links to them, outside callers still fetch them ─
+# Staff email signatures and the dated document revisions. The manifest keeps
+# the globs; the samples are what the production log showed being requested.
+# Sample mode skips them: they are a cutover requirement, not a design one.
+preserved = manifest.get("preserved", [])
+if strict:
+    print(f"\npreserved files ({sum(len(p['samples']) for p in preserved)} samples from {len(preserved)} globs):")
+    for entry in preserved:
+        for path in entry["samples"]:
+            expect_ok(path, 200, f"{path} (preserved)")
 
 # ── Index the redirect rules, so a manifest URL covered by one is satisfied ───
 literal_redirects = {

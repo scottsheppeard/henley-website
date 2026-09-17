@@ -107,6 +107,16 @@ for document in manifest["documents"]:
     routes[document["path"]] = (200, "application/pdf", PDF, LONG_CACHE)
     routes[document["alias"]] = (200, "application/pdf", PDF, REVALIDATE)
 
+IMAGES = {".png": (b"\x89PNG\r\n\x1a\n", "image/png"), ".jpg": (b"\xff\xd8\xff", "image/jpeg"),
+          ".jpeg": (b"\xff\xd8\xff", "image/jpeg"), ".svg": (b"<svg/>", "image/svg+xml")}
+for entry in manifest.get("preserved", []):
+    for path in entry["samples"]:
+        if path.endswith(".pdf"):
+            routes[path] = (200, "application/pdf", PDF, LONG_CACHE)
+        else:
+            body, content_type = IMAGES["." + path.rsplit(".", 1)[-1].lower()]
+            routes[path] = (200, content_type, body, LONG_CACHE)
+
 for rule in redirects["redirects"]:
     if rule.get("pattern"):
         continue
@@ -125,6 +135,14 @@ elif BREAK == "missing-news-page-2":
     del routes["/news/page/2/"]
 elif BREAK == "missing-document":
     del routes["/documents/village-comparison-document.pdf"]
+elif BREAK == "missing-signature-image":
+    # The page-driven export never sees this file; only staff email does.
+    del routes["/wp-content/uploads/branding/Facebook.png"]
+elif BREAK == "html-for-signature-image":
+    routes["/wp-content/uploads/branding/Facebook.png"] = (
+        200, "text/html; charset=utf-8", page("/404/", canonical="/"), None)
+elif BREAK == "missing-dated-pdf":
+    del routes["/wp-content/uploads/2023/05/Henley-Form-3-VCD-17-Jan-2023.pdf"]
 elif BREAK == "broken-redirect":
     # The Location is exactly what redirects.json promises. The destination is
     # not there. A header-only check calls this a pass.
@@ -277,6 +295,9 @@ expect_failure missing-feed            '/feed/ — expected 200, got 404'
 expect_failure missing-news-feed       '/news/feed/ — expected 200, got 404'
 expect_failure missing-news-page-2     '/news/page/2/'
 expect_failure missing-document        '/documents/village-comparison-document.pdf'
+expect_failure missing-signature-image '/wp-content/uploads/branding/Facebook.png'
+expect_failure html-for-signature-image 'not an image'
+expect_failure missing-dated-pdf       'Henley-Form-3-VCD-17-Jan-2023.pdf'
 expect_failure broken-redirect         'ends 404'
 expect_failure redirect-loop           'redirect loop'
 expect_failure offsite-redirect        'off-origin'

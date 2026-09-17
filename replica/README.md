@@ -11,7 +11,7 @@ in `stream/website-rebuild` takes its time. The binding design is
 |---|---|
 | `export.py` | Fetches the live site and writes `site/` and `manifest.json`. It uses the standard library only. |
 | `form.html` | The contact form: name, email, phone, two interest checkboxes and enquiry. It posts to the receiver in `../forms/`. |
-| `site/` | The generated site: 28 pages, 404 page, two feeds, sitemaps, `robots.txt`, and the same-origin assets they use. |
+| `site/` | The generated site: 28 pages, 404 page, two feeds, sitemaps, `robots.txt`, the same-origin assets they use, and the preserved files below. |
 | `manifest.json` | Every file in `site/`, its source URL and SHA-256. |
 | `compare.mjs` | Screenshot comparison of live and a candidate at 390 and 1280 px. |
 | `console-check.mjs` | Per-page CSP violations, runtime errors and external-request failures. CSP and local-resource/runtime errors are the gate; external tracking failures are reported separately. |
@@ -22,6 +22,15 @@ in `stream/website-rebuild` takes its time. The binding design is
 Do this the evening before cutover and whenever the live site changes.
 
     forms/.venv/bin/python replica/export.py
+
+The export must run on this host: the manifest's `preserved` section names
+files no page links to but outside callers still fetch (the brand asset tree
+behind every staff email signature, every dated VCD and fee revision, two
+notification-email images), and they are copied from the WordPress web root
+on disk, `/mnt/persistent/prod/www_henleycomau` (`--webroot` to change). The
+export refuses a glob that matches nothing or misses one of its samples;
+`scripts/check-urls.sh --strict` asserts the samples on the deployment. Keep
+the web root until the export is no longer refreshed.
     git diff --stat replica/
     forms/.venv/bin/python -m pytest replica/tests -q
 
@@ -79,8 +88,9 @@ Only these changes are intended; `tests/test_export.py` pins them.
   JavaScript and its AJAX iframe.
 - Replaced: the Gravity Form on `/contact/` with `form.html`.
 - Rewritten: same-origin references root-relative; retired dev-host upload URLs
-  are treated as production assets and made local; two rotating WordPress nonces
-  are zeroed; Yoast child sitemaps are named `sitemap-pages.xml` and
+  are treated as production assets and made local; the rotating WordPress
+  nonces (including Elementor's click-tracking one, which only the uncached
+  404 page rotated) are zeroed; Yoast child sitemaps are named `sitemap-pages.xml` and
   `sitemap-posts.xml`.
 - Kept: Elementor, jQuery, WP Rocket lazy-load, both GTM containers, gtag, Yoast
   metadata, Typekit, Google Fonts and the Font Awesome kit.
