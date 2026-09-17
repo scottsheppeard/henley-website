@@ -193,9 +193,14 @@ the WordPress reader, and what was actually built reads both sources.
       Kit is removed. Site Kit's verification is an OAuth grant tied to the
       WordPress install; switching it off can take ownership with it, and
       re-verifying afterwards is much harder than verifying now.
-- [ ] A test enquiry through dev lands in the nonprod intake store, and a
-      `DRY_RUN=true` run of the nightly job classifies it and logs the
-      Salesforce payload it would send.
+- [x] **Nightly reader proven against the nonprod intake store** (2026-09-17).
+      With `DRY_RUN=true INTAKE_DB_PATH=/mnt/persistent/stor/henley-website-nonprod/intake.sqlite`
+      on the command line (shell variables win over `.env`, so nothing was
+      edited), `update_salesforce_leads.py` read the Sales Manager's test
+      enquiry from dev as id 100010, classified it in the same Codex batch as
+      that week's WordPress entries, and logged the Salesforce upsert it would
+      have made. No `INTAKE_DB_PATH is set but missing` warning. Repeat with
+      the production path at step 3.
 - [ ] **The drain rehearsal is deferred.** On 2026-09-10 Scott judged the few
       enquiries not worth holding work up for, so the drain will first be
       performed on cutover day. The live drain boundary and reconciliation in
@@ -207,6 +212,26 @@ the WordPress reader, and what was actually built reads both sources.
    `/mnt/persistent/prod/www_henleycomau`, both under
    `/mnt/persistent/stor/henley-website-archive/`. Verify the dump restores
    into a scratch database before continuing — an unverified backup is not one.
+
+   **Rehearsed 2026-09-17**: `wordpress-20260917.sql` (74 tables, latest
+   Gravity Forms entry id 5260) and `www_henleycomau-20260917.tar.gz` (the
+   root-owned `core` dump excluded) are in the archive, and the dump was
+   restored into a throwaway `mariadb:10.6` container and queried. The
+   commands, run from the host:
+
+   ```bash
+   docker exec db-prod-henley sh -c 'exec mysqldump --single-transaction --routines --triggers -uroot -p"${MARIADB_ROOT_PASSWORD:-$MYSQL_ROOT_PASSWORD}" wordpress' \
+     > /mnt/persistent/stor/henley-website-archive/wordpress-$(date +%Y%m%d).sql
+   (cd /mnt/persistent/prod && tar --exclude='www_henleycomau/core' -czf /mnt/persistent/stor/henley-website-archive/www_henleycomau-$(date +%Y%m%d).tar.gz www_henleycomau)
+   docker run -d --rm --name henley-dump-verify -e MARIADB_ROOT_PASSWORD=scratch -e MARIADB_DATABASE=wordpress mariadb:10.6
+   until docker exec henley-dump-verify mysql -uroot -pscratch -e 'select 1' >/dev/null 2>&1; do sleep 1; done
+   docker exec -i henley-dump-verify mysql -uroot -pscratch wordpress < /mnt/persistent/stor/henley-website-archive/wordpress-$(date +%Y%m%d).sql
+   docker exec henley-dump-verify mysql -uroot -pscratch wordpress -N -e "SELECT COUNT(*), MAX(id), MAX(date_created) FROM wp_gf_entry;"
+   docker stop henley-dump-verify
+   ```
+
+   Take both again on the day: the rehearsal copy is not the final-source
+   snapshot.
 
    This dump is also the **final-source snapshot** the drain depends on. Take
    it again immediately after step 6, once WordPress can no longer receive a
