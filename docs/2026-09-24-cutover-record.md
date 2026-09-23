@@ -50,6 +50,24 @@ Once it is present and classified, the gate in "Draining WordPress" step 3 is
 met, and step 5 (clear `DB_HOST`, one intake-only dry run, one live intake-only
 night, then stop `db-prod-henley`) can go ahead.
 
+## End-to-end test and drain gate, 2026-09-24 09:51
+
+Scott submitted a test enquiry through the live form ("Mike Frederickson",
+resort-style living for a parent). It was stored as id **100001** from his own
+address. `update_salesforce_leads.py` was run live on request, outside the
+nightly schedule. It read two submissions, the intake row and WordPress's 5286,
+in one Codex batch:
+
+| Id | Category | Spam rating | Outcome |
+|---|---|---|---|
+| 100001 | `prospective_resident` | 98 | Pushed 09:51:21, Salesforce Lead `00QOl00000Ui1aDMAR` (a test, for Scott to remove from Salesforce) |
+| 5286 | `business_solicitation` | 1 | Filtered; nothing owed |
+
+All 54 drain ids are now terminal, so the gate in "Draining WordPress" step 3 is
+met. Only `update_salesforce_leads.py` (and the retired
+`update_sales_forms.py`) reads `DB_*`, so step 5 can start as soon as Scott
+clears `DB_HOST`.
+
 ## Where the runbook was wrong (corrected in place)
 
 1. **NPM did not need recreating.** `docker network connect` attaches the
@@ -68,11 +86,11 @@ night, then stop `db-prod-henley`) can go ahead.
   TXT record at 09:40. The replica serves the same HTML as WordPress did, so
   any tag-based verification still works. Site Kit's OAuth verification is gone
   with WordPress.
-- **`henley-aws/docker-compose.yml`** must name `henley-website-prod-net` under
-  `npm-attachment` and in the top-level `networks:` block (Scott; the agent's
-  edit was refused by the permission classifier). Until then, an NPM
-  recreation takes the site down.
-- **The drain**: reconcile after tonight's run, then step 5.
+- ~~`henley-aws/docker-compose.yml` must name `henley-website-prod-net`~~
+  **Done**: Scott, henley-aws `3f60ba8`, pushed. `docker compose config` passed.
+- **The drain**: the gate is met (above). Next is step 5: Scott clears
+  `DB_HOST`, then an intake-only dry run, one live intake-only nightly run, and
+  `docker stop db-prod-henley`.
 - **Google Ads tracking** for the marketing partner: the `enquiry_submitted`
   event on the replica thank-you page, the `GTM-M3MV9VG` decision, and the CSP
   check for call tracking.
