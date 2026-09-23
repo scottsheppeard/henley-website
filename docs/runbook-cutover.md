@@ -4,12 +4,12 @@ Moving thehenley.com.au from WordPress to the static site. Written while the
 pieces were being built, so it records what is actually true rather than what
 was planned.
 
-**Not yet ready to run.** The replica must first be refreshed, deployed to
-nonprod, and pass the acceptance checks below. The older Astro redesign's
-Stage 3 is no longer this cutover's blocker; it remains work for
-`stream/website-rebuild`. The sequencing decisions here still apply because
-they protect enquiries, webhooks, and externally linked legacy assets during
-the replica cutover.
+**Executed 2026-09-24: the replica is live and WordPress is stopped; the drain
+is in progress.** The record, with the evidence and the three places this
+runbook was wrong, is [2026-09-24-cutover-record.md](2026-09-24-cutover-record.md).
+The steps below are corrected in place. The drain, "After" and the rollback
+sections still apply. The Astro redesign remains work for
+`stream/website-rebuild`.
 
 ---
 
@@ -159,23 +159,24 @@ the WordPress reader, and what was actually built reads both sources.
 
 ## Before the day
 
-- [ ] The replica export is fresh: run `forms/.venv/bin/python
+- [x] The replica export is fresh: run `forms/.venv/bin/python
       replica/export.py` the evening before, review and commit its diff, and
       rebuild nonprod from it. This is the last copy from WordPress; a
-      WordPress edit after it is not in the replica.
-- [ ] `scripts/check-urls.sh --strict --noindex https://dev.thehenley.com.au`
+      WordPress edit after it is not in the replica. (2026-09-23, `57c96d6`.)
+- [x] `scripts/check-urls.sh --strict --noindex https://dev.thehenley.com.au`
       is green.
       Strict is the gate: it requires every manifest URL, both feeds,
       `/news/page/2/`, both documents at both addresses, and every redirect's
       *destination*, and checks that what came back is the right kind of thing
       rather than merely a 200.
-- [ ] `scripts/check-urls-fixture.sh` green, so the gate itself is known to
+- [x] `scripts/check-urls-fixture.sh` green, so the gate itself is known to
       fail on the defects it claims to catch.
-- [ ] `scripts/with-node.sh node replica/compare.mjs https://thehenley.com.au
+- [x] `scripts/with-node.sh node replica/compare.mjs https://thehenley.com.au
       https://dev.thehenley.com.au` has only the known shorter `/contact/` form
       and, after Task 11b, reviewed restored-image differences from the retired
-      dev hostname. Any other difference is investigated.
-- [ ] `scripts/with-node.sh node replica/console-check.mjs
+      dev hostname. Any other difference is investigated. (Accepted from the
+      2026-09-17 run: the 2026-09-23 refresh changed no content.)
+- [x] `scripts/with-node.sh node replica/console-check.mjs
       https://dev.thehenley.com.au` has zero CSP violations and zero
       local-resource/runtime errors. External tracking failures are recorded
       separately; the known dead `GTM-M3MV9VG` container is nonfatal and remains
@@ -190,7 +191,8 @@ the WordPress reader, and what was actually built reads both sources.
       `scripts/check-urls.sh --strict` asserts the hot paths. The web root
       must remain on disk for as long as the export is refreshed.
 - [ ] **Search Console ownership secured by DNS TXT**, verified *before* Site
-      Kit is removed. Site Kit's verification is an OAuth grant tied to the
+      Kit is removed. **Still open after cutover**: no `google-site-verification`
+      TXT record on 2026-09-24 09:40. Site Kit's verification is an OAuth grant tied to the
       WordPress install; switching it off can take ownership with it, and
       re-verifying afterwards is much harder than verifying now.
 - [x] **Nightly reader proven against the nonprod intake store** (2026-09-17).
@@ -243,8 +245,15 @@ the WordPress reader, and what was actually built reads both sources.
    ```bash
    docker network create henley-website-prod-net   # once
    cd /mnt/persistent/dev/henley-website
-   # Attach henley-website-prod-net to npm-attachment in
-   # /home/admin/henley-aws/docker-compose.yml, then recreate NPM.
+   # Attach it live: no NPM restart, so no blip for every other site, and
+   # the addresses NPM already holds on other networks do not change.
+   docker network connect henley-website-prod-net npm-attachment
+   # Then add henley-website-prod-net to npm-attachment's networks (and the
+   # top-level networks: block) in /home/admin/henley-aws/docker-compose.yml,
+   # or the next NPM recreation drops the network and the site with it.
+   # Create the store as admin: left to Docker, the bind mount is created
+   # root-owned and the receiver (uid 1000) cannot write its database.
+   mkdir -p /mnt/persistent/stor/henley-website-prod
    test -f deploy/.env.prod || cp deploy/.env.example deploy/.env.prod
    prod_npm_ip="$(docker inspect -f '{{(index .NetworkSettings.Networks "henley-website-prod-net").IPAddress}}' npm-attachment)"
    nonprod_npm_ip="$(docker inspect -f '{{(index .NetworkSettings.Networks "henley-website-nonprod-net").IPAddress}}' npm-attachment)"
@@ -309,7 +318,12 @@ the WordPress reader, and what was actually built reads both sources.
    can no longer receive a submission, and it is the start of the drain.
    ```bash
    docker stop wp-prod-henley
+   docker update --restart=no wp-prod-henley
    ```
+   The second line matters: the container's policy was `always`, which
+   restarts a manually stopped container whenever the Docker daemon restarts,
+   so the first host reboot would have brought WordPress back.
+
    **Do not stop `db-prod-henley`, and do not clear `DB_*`.** The nightly job
    still has to read Gravity Forms for the enquiries taken in the days before
    this moment, and a `DB_HOST` pointing at a stopped database fails the whole
@@ -516,7 +530,8 @@ tries to bypass a rate limit.
 
 Point the `thehenley.com.au` proxy host back at `wp-prod-henley:80`, restore
 the `/webhooks` location, and `docker start wp-prod-henley` (and
-`db-prod-henley` if the drain had already reached step 5c).
+`db-prod-henley` if the drain had already reached step 5c). Put its restart
+policy back with `docker update --restart=always wp-prod-henley`.
 `www.thehenley.com.au` as a Redirection Host is correct either way and needs no
 rollback. Nothing in the cutover destroys WordPress state.
 
