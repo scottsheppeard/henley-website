@@ -88,9 +88,11 @@ clears `DB_HOST`.
   with WordPress.
 - ~~`henley-aws/docker-compose.yml` must name `henley-website-prod-net`~~
   **Done**: Scott, henley-aws `3f60ba8`, pushed. `docker compose config` passed.
-- **The drain**: the gate is met (above). Next is step 5: Scott clears
-  `DB_HOST`, then an intake-only dry run, one live intake-only nightly run, and
-  `docker stop db-prod-henley`.
+- **The drain**: the gate is met (above). Step 5a is done: Scott cleared
+  `DB_HOST` at 09:56 (`INTAKE_DB_PATH` kept). The intake-only `DRY_RUN=true` run
+  at 09:57 exited 0 with "No changes required" and no warning or error. Next,
+  5b: check the 2026-09-25 00:30 nightly log (the first live intake-only run).
+  Then 5c: `docker stop db-prod-henley`.
 - **Google Ads tracking** for the marketing partner: the `enquiry_submitted`
   event on the replica thank-you page, the `GTM-M3MV9VG` decision, and the CSP
   check for call tracking.
