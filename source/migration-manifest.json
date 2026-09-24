@@ -591,7 +591,7 @@
       "note": "Dated file stays immutable and long-cached; the alias always points at the current revision and must revalidate."
     },
     {
-      "path": "/wp-content/uploads/2026/08/Henley-Form-3-VCD-1-July-2026.pdf",
+      "path": "/wp-content/uploads/2026/09/Henley-Form-3-VCD-23-September-2026.pdf",
       "alias": "/documents/village-comparison-document.pdf",
       "linked_from": [
         "/"

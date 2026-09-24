@@ -79,6 +79,15 @@ will overwrite it with what WordPress serves, so an edit that must survive a
 refresh needs to be made in WordPress while it exists, or the refresh skipped.
 After cutover `site/` is the only source.
 
+To publish a new Village Comparison Document or Schedule of Fees: copy the PDF
+to a new dated path under `site/wp-content/uploads/<yyyy>/<mm>/` (that path is
+long-cached and must never change) and over the alias under `site/documents/`
+(served `no-cache`, and what the pages link to). Point the `documents` entry in
+`source/migration-manifest.json` at the new dated path, update
+`manifest.json` (alias hash and source, the new dated file as an `asset`, the
+superseded one as `preserved`, counts), run the tests, deploy nonprod, run
+`scripts/check-urls.sh --strict`, then deploy prod and check again.
+
 ## What was changed from what WordPress served
 
 Only these changes are intended; `tests/test_export.py` pins them.
@@ -91,6 +100,12 @@ Only these changes are intended; `tests/test_export.py` pins them.
   `enquiry_submitted` dataLayer event on `/thank-you/`, pushed once when the
   receiver's `?sent=1` is present. That parameter is then removed from the
   address. `tests/thank-you-event.test.mjs` runs the page's own script.
+- Replaced after cutover (2026-09-24): the Village Comparison Document. The
+  23 September 2026 revision is at
+  `wp-content/uploads/2026/09/Henley-Form-3-VCD-23-September-2026.pdf` and
+  behind `/documents/village-comparison-document.pdf`; the home-page button
+  now links the alias rather than the dated file, so the next revision is a
+  file swap. The 1 July 2026 file stays at its dated path as a preserved file.
 - Rewritten: same-origin references root-relative; retired dev-host upload URLs
   are treated as production assets and made local; the rotating WordPress
   nonces (including Elementor's click-tracking one, which only the uncached

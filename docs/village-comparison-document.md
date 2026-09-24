@@ -61,16 +61,18 @@ rather than buried among legal links. Recommended:
 - The link target is the stable alias `/documents/village-comparison-document.pdf`
   (see `source/migration-manifest.json`), which always points at the current
   revision and is served `Cache-Control: no-cache`, so an amended document
-  reaches visitors immediately. The dated file keeps its
-  `/wp-content/uploads/2026/08/Henley-Form-3-VCD-1-July-2026.pdf` path.
+  reaches visitors immediately. The dated file keeps its own path under
+  `/wp-content/uploads/<yyyy>/<mm>/`, currently
+  `/wp-content/uploads/2026/09/Henley-Form-3-VCD-23-September-2026.pdf`.
 - Link text should say what it is. "Village Comparison Document (Form 3)"
   rather than "Compare us".
 
-**Currency.** The document on the live site is dated 1 July 2026 and uses the
+**Currency.** The document on the live site is correct as at 23 September
+2026 (published 2026-09-24, replacing the 1 July 2026 revision) and uses the
 approved form version V10 (June 2025), the same version other Queensland
-operators are publishing in 2026. Nine earlier revisions exist in the
-WordPress uploads back to January 2023; they stay reachable at their dated
-paths but nothing should link to them.
+operators are publishing in 2026. Ten earlier revisions exist in the uploads
+back to January 2023; they stay reachable at their dated paths but nothing
+should link to them.
 
 **Ownership.** Amending the VCD, notifying the chief executive and the annual
 refresh are the operator's obligations, not the website's. The website's job

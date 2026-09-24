@@ -10,7 +10,7 @@
     "robots": 1,
     "asset": 301,
     "document": 2,
-    "preserved": 227
+    "preserved": 228
   },
   "files": [
     {
@@ -71,10 +71,10 @@
     },
     {
       "file": "documents/village-comparison-document.pdf",
-      "url": "https://thehenley.com.au/wp-content/uploads/2026/08/Henley-Form-3-VCD-1-July-2026.pdf",
+      "url": "https://thehenley.com.au/wp-content/uploads/2026/09/Henley-Form-3-VCD-23-September-2026.pdf",
       "kind": "document",
-      "bytes": 462333,
-      "sha256": "21691401b0ba082839ff06981f59cd15f753ad8be651e1f93b5520a92e83a955"
+      "bytes": 460947,
+      "sha256": "6abcbb336afc7e17f5fc8518dceb9e78514c6ae73a3e3e96a4f31e8a0bdb99ca"
     },
     {
       "file": "fashionista-the-henley/index.html",
@@ -101,8 +101,8 @@
       "file": "index.html",
       "url": "https://thehenley.com.au/",
       "kind": "page",
-      "bytes": 92605,
-      "sha256": "a4019987fe00b578d20eac8243d800994185ccc6c3fddb5971aecd37761a58a6"
+      "bytes": 92586,
+      "sha256": "3859bdb2434153f06fbc82f3ebe5e491d24ff2707346f67c28aaecd246b5012a"
     },
     {
       "file": "internationalwomensday/index.html",
@@ -2333,9 +2333,16 @@
     {
       "file": "wp-content/uploads/2026/08/Henley-Form-3-VCD-1-July-2026.pdf",
       "url": "https://thehenley.com.au/wp-content/uploads/2026/08/Henley-Form-3-VCD-1-July-2026.pdf",
-      "kind": "asset",
+      "kind": "preserved",
       "bytes": 462333,
       "sha256": "21691401b0ba082839ff06981f59cd15f753ad8be651e1f93b5520a92e83a955"
+    },
+    {
+      "file": "wp-content/uploads/2026/09/Henley-Form-3-VCD-23-September-2026.pdf",
+      "url": "https://thehenley.com.au/wp-content/uploads/2026/09/Henley-Form-3-VCD-23-September-2026.pdf",
+      "kind": "asset",
+      "bytes": 460947,
+      "sha256": "6abcbb336afc7e17f5fc8518dceb9e78514c6ae73a3e3e96a4f31e8a0bdb99ca"
     },
     {
       "file": "wp-content/uploads/branding/Cortex/cortex-black.png",
