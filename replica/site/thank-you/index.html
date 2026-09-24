@@ -389,6 +389,22 @@ var elementorFrontendConfig = {"environmentMode":{"edit":false,"wpPreview":false
 if(typeof mutation.addedNodes[i].getElementsByClassName!=='function'){continue}
 images=mutation.addedNodes[i].getElementsByTagName('img');is_image=mutation.addedNodes[i].tagName=="IMG";iframes=mutation.addedNodes[i].getElementsByTagName('iframe');is_iframe=mutation.addedNodes[i].tagName=="IFRAME";rocket_lazy=mutation.addedNodes[i].getElementsByClassName('rocket-lazyload');image_count+=images.length;iframe_count+=iframes.length;rocketlazy_count+=rocket_lazy.length;if(is_image){image_count+=1}
 if(is_iframe){iframe_count+=1}}});if(image_count>0||iframe_count>0||rocketlazy_count>0){lazyLoadInstance.update()}});var b=document.getElementsByTagName("body")[0];var config={childList:!0,subtree:!0};observer.observe(b,config)}},!1)</script><script data-no-minify="1" async src="/wp-content/plugins/wp-rocket/assets/js/lazyload/17.8.3/lazyload.min.js"></script>
+<script id="enquiry-submitted-event">
+/* Not from WordPress: added 2026-09-24, after cutover, for Google Ads.
+   The receiver redirects here with ?sent=1 once it has stored an enquiry, so
+   this is the one moment a real submission can be counted. Firing on every
+   /thank-you/ view would count a refresh, the back button or a shared link as
+   a new lead, so push once and take the marker off the address.
+   replica/tests/thank-you-event.test.mjs runs this script. */
+(function () {
+  var url = new URL(window.location.href);
+  if (url.searchParams.get('sent') !== '1') return;
+  window.dataLayer = window.dataLayer || [];
+  window.dataLayer.push({ event: 'enquiry_submitted' });
+  url.searchParams.delete('sent');
+  window.history.replaceState(window.history.state, '', url.pathname + url.search + url.hash);
+})();
+</script>
 </body>
 </html>
 

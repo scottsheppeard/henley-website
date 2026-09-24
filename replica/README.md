@@ -87,6 +87,10 @@ Only these changes are intended; `tests/test_export.py` pins them.
   links; emoji script and style; generator and Site Kit meta tags; Gravity Forms
   JavaScript and its AJAX iframe.
 - Replaced: the Gravity Form on `/contact/` with `form.html`.
+- Added after cutover (2026-09-24, edited directly in `site/`): the
+  `enquiry_submitted` dataLayer event on `/thank-you/`, pushed once when the
+  receiver's `?sent=1` is present. That parameter is then removed from the
+  address. `tests/thank-you-event.test.mjs` runs the page's own script.
 - Rewritten: same-origin references root-relative; retired dev-host upload URLs
   are treated as production assets and made local; the rotating WordPress
   nonces (including Elementor's click-tracking one, which only the uncached
