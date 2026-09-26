@@ -68,6 +68,43 @@ met. Only `update_salesforce_leads.py` (and the retired
 `update_sales_forms.py`) reads `DB_*`, so step 5 can start as soon as Scott
 clears `DB_HOST`.
 
+## Drain step 5b, checked 2026-09-27
+
+Read-only, from the host. `DB_HOST` is empty in `henley-utils/scripts/.env`
+and `INTAKE_DB_PATH` is set, as Scott left them on 2026-09-24.
+
+| Night (00:30 AEST) | `update_salesforce_leads.log` |
+|---|---|
+| 2026-09-25 | **Failed**: `Codex spam classification batch 1 exited with status 1` — "Selected model is at capacity". The intake read had already succeeded; this is the classifier, not the source |
+| 2026-09-26 | `[LIVE]: 9 submissions \| 2 pushed, 7 filtered out` (100002–100010) |
+| 2026-09-27 | `[LIVE]: 5 submissions \| 0 pushed, 5 filtered out` (100011–100015) |
+
+No night logged a WordPress or `DB_*` error. The intake store holds ids
+100001–100015 (`sqlite_sequence` 100015) and every one is in
+`henley-utils/data/forms.db` with `classification_at` set. The three
+prospective residents are pushed: 100001 (the test, 24 Sep 09:51), 100002 and
+100008 (both 26 Sep 00:31). The rest are spam or business solicitation; no row
+is on the non-sales route, so nothing is owed to reception. **Step 5b is met.**
+
+The failed night had a cost: 100002, submitted 2026-09-24 13:46 AEST, reached
+Salesforce about 35 hours later, and 100008 about 16 hours later. The rows were
+not lost, because the next night re-read the 7-day window, but one classifier
+outage delays every enquiry of that day by a day. That is a henley-utils
+question, not a website one.
+
+**Host reboot, 2026-09-27 07:26.** `wp-prod-henley` stayed stopped (policy
+`no`), which is the step 6 correction proving itself. `db-prod-henley` came
+back up by itself (policy `always`), so step 5c is `docker stop` **and**
+`docker update --restart=no`; the runbook now says so.
+
+**Google Ads event on production.** `https://thehenley.com.au/thank-you/`
+returns 200 and its body is byte-identical (sha256 `ba723e53…7292`) to
+`replica/site/thank-you/index.html` at `a6ee04f`, with the
+`enquiry_submitted` push present once; `replica/tests/thank-you-event.test.mjs`
+passes against that file. It was deliberately not loaded with `?sent=1` in a
+browser, which would record a real conversion. The page still carries
+`GTM-M3MV9VG` alongside `GTM-PGSH3HF7`.
+
 ## Where the runbook was wrong (corrected in place)
 
 1. **NPM did not need recreating.** `docker network connect` attaches the
@@ -90,10 +127,12 @@ clears `DB_HOST`.
   **Done**: Scott, henley-aws `3f60ba8`, pushed. `docker compose config` passed.
 - **The drain**: the gate is met (above). Step 5a is done: Scott cleared
   `DB_HOST` at 09:56 (`INTAKE_DB_PATH` kept). The intake-only `DRY_RUN=true` run
-  at 09:57 exited 0 with "No changes required" and no warning or error. Next,
-  5b: check the 2026-09-25 00:30 nightly log (the first live intake-only run).
-  Then 5c: `docker stop db-prod-henley`.
+  at 09:57 exited 0 with "No changes required" and no warning or error. Step
+  5b is met (2026-09-26 and 2026-09-27 nights, above). Next, 5c (Scott):
+  `docker stop db-prod-henley && docker update --restart=no db-prod-henley`,
+  then check the next night's log.
 - **Google Ads tracking** for the marketing partner: the `enquiry_submitted`
-  event on the replica thank-you page, the `GTM-M3MV9VG` decision, and the CSP
-  check for call tracking.
+  event on the thank-you page is live (`7e23bd5`, checked on production
+  2026-09-27). Still open: the `GTM-M3MV9VG` decision, and the CSP check for
+  call tracking once their tag is in GTM Preview.
 - The "After" list in the runbook.

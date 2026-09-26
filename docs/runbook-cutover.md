@@ -409,10 +409,19 @@ through it deliberately.
    # b. one live nightly run with intake as the only source, checked in the log
    # c. and only after that:
    docker stop db-prod-henley
+   docker update --restart=no db-prod-henley
    ```
 
    Stopping the database before (a) and (b) is what the earlier version of this
    runbook told you to do, and it is the failure this section exists to prevent.
+
+   The second line of (c) matters for the same reason as in cutover step 6:
+   `db-prod-henley`'s policy is `always` (compose project `prod_henleycomau`),
+   so a stop alone lasts until the next host reboot. The reboot of 2026-09-27
+   07:26 showed both halves: `wp-prod-henley`, set to `no`, stayed stopped;
+   `db-prod-henley` came straight back. Running `docker compose up` in
+   `henley-aws/websites/prod_henleycomau` would start both again, because the
+   compose file still says `restart: always`.
 
 6. **Keep the rollback material** as step 1 requires: the verified dump, the
    post-switch dump, and the web-root tarball. Reconciliation being clean is
