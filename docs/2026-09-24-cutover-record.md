@@ -105,6 +105,40 @@ passes against that file. It was deliberately not loaded with `?sent=1` in a
 browser, which would record a real conversion. The page still carries
 `GTM-M3MV9VG` alongside `GTM-PGSH3HF7`.
 
+## Proxy address drift, found 2026-10-06
+
+The 2026-09-27 07:26 reboot (above) also reassigned addresses on
+`henley-website-prod-net`. Docker gives them out in start order and remembers
+nothing: `henley-website-prod` took `.2`, `henley-website-forms-prod` `.3` and
+`npm-attachment` `.4`. The receiver still believed `X-Forwarded-For` only from
+`192.168.176.2`, NPM's address at the switch (above) and now the static site's,
+so NPM was an untrusted peer and the receiver took NPM itself to be the
+visitor. Nonprod drifted the same way: NPM's address on
+`henley-website-nonprod-net` moved from `192.168.160.4` to `.3`.
+
+| What | Evidence |
+|---|---|
+| From | 2026-09-27 10:46: every visitor attributed to `192.168.176.4` (NPM). The three-an-hour per-visitor cap acted as a site-wide cap |
+| Refused | 758 POSTs answered 429, all in four bot-flood hours: 27 Sep 10:00, 3 Oct 19:00, 3 Oct 23:00 and 6 Oct 07:00. Outside those hours nobody was refused |
+| Stored | Intake rows 100016 onward (through at least 100057) carry `192.168.176.4` as `remote_ip`. The visitors' real addresses are not recoverable. No downstream system reads that column |
+
+**Fix.** The receiver now accepts CIDR networks (`829f6b7`), and the value it
+is given becomes the website network's subnet, which survives reboots and NPM
+recreations: `192.168.176.0/20` for production, `192.168.160.0/20` for nonprod.
+It refuses to start on an entry it cannot parse, and logs an untrusted peer
+that forwards an address, so a repeat is no longer silent.
+`scripts/check-proxy-trust.sh` covers the network case (`cbe4660`). The
+runbook's step 2 and "Trusted proxy address", `deploy/.env.example`, both
+Compose files and `forms/README.md` now say subnet; the reasoning is in
+[decisions.md](decisions.md), "The trusted proxy is a network, not an address
+(2026-10-06)".
+
+- Drain step 5c was executed 2026-10-06 10:36:
+  `docker stop db-prod-henley && docker update --restart=no db-prod-henley`.
+  `db-prod-henley` is stopped with restart policy `no`. Tonight's 00:30 run
+  (2026-10-07) is the check that nothing still needed it.
+- Deployed: (to be recorded)
+
 ## Where the runbook was wrong (corrected in place)
 
 1. **NPM did not need recreating.** `docker network connect` attaches the
@@ -128,9 +162,12 @@ browser, which would record a real conversion. The page still carries
 - **The drain**: the gate is met (above). Step 5a is done: Scott cleared
   `DB_HOST` at 09:56 (`INTAKE_DB_PATH` kept). The intake-only `DRY_RUN=true` run
   at 09:57 exited 0 with "No changes required" and no warning or error. Step
-  5b is met (2026-09-26 and 2026-09-27 nights, above). Next, 5c (Scott):
-  `docker stop db-prod-henley && docker update --restart=no db-prod-henley`,
-  then check the next night's log.
+  5b is met (2026-09-26 and 2026-09-27 nights, above). Step 5c was executed
+  2026-10-06 10:36 (above). Still to do: check the 2026-10-07 00:30 night's
+  log for any WordPress or `DB_*` error.
+- **The proxy-trust redeploy** (above): both environment files set to their
+  network's subnet, both receivers recreated, and each startup line checked.
+  Open until "Deployed" is recorded.
 - **Google Ads tracking** for the marketing partner: the `enquiry_submitted`
   event on the thank-you page is live (`7e23bd5`, checked on production
   2026-09-27). Still open: the `GTM-M3MV9VG` decision, and the CSP check for

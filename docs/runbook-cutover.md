@@ -255,12 +255,12 @@ the WordPress reader, and what was actually built reads both sources.
    # root-owned and the receiver (uid 1000) cannot write its database.
    mkdir -p /mnt/persistent/stor/henley-website-prod
    test -f deploy/.env.prod || cp deploy/.env.example deploy/.env.prod
-   prod_npm_ip="$(docker inspect -f '{{(index .NetworkSettings.Networks "henley-website-prod-net").IPAddress}}' npm-attachment)"
-   nonprod_npm_ip="$(docker inspect -f '{{(index .NetworkSettings.Networks "henley-website-nonprod-net").IPAddress}}' npm-attachment)"
-   test -n "$prod_npm_ip" && test -n "$nonprod_npm_ip"
-   sed -i -E "s|^TRUSTED_PROXY_IPS=.*$|TRUSTED_PROXY_IPS=$prod_npm_ip|" deploy/.env.prod
-   if ! grep -qx "TRUSTED_PROXY_IPS=$nonprod_npm_ip" deploy/.env; then
-     sed -i -E "s|^TRUSTED_PROXY_IPS=.*$|TRUSTED_PROXY_IPS=$nonprod_npm_ip|" deploy/.env
+   prod_subnet="$(docker network inspect henley-website-prod-net -f '{{range .IPAM.Config}}{{.Subnet}}{{end}}')"
+   nonprod_subnet="$(docker network inspect henley-website-nonprod-net -f '{{range .IPAM.Config}}{{.Subnet}}{{end}}')"
+   test -n "$prod_subnet" && test -n "$nonprod_subnet"
+   sed -i -E "s|^TRUSTED_PROXY_IPS=.*$|TRUSTED_PROXY_IPS=$prod_subnet|" deploy/.env.prod
+   if ! grep -qx "TRUSTED_PROXY_IPS=$nonprod_subnet" deploy/.env; then
+     sed -i -E "s|^TRUSTED_PROXY_IPS=.*$|TRUSTED_PROXY_IPS=$nonprod_subnet|" deploy/.env
      docker compose --env-file deploy/.env -f deploy/compose.nonprod.yml up -d forms
    fi
    docker compose --env-file deploy/.env.prod -f deploy/compose.prod.yml up -d --build
@@ -268,12 +268,15 @@ the WordPress reader, and what was actually built reads both sources.
    `--env-file` is not optional: Compose reads `.env` from the directory it is
    run in, not from `deploy/`. `deploy/.env` remains the nonprod file. Create
    `deploy/.env.prod` from the example only when it is absent, then set its
-   `TRUSTED_PROXY_IPS` for the production network. The commands inspect the
-   named production and nonprod networks directly; do not copy an address from
-   the other network. If NPM recreation changed the nonprod address, they update
-   only `deploy/.env` and recreate its forms service before production begins.
+   `TRUSTED_PROXY_IPS` to the production network's subnet. The commands read
+   each named network's subnet directly; do not copy a value from the other
+   network. A subnet does not move when NPM is recreated or the host reboots, so
+   the nonprod branch fires only when `deploy/.env` still holds something else,
+   such as a single NPM address written before 2026-10-06; it then updates
+   only `deploy/.env` and recreates its forms service before production begins.
    They set `deploy/.env.prod` before starting any production container. An
-   empty value is a misconfiguration, not a default.
+   empty value is a misconfiguration, not a default ("Trusted proxy address",
+   below).
 
 3. **Turn on the intake source, before the switch.**
    Set `INTAKE_DB_PATH=/mnt/persistent/stor/henley-website-prod/intake.sqlite`
@@ -452,6 +455,56 @@ through it deliberately.
 `TRUSTED_PROXY_IPS` is the receiver's whole basis for believing
 `X-Forwarded-For`, and therefore for its rate limits meaning anything.
 
+**The value is the site network's subnet, not NPM's address.** The receiver
+publishes no port, so the only peers that can reach it are the containers on its
+own network — NPM, the static site's nginx and the receiver itself — and the
+Docker host, from the bridge gateway, which is an address inside the subnet.
+Of the containers, only NPM is on any other network (keystone
+`docs/network-segmentation.md`), so nothing else is a path in. The network is
+the boundary, and the setting names it. Read each subnet from its named network
+so a value is never copied from the wrong one:
+
+```bash
+docker network inspect henley-website-prod-net -f '{{range .IPAM.Config}}{{.Subnet}}{{end}}'      # 192.168.176.0/20 on 2026-10-06
+docker network inspect henley-website-nonprod-net -f '{{range .IPAM.Config}}{{.Subnet}}{{end}}'   # 192.168.160.0/20 on 2026-10-06
+```
+
+Put the production subnet in `deploy/.env.prod` and use it for every production
+Compose command. Put the nonprod subnet in `deploy/.env`. Docker keeps a
+network's subnet across host reboots and container recreations, NPM's
+included. It changes only if the network itself is deleted and recreated; then
+re-read it, update the matching environment file and recreate that forms
+container. After any change, check
+`docker logs henley-website-forms-prod | head`: it should say
+`X-Forwarded-For is believed from 192.168.176.0/20`. An empty list is a
+misconfiguration that looks exactly like a working deployment until someone
+tries to bypass a rate limit, and an entry that does not parse stops the
+receiver starting. A bare address still works and means that one host.
+
+The cost, accepted in [decisions.md](decisions.md) (2026-10-06): any container
+on the network that reaches the receiver directly, or a process on the host,
+may assert a visitor address. Today the containers are NPM and one read-only
+static nginx. `scripts/check-proxy-trust.sh` proves the receiver behaves
+exactly that way rather than assuming it.
+
+**Why not NPM's address (2026-10-06).** Until then the value was NPM's address
+on each network, re-read after every NPM recreation. Recreation was never the
+only thing that moves it: Docker allocates addresses on a user-defined network
+in container start order and does not remember who had what. The host reboot of
+2026-09-27 07:26 gave `henley-website-prod` `.2`, the receiver `.3` and
+`npm-attachment` `.4` on the production network, and the receiver went on
+trusting `.2`; nonprod moved from `.4` to `.3`. From that morning every visitor
+was counted as NPM, in one rate limit, and nothing logged it: see
+[the cutover record](2026-09-24-cutover-record.md), "Proxy address drift, found
+2026-10-06". The receiver now logs, once per peer, when a proxy it does not
+cover forwards addresses:
+
+```text
+untrusted peer <ip> sent X-Forwarded-For (last hop <ip>); using the peer
+```
+
+If that appears, compare the configured range with the network's subnet.
+
 **How NPM sets the header, confirmed 2026-09-10.** Every proxy host includes
 `conf.d/include/proxy.conf`, which does:
 
@@ -515,25 +568,6 @@ exists. Only bodies four times over the limit, which no one types, are cut off
 at the proxy with nginx's own error. Without the location setting, NPM's global
 `client_max_body_size 2000m` applies and it will stream two gigabytes at a
 receiver whose limit is 16 KB.
-
-The value itself is the npm-attachment container's address **on this site's
-network**. Inspect the named networks directly so an address is never copied
-from the wrong network:
-
-```bash
-docker inspect -f '{{(index .NetworkSettings.Networks "henley-website-prod-net").IPAddress}}' npm-attachment
-docker inspect -f '{{(index .NetworkSettings.Networks "henley-website-nonprod-net").IPAddress}}' npm-attachment
-```
-
-Put the production-network address in `deploy/.env.prod` and use it for every
-production Compose command. Put the nonprod-network address in `deploy/.env`.
-**Both addresses can change when `npm-attachment` is recreated**, including
-when step 2 adds the production network. After any NPM recreation, re-read the
-addresses on both named networks, update only their corresponding environment
-files, and recreate the matching forms container when its value changed. Then check
-`docker logs henley-website-forms-prod | head`: an empty list is a
-misconfiguration that looks exactly like a working deployment until someone
-tries to bypass a rate limit.
 
 ## If it goes wrong
 

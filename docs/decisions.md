@@ -334,6 +334,56 @@ the last hop and validates it as an address, and a malformed chain falls back to
 the peer rather than to whatever the client wrote. `scripts/check-proxy-trust.sh`
 proves it through a real proxy, because no in-process test could.
 
+### The trusted proxy is a network, not an address (2026-10-06)
+
+`TRUSTED_PROXY_IPS` now takes CIDR networks as well as addresses, and the
+deployed value is the website Docker network's subnet — `192.168.176.0/20` for
+`henley-website-prod-net`, `192.168.160.0/20` for `henley-website-nonprod-net` —
+instead of `npm-attachment`'s address on it. An entry that is neither an
+address nor a network stops the receiver starting, and an untrusted peer that
+sends `X-Forwarded-For` is logged, once per peer.
+
+The address was re-read whenever NPM was recreated, on the belief that only a
+recreation moved it. That was wrong: Docker allocates addresses on a
+user-defined network in container start order and does not remember who had
+what. The host reboot of 2026-09-27 07:26 gave `henley-website-prod` `.2`, the
+receiver `.3` and NPM `.4` on the production network. The receiver went on
+trusting `.2`, so from 10:46 that day every visitor was counted as NPM, the
+three-an-hour per-visitor cap acted as a site-wide cap, and 758 POSTs were
+refused with 429 in four bot-flood hours. Nonprod drifted the same way.
+Nothing logged it. The details are in
+[the cutover record](2026-09-24-cutover-record.md), "Proxy address drift, found
+2026-10-06".
+
+The network is the boundary because it is the only way in. The receiver
+publishes no port, so its only peers are the containers on its network — NPM,
+the static site's nginx and the receiver itself — and the Docker host, from the
+bridge gateway, which is inside the subnet. Keystone's
+`docs/network-segmentation.md` already makes NPM the only one of those
+containers on any other network. Docker keeps a network's subnet across reboots
+and container recreations; it changes only if the network itself is deleted
+and recreated.
+
+**Accepted:** a container on the website network that reaches the receiver
+directly may assert a visitor address with `X-Forwarded-For`, and so may a
+process on the host, through the gateway. Today those containers are NPM and
+one read-only static nginx. `scripts/check-proxy-trust.sh` proves the receiver
+has exactly that property (its `cidr-inside` scenario) rather than assuming it.
+
+**The step up, not taken.** If that set ever needs narrowing, NPM can inject a
+shared-secret header on the `/api/enquiry` location and the receiver can
+believe `X-Forwarded-For` only alongside it. Not taken because it fails the same
+silent way this did: a proxy host recreated without the header makes NPM an
+untrusted peer again, and every visitor shares one bucket.
+
+Two other fixes were rejected. Pinning NPM's address with `ipv4_address` means
+recreating NPM, which interrupts every site it fronts, and a pinned address is
+not reserved from Docker's dynamic pool, so another container can take it
+first. Resolving the name `npm-attachment` at runtime trusts whatever a cached
+lookup said until its TTL runs out. And nothing else needs NPM's address:
+henley-aws, keystone, vertex and henley-utils were searched for anything that
+reads it, and nothing does.
+
 ## Favicon
 
 **Provisional only.** The brand kit has just the wide wordmark — no compact or
