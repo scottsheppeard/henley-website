@@ -40,8 +40,12 @@ and proven, not assumed, by the shell check.
   message `TRUSTED_PROXY_IPS entry {entry!r} is not an IP address or network`,
   so the container refuses to start. An ignored entry would fail closed into
   the same silent site-wide limit this plan removes.
-- The empty-value startup WARNING keeps its existing text
-  (`TRUSTED_PROXY_IPS is empty. …`).
+- The empty-value startup WARNING keeps its asserted prefix
+  (`TRUSTED_PROXY_IPS is empty.`) and its explanation of the consequence,
+  but its advice sentence becomes `Set it to this Docker network's subnet
+  (see deploy/.env.example) and recreate this container.` (Ruling
+  2026-10-06 after the Task 1 review: the old advice named the
+  configuration that caused the incident.)
 - Startup INFO line format: `X-Forwarded-For is believed from <entries>`
   where entries are joined by `, ` in sorted order, a single-host network is
   printed as the bare address (`10.0.0.1`, not `10.0.0.1/32`) and any other
