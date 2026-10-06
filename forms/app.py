@@ -31,6 +31,7 @@ import sqlite3
 import time
 from collections import deque
 from contextlib import asynccontextmanager
+from ipaddress import IPv4Network, IPv6Network
 from pathlib import Path
 from typing import Deque
 
@@ -69,17 +70,58 @@ MAX_BODY_BYTES = int(os.environ.get("MAX_BODY_BYTES", 16 * 1024))
 MAX_PER_IP_PER_HOUR = int(os.environ.get("MAX_PER_IP_PER_HOUR", 3))
 MAX_PER_DAY = int(os.environ.get("MAX_PER_DAY", 100))
 
-# Only these peers may be believed about X-Forwarded-For. Anyone can send the
-# header; trusting it from an arbitrary peer would make every rate limit
-# bypassable by inventing an address per request.
+# Only peers inside these networks may be believed about X-Forwarded-For.
+# Anyone can send the header; trusting it from an arbitrary peer would make
+# every rate limit bypassable by inventing an address per request.
+#
+# On the live hosts the value is the website Docker network's subnet. The
+# receiver publishes no port, so the only peers that can reach it at all are
+# containers on that network: the network is the boundary, not any one address
+# on it. A bare address still works and means that one host. It used to be the
+# proxy's address, until the 2026-09-27 host reboot had Docker give the proxy a
+# different one and every visitor was counted as the proxy, in one rate limit.
 #
 # This is the only place proxy headers are interpreted. Uvicorn's own
 # --proxy-headers rewriting is turned off in the Dockerfile: it runs before this
 # and rewrites request.client from a header it was told to trust from anywhere,
 # which silently replaced the peer this logic depends on.
-TRUSTED_PROXIES = {
-    ip.strip() for ip in os.environ.get("TRUSTED_PROXY_IPS", "").split(",") if ip.strip()
-}
+
+
+def parse_trusted_proxies(value: str) -> list[IPv4Network | IPv6Network]:
+    """The networks in a comma-separated TRUSTED_PROXY_IPS value.
+
+    A bare address becomes a network of one host, so every value written before
+    networks were accepted still means what it meant.
+
+    An entry that does not parse raises, so the container refuses to start.
+    Skipping it would fail closed into the same silent site-wide rate limit a
+    stale address produced, and look exactly like a working deployment.
+    """
+    networks = []
+    for entry in (part.strip() for part in value.split(",")):
+        if not entry:
+            continue
+        try:
+            networks.append(ipaddress.ip_network(entry, strict=False))
+        except ValueError:
+            raise ValueError(
+                f"TRUSTED_PROXY_IPS entry {entry!r} is not an IP address or network"
+            ) from None
+    return networks
+
+
+def describe_network(network: IPv4Network | IPv6Network) -> str:
+    """A network as the startup line prints it: one host as its bare address.
+
+    `10.0.0.1`, not `10.0.0.1/32`, so a deployment that configures an address
+    reads exactly as it always has.
+    """
+    if network.prefixlen == network.max_prefixlen:
+        return str(network.network_address)
+    return str(network)
+
+
+TRUSTED_PROXY_NETWORKS = parse_trusted_proxies(os.environ.get("TRUSTED_PROXY_IPS", ""))
 
 # Field lengths. Generous for a person, bounded for everyone else.
 LIMITS = {
@@ -152,15 +194,40 @@ def normalise_ip(value: str) -> str | None:
         return None
 
 
+# Untrusted peers already reported for sending X-Forwarded-For. Once each per
+# process: a bot flood through a misconfigured proxy is one line, not one per
+# request. Only containers on the website network can reach the receiver, so
+# this stays a handful of addresses.
+_reported_untrusted_peers: set[str] = set()
+
+
 def client_ip(request: Request) -> str:
     """The visitor's address, believing X-Forwarded-For only from the proxy."""
     peer = request.client.host if request.client else "unknown"
-    if peer not in TRUSTED_PROXIES:
+    forwarded = request.headers.get("x-forwarded-for", "").strip()
+
+    # A peer that is not an address literal at all is never trusted.
+    observed_peer = normalise_ip(peer)
+    trusted = observed_peer is not None and any(
+        ipaddress.ip_address(observed_peer) in network for network in TRUSTED_PROXY_NETWORKS
+    )
+    if not trusted:
         # Either a direct connection, or a proxy nobody configured. Its own
         # address is the only thing about it we know first-hand.
+        if forwarded and peer not in _reported_untrusted_peers:
+            # A proxy nobody configured is also what a proxy whose address
+            # drifted looks like, and that is otherwise silent: every visitor
+            # just shares one bucket. Name the parsed hop, never the header,
+            # which is whatever the client wrote.
+            _reported_untrusted_peers.add(peer)
+            hop = normalise_ip(forwarded.rsplit(",", 1)[-1])
+            logger.warning(
+                "untrusted peer %s sent X-Forwarded-For (last hop %s); using the peer",
+                peer,
+                "malformed" if hop is None else hop,
+            )
         return peer
 
-    forwarded = request.headers.get("x-forwarded-for", "").strip()
     if not forwarded:
         # No chain to read. The health check and anything else reaching the
         # proxy without one lands here, so it is not worth a warning.
@@ -251,10 +318,11 @@ def within_daily_limit(connection: sqlite3.Connection) -> bool:
 
 
 def _reset_rate_limits() -> None:
-    """Test helper: forget every in-memory window."""
+    """Test helper: forget every in-memory window, and which peers were reported."""
     global _last_sweep
     _recent.clear()
     _last_sweep = 0.0
+    _reported_untrusted_peers.clear()
 
 
 # ── Responses ────────────────────────────────────────────────────────────────
@@ -402,9 +470,10 @@ async def _closed() -> Message:
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     initialise()
-    if TRUSTED_PROXIES:
+    if TRUSTED_PROXY_NETWORKS:
         logger.info(
-            "X-Forwarded-For is believed from %s", ", ".join(sorted(TRUSTED_PROXIES))
+            "X-Forwarded-For is believed from %s",
+            ", ".join(sorted(describe_network(network) for network in TRUSTED_PROXY_NETWORKS)),
         )
     else:
         # An empty list is what a missed deployment step looks like, and it looks

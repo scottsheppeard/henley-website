@@ -19,6 +19,7 @@ import sys
 import time
 from datetime import datetime, timezone
 from html.parser import HTMLParser
+from ipaddress import ip_network
 from pathlib import Path
 from urllib.parse import urlencode
 
@@ -677,33 +678,61 @@ def test_optional_fields_left_blank_are_stored_as_null(receiver):
 # now, and the Dockerfile says --no-proxy-headers.
 
 
-def behind_proxy(client, app_module, monkeypatch):
-    """Make the test client's peer the trusted proxy, as NPM is in production."""
-    monkeypatch.setattr(app_module, "TRUSTED_PROXIES", {"testclient"})
+def client_from(app, host):
+    """A test client whose connection comes from `host`, as a container's would."""
+    return TestClient(app, client=(host, 50000))
 
 
-def test_forwarded_for_is_believed_only_from_the_configured_proxy(receiver):
+@pytest.fixture
+def behind_proxy(receiver):
+    """The receiver reached through the trusted proxy, as NPM reaches it in production.
+
+    A real peer address — the one the `receiver` fixture trusts — not a name
+    patched into the trusted set, so it goes through the same parsing and the
+    same check a deployed request does.
+    """
+    _, app_module = receiver
+    with client_from(app_module.app, "10.0.0.1") as client:
+        yield client, app_module
+
+
+def trusting(monkeypatch, value):
+    """The receiver module reloaded with TRUSTED_PROXY_IPS set to `value`."""
+    monkeypatch.setenv("TRUSTED_PROXY_IPS", value)
+    import app as app_module
+
+    return importlib.reload(app_module)
+
+
+def test_forwarded_for_is_believed_only_from_the_configured_proxy(receiver, caplog):
     """Anyone can send the header; trusting it generally makes rate limits moot."""
     client, app_module = receiver
 
     submit(client, email="a@example.com")
     assert rows(app_module)[0]["remote_ip"] == "testclient"
 
-    monkeypatched = client.post(
-        "/api/enquiry",
-        data={"name": "B", "email": "b@example.com"},
-        headers={"x-forwarded-for": "203.0.113.9"},
-        follow_redirects=False,
-    )
+    with caplog.at_level("INFO", logger="henley.forms"):
+        monkeypatched = client.post(
+            "/api/enquiry",
+            data={"name": "B", "email": "b@example.com"},
+            headers={"x-forwarded-for": "203.0.113.9"},
+            follow_redirects=False,
+        )
     assert monkeypatched.status_code == 303
-    # TestClient's peer is "testclient", which is not in TRUSTED_PROXY_IPS,
-    # so the claimed address is ignored.
+    # TestClient's peer is "testclient", which is not an address at all and so
+    # never trusted: the claimed address is ignored.
     assert rows(app_module)[1]["remote_ip"] == "testclient"
 
+    # And it says so. The header's value is in that line only, as the parsed hop.
+    assert (
+        "untrusted peer testclient sent X-Forwarded-For (last hop 203.0.113.9); using the peer"
+        in caplog.messages
+    )
+    assert caplog.text.count("203.0.113.9") == 1
 
-def test_forwarded_for_takes_the_last_hop_from_a_trusted_proxy(receiver, monkeypatch):
-    client, app_module = receiver
-    behind_proxy(client, app_module, monkeypatch)
+
+def test_forwarded_for_takes_the_last_hop_from_a_trusted_proxy(behind_proxy):
+    client, app_module = behind_proxy
 
     client.post(
         "/api/enquiry",
@@ -716,10 +745,9 @@ def test_forwarded_for_takes_the_last_hop_from_a_trusted_proxy(receiver, monkeyp
     assert rows(app_module)[0]["remote_ip"] == "203.0.113.9"
 
 
-def test_a_spoofed_leading_hop_cannot_change_the_stored_address(receiver, monkeypatch):
+def test_a_spoofed_leading_hop_cannot_change_the_stored_address(behind_proxy):
     """The reproduction: four submissions, four invented first hops, one visitor."""
-    client, app_module = receiver
-    behind_proxy(client, app_module, monkeypatch)
+    client, app_module = behind_proxy
 
     spoofed = ["10.1.1.1", "10.2.2.2", "10.3.3.3", "10.4.4.4"]
     statuses = [
@@ -738,9 +766,8 @@ def test_a_spoofed_leading_hop_cannot_change_the_stored_address(receiver, monkey
     assert {row["remote_ip"] for row in stored} == {"203.0.113.9"}
 
 
-def test_independent_visitors_behind_the_proxy_are_counted_independently(receiver, monkeypatch):
-    client, app_module = receiver
-    behind_proxy(client, app_module, monkeypatch)
+def test_independent_visitors_behind_the_proxy_are_counted_independently(behind_proxy):
+    client, app_module = behind_proxy
 
     for i in range(3):
         response = client.post(
@@ -780,14 +807,63 @@ def test_an_untrusted_peer_cannot_choose_its_own_rate_limit_bucket(receiver):
     assert {row["remote_ip"] for row in rows(app_module)} == {"testclient"}
 
 
+def test_an_untrusted_peer_sending_the_header_is_reported_once(receiver, caplog):
+    """What a proxy whose address drifted looks like, said once rather than per request.
+
+    From 27 September every visitor arrived through a peer the receiver no
+    longer trusted, and nothing said so. One line per peer is enough to notice;
+    one per request would be a bot flood written into the log.
+    """
+    client, _ = receiver
+
+    with caplog.at_level("INFO", logger="henley.forms"):
+        statuses = [
+            client.post(
+                "/api/enquiry",
+                data={"name": "M", "email": f"m{i}@example.com"},
+                headers={"x-forwarded-for": "198.51.100.7, 203.0.113.9:44321"},
+                follow_redirects=False,
+            ).status_code
+            for i in range(3)
+        ]
+
+    assert statuses == [303, 303, 303]
+    reported = [message for message in caplog.messages if "sent X-Forwarded-For" in message]
+    assert reported == [
+        "untrusted peer testclient sent X-Forwarded-For (last hop 203.0.113.9); using the peer"
+    ]
+    # The parsed hop, not the header: neither the client's claim nor the port.
+    assert "198.51.100.7" not in caplog.text
+    assert "44321" not in caplog.text
+
+
+def test_a_malformed_last_hop_is_reported_without_repeating_it(receiver, caplog):
+    """The header is whatever the client wrote, so none of it is copied into the log."""
+    client, _ = receiver
+
+    with caplog.at_level("INFO", logger="henley.forms"):
+        response = client.post(
+            "/api/enquiry",
+            data={"name": "N", "email": "n@example.com"},
+            headers={"x-forwarded-for": "203.0.113.9, not-an-ip"},
+            follow_redirects=False,
+        )
+
+    assert response.status_code == 303
+    assert (
+        "untrusted peer testclient sent X-Forwarded-For (last hop malformed); using the peer"
+        in caplog.messages
+    )
+    assert "not-an-ip" not in caplog.text
+
+
 @pytest.mark.parametrize(
     "header",
     ["not-an-address", "203.0.113.9, ", "203.0.113.9, banana", "   ", "; DROP TABLE enquiries"],
 )
-def test_a_malformed_forwarded_header_falls_back_to_the_peer(receiver, monkeypatch, header):
+def test_a_malformed_forwarded_header_falls_back_to_the_peer(behind_proxy, header):
     """The documented fallback. Never the client's value, never a stored non-address."""
-    client, app_module = receiver
-    behind_proxy(client, app_module, monkeypatch)
+    client, app_module = behind_proxy
 
     response = client.post(
         "/api/enquiry",
@@ -797,7 +873,7 @@ def test_a_malformed_forwarded_header_falls_back_to_the_peer(receiver, monkeypat
     )
 
     assert response.status_code == 303
-    assert rows(app_module)[0]["remote_ip"] == "testclient"
+    assert rows(app_module)[0]["remote_ip"] == "10.0.0.1"
 
 
 @pytest.mark.parametrize(
@@ -809,9 +885,8 @@ def test_a_malformed_forwarded_header_falls_back_to_the_peer(receiver, monkeypat
         (" 203.0.113.9 ", "203.0.113.9"),
     ],
 )
-def test_addresses_are_normalised_so_one_visitor_is_one_bucket(receiver, monkeypatch, sent, stored):
-    client, app_module = receiver
-    behind_proxy(client, app_module, monkeypatch)
+def test_addresses_are_normalised_so_one_visitor_is_one_bucket(behind_proxy, sent, stored):
+    client, app_module = behind_proxy
 
     client.post(
         "/api/enquiry",
@@ -823,7 +898,64 @@ def test_addresses_are_normalised_so_one_visitor_is_one_bucket(receiver, monkeyp
     assert rows(app_module)[0]["remote_ip"] == stored
 
 
-def test_startup_says_out_loud_which_proxies_it_believes(receiver, caplog):
+def test_a_network_entry_trusts_every_peer_inside_it_and_no_other(receiver, monkeypatch):
+    """The deployed value is the website network's subnet, not the proxy's address.
+
+    Docker hands out addresses on that network in start order, so a reboot can
+    move the proxy to another one. The subnet stays where it is.
+    """
+    app_module = trusting(monkeypatch, "10.0.0.0/24")
+
+    for peer in ("10.0.0.77", "10.0.1.77"):
+        with client_from(app_module.app, peer) as client:
+            response = client.post(
+                "/api/enquiry",
+                data={"name": "K", "email": "k@example.com"},
+                headers={"x-forwarded-for": "203.0.113.9"},
+                follow_redirects=False,
+            )
+        assert response.status_code == 303
+
+    assert [row["remote_ip"] for row in rows(app_module)] == ["203.0.113.9", "10.0.1.77"]
+
+
+def test_ipv6_addresses_and_networks_are_accepted_too(receiver, monkeypatch):
+    """A dual-stack network would hand the proxy an IPv6 peer address."""
+    app_module = trusting(monkeypatch, "2001:db8::1, 2001:db8::/32")
+    assert app_module.TRUSTED_PROXY_NETWORKS == [
+        ip_network("2001:db8::1/128"),
+        ip_network("2001:db8::/32"),
+    ]
+
+    with client_from(app_module.app, "2001:db8::9") as client:
+        client.post(
+            "/api/enquiry",
+            data={"name": "L", "email": "l@example.com"},
+            headers={"x-forwarded-for": "203.0.113.9"},
+            follow_redirects=False,
+        )
+
+    # Not the single host, so it is the network entry that trusted this peer.
+    assert rows(app_module)[0]["remote_ip"] == "203.0.113.9"
+
+
+@pytest.mark.parametrize(
+    ("configured", "networks", "line"),
+    [
+        # A bare address, as every deployment before networks wrote it: a
+        # network of one host, printed exactly as the old line printed it.
+        ("10.0.0.1", [ip_network("10.0.0.1/32")], "X-Forwarded-For is believed from 10.0.0.1"),
+        (
+            "192.168.176.0/20,10.0.0.1",
+            [ip_network("192.168.176.0/20"), ip_network("10.0.0.1/32")],
+            "X-Forwarded-For is believed from 10.0.0.1, 192.168.176.0/20",
+        ),
+    ],
+    ids=["a bare address", "a network and an address"],
+)
+def test_startup_says_out_loud_which_proxies_it_believes(
+    receiver, monkeypatch, caplog, configured, networks, line
+):
     """Silence is not confirmation.
 
     Uvicorn configures its own loggers and leaves the root one without a
@@ -831,14 +963,14 @@ def test_startup_says_out_loud_which_proxies_it_believes(receiver, caplog):
     printed nothing at startup, and so did a broken one. `docker logs … | head`
     is the documented check, and it has to have something to read.
     """
-    _, app_module = receiver
-    assert app_module.TRUSTED_PROXIES == {"10.0.0.1"}
+    app_module = trusting(monkeypatch, configured)
+    assert app_module.TRUSTED_PROXY_NETWORKS == networks
 
     with caplog.at_level("INFO", logger="henley.forms"):
         with TestClient(app_module.app):
             pass
 
-    assert "X-Forwarded-For is believed from 10.0.0.1" in caplog.text
+    assert line in caplog.messages
     assert app_module.logger.getEffectiveLevel() <= 20, "INFO would be dropped"
 
 
@@ -860,8 +992,24 @@ def test_an_empty_trusted_proxy_list_is_a_warning_not_a_default(tmp_path, monkey
         with TestClient(reloaded.app):
             pass
 
-    assert reloaded.TRUSTED_PROXIES == set()
+    assert reloaded.TRUSTED_PROXY_NETWORKS == []
     assert "TRUSTED_PROXY_IPS is empty" in caplog.text
+
+
+def test_an_entry_that_is_not_an_address_stops_the_receiver_starting(tmp_path, monkeypatch):
+    """A container that will not start is noticed; a skipped entry is not.
+
+    Ignoring the entry would fail closed into the same silent site-wide limit
+    a stale proxy address produced, and look exactly like a working deployment.
+    """
+    monkeypatch.setenv("INTAKE_DB_PATH", str(tmp_path / "intake.sqlite"))
+    message = "TRUSTED_PROXY_IPS entry 'not-an-address' is not an IP address or network"
+    try:
+        with pytest.raises(ValueError, match=re.escape(message)):
+            trusting(monkeypatch, "not-an-address")
+    finally:
+        # The failed reload left the module half-run; later tests import it.
+        trusting(monkeypatch, "10.0.0.1")
 
 
 def test_the_container_does_not_let_uvicorn_rewrite_the_client_address(receiver):
@@ -882,7 +1030,7 @@ def test_the_container_does_not_let_uvicorn_rewrite_the_client_address(receiver)
     assert '"--proxy-headers"' not in cmd
 
 
-def test_uvicorns_rewriting_is_what_made_spoofing_work(receiver, monkeypatch):
+def test_uvicorns_rewriting_is_what_made_spoofing_work(receiver):
     """Why the flag matters, pinned rather than described.
 
     This wraps the app in the middleware the old Docker command turned on. It
@@ -891,10 +1039,12 @@ def test_uvicorns_rewriting_is_what_made_spoofing_work(receiver, monkeypatch):
     """
     from uvicorn.middleware.proxy_headers import ProxyHeadersMiddleware
 
-    client, app_module = receiver
-    behind_proxy(client, app_module, monkeypatch)
+    _, app_module = receiver
 
-    with TestClient(ProxyHeadersMiddleware(app_module.app, trusted_hosts="*")) as proxied:
+    # Reached from the trusted proxy's address, as in production: the middleware
+    # replaces that peer with the first hop before the receiver ever sees it.
+    rewriting = ProxyHeadersMiddleware(app_module.app, trusted_hosts="*")
+    with client_from(rewriting, "10.0.0.1") as proxied:
         for i, claim in enumerate(["10.1.1.1", "10.2.2.2", "10.3.3.3", "10.4.4.4"]):
             response = proxied.post(
                 "/api/enquiry",
