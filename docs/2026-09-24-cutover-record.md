@@ -139,7 +139,19 @@ Compose files and `forms/README.md` now say subnet; the reasoning is in
   `docker stop db-prod-henley && docker update --restart=no db-prod-henley`.
   `db-prod-henley` is stopped with restart policy `no`. Tonight's 00:30 run
   (2026-10-07) is the check that nothing still needed it.
-- Deployed: (to be recorded)
+- Deployed 2026-10-06, from main `98d8b8c` in the shared checkout. Nonprod
+  11:39: `deploy/.env` → `192.168.160.0/20`, `up -d --build forms`; the
+  receiver kept `192.168.160.4`, its startup line names the subnet, the image
+  check gives 1, and `/api/enquiry` answers 405 through NPM. Proof through
+  `dev.thehenley.com.au` from this host (`52.63.244.217`): three marked test
+  submissions stored as nonprod ids 100014–100016 against that address, the
+  fourth refused 429, and the per-IP warning names the public address. The
+  nonprod store is not read by the nightly job. Production 11:40:20–11:40:30:
+  `deploy/.env.prod` → `192.168.176.0/20`, `up -d --build forms`; the receiver
+  kept `192.168.176.3`, startup line and image check as on nonprod,
+  `/api/enquiry` 405, the site and `/webhooks/health` 200 through NPM. The
+  drift window closed at 11:40 on 2026-10-06. The next organic submission's
+  `remote_ip` is the remaining proof.
 
 ## Where the runbook was wrong (corrected in place)
 
@@ -167,10 +179,11 @@ Compose files and `forms/README.md` now say subnet; the reasoning is in
   5b is met (2026-09-26 and 2026-09-27 nights, above). Step 5c was executed
   2026-10-06 10:36 (above). Still to do: check the 2026-10-07 00:30 night's
   log for any WordPress or `DB_*` error.
-- **The proxy-trust redeploy** (above): both environment files set to their
-  network's subnet, both receivers rebuilt from the landed commit and
-  recreated (`up -d --build forms`), and each startup line checked.
-  Open until "Deployed" is recorded.
+- ~~**The proxy-trust redeploy**~~ **Done** 2026-10-06 11:40 (above): both
+  environment files set to their network's subnet, both receivers rebuilt
+  from the landed commit and recreated, each startup line checked. Still to
+  see: the next organic production submission's `remote_ip` is a public
+  address.
 - **Google Ads tracking** for the marketing partner: the `enquiry_submitted`
   event on the thank-you page is live (`7e23bd5`, checked on production
   2026-09-27). Still open: the `GTM-M3MV9VG` decision, and the CSP check for
