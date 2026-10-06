@@ -246,7 +246,7 @@ four_spoofed_submissions() {
 direct_client() {
   # direct_client <requests> — $CLIENT_C posts straight to the receiver,
   # each time forwarding an address of its own choosing.
-  local count="$1" i s statuses=() accepted=ok
+  local count="$1" i s statuses=() accepted=ok stored from_c
   echo
   echo "a client reaching the receiver directly ($CLIENT_C), past the proxy:"
   for i in $(seq 1 "$count"); do
@@ -261,12 +261,18 @@ direct_client() {
   [[ "$accepted" == "ok" ]] \
     && check ok "an untrusted peer is accepted" \
     || check no "expected 303 from a direct client each time, got ${statuses[*]}"
-  rows | grep -q "203.0.113.77" \
+  # Capture the rows before testing them. Piped into grep -q, a match can close
+  # the pipe while rows is still writing, pipefail turns the match into a
+  # failure, and the inverted check below would print PASS for exactly the
+  # case it exists to catch.
+  stored="$(rows)"
+  [[ "$stored" == *"203.0.113.77"* ]] \
     && check no "an untrusted peer chose its own identity with a header" \
     || check ok "an untrusted peer cannot choose its own identity with a header"
-  [[ "$(rows | grep -c "	$CLIENT_C$")" -eq "$count" ]] \
+  from_c="$(grep -c "	$CLIENT_C$" <<<"$stored" || true)"
+  [[ "$from_c" -eq "$count" ]] \
     && check ok "it was stored against the address it actually came from" \
-    || check no "expected $count row(s) stored against $CLIENT_C, got $(rows | grep -c "	$CLIENT_C$")"
+    || check no "expected $count row(s) stored against $CLIENT_C, got $from_c"
 }
 
 scenario_literal() {
