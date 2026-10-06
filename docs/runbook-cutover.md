@@ -261,7 +261,7 @@ the WordPress reader, and what was actually built reads both sources.
    sed -i -E "s|^TRUSTED_PROXY_IPS=.*$|TRUSTED_PROXY_IPS=$prod_subnet|" deploy/.env.prod
    if ! grep -qx "TRUSTED_PROXY_IPS=$nonprod_subnet" deploy/.env; then
      sed -i -E "s|^TRUSTED_PROXY_IPS=.*$|TRUSTED_PROXY_IPS=$nonprod_subnet|" deploy/.env
-     docker compose --env-file deploy/.env -f deploy/compose.nonprod.yml up -d forms
+     docker compose --env-file deploy/.env -f deploy/compose.nonprod.yml up -d --build forms
    fi
    docker compose --env-file deploy/.env.prod -f deploy/compose.prod.yml up -d --build
    ```
@@ -273,7 +273,7 @@ the WordPress reader, and what was actually built reads both sources.
    network. A subnet does not move when NPM is recreated or the host reboots, so
    the nonprod branch fires only when `deploy/.env` still holds something else,
    such as a single NPM address written before 2026-10-06; it then updates
-   only `deploy/.env` and recreates its forms service before production begins.
+   only `deploy/.env` and rebuilds its forms service before production begins.
    They set `deploy/.env.prod` before starting any production container. An
    empty value is a misconfiguration, not a default ("Trusted proxy address",
    below).
@@ -473,10 +473,14 @@ Put the production subnet in `deploy/.env.prod` and use it for every production
 Compose command. Put the nonprod subnet in `deploy/.env`. Docker keeps a
 network's subnet across host reboots and container recreations, NPM's
 included. It changes only if the network itself is deleted and recreated; then
-re-read it, update the matching environment file and recreate that forms
-container. After any change, check
-`docker logs henley-website-forms-prod | head`: it should say
-`X-Forwarded-For is believed from 192.168.176.0/20`. An empty list is a
+re-read it, update the matching environment file and rebuild that forms
+container (`up -d --build forms`). After any change, check
+`docker logs henley-website-forms-prod 2>&1 | grep -E 'believed|TRUSTED_PROXY_IPS' | tail -1`:
+it should say `X-Forwarded-For is believed from 192.168.176.0/20`. A receiver
+built before 829f6b7 prints the same line for a subnet and trusts nothing;
+confirm the image is current with
+`docker exec henley-website-forms-<env> grep -c 'def parse_trusted_proxies' /app/app.py`
+(expect 1). An empty list is a
 misconfiguration that looks exactly like a working deployment until someone
 tries to bypass a rate limit, and an entry that does not parse stops the
 receiver starting. A bare address still works and means that one host.

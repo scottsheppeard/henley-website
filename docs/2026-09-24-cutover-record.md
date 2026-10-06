@@ -168,7 +168,8 @@ Compose files and `forms/README.md` now say subnet; the reasoning is in
   2026-10-06 10:36 (above). Still to do: check the 2026-10-07 00:30 night's
   log for any WordPress or `DB_*` error.
 - **The proxy-trust redeploy** (above): both environment files set to their
-  network's subnet, both receivers recreated, and each startup line checked.
+  network's subnet, both receivers rebuilt from the landed commit and
+  recreated (`up -d --build forms`), and each startup line checked.
   Open until "Deployed" is recorded.
 - **Google Ads tracking** for the marketing partner: the `enquiry_submitted`
   event on the thank-you page is live (`7e23bd5`, checked on production

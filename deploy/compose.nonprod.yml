@@ -68,7 +68,11 @@ services:
       # This is the SUBNET of henley-website-nonprod-net, not any one address on
       # it. The receiver publishes no port and NPM is the only multi-homed
       # container on this network, so nothing reaches the receiver except from
-      # inside it: the network is the boundary. Read it once the network exists:
+      # inside it or from the host, through its gateway: the network is the
+      # boundary. Keep it so: no `ports:` for this service and nothing else on
+      # this network. A published port's connections can arrive from the
+      # gateway, inside this subnet, and would be believed (docs/decisions.md,
+      # 2026-10-06). Read the subnet once the network exists:
       #   docker network inspect henley-website-nonprod-net -f '{{range .IPAM.Config}}{{.Subnet}}{{end}}'
       # It survives host reboots and NPM recreations and changes only if the
       # network itself is deleted and recreated. NPM's address does not: the
@@ -78,8 +82,10 @@ services:
       # Empty is not a default, it is a misconfiguration: every visitor is then
       # attributed to the proxy and three-an-hour becomes a site-wide limit.
       # The receiver logs a warning at startup when this is unset, and refuses
-      # to start on an entry it cannot parse — `docker logs <container> | head`
-      # is the check. Verified with scripts/check-proxy-trust.sh.
+      # to start on an entry it cannot parse. The check prints the startup
+      # line, the warning or the refusal, whichever came last:
+      #   docker logs henley-website-forms-nonprod 2>&1 | grep -E 'believed|TRUSTED_PROXY_IPS' | tail -1
+      # Verified with scripts/check-proxy-trust.sh.
       TRUSTED_PROXY_IPS: ${TRUSTED_PROXY_IPS:-}
       CONTACT_PHONE: '07 5591 2111'
       CONTACT_EMAIL: info@thehenley.com.au

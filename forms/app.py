@@ -76,10 +76,11 @@ MAX_PER_DAY = int(os.environ.get("MAX_PER_DAY", 100))
 #
 # On the live hosts the value is the website Docker network's subnet. The
 # receiver publishes no port, so the only peers that can reach it at all are
-# containers on that network: the network is the boundary, not any one address
-# on it. A bare address still works and means that one host. It used to be the
-# proxy's address, until the 2026-09-27 host reboot had Docker give the proxy a
-# different one and every visitor was counted as the proxy, in one rate limit.
+# containers on that network and the host, through the network's gateway: the
+# network is the boundary, not any one address on it. A bare address still
+# works and means that one host. It used to be the proxy's address, until the
+# 2026-09-27 host reboot had Docker give the proxy a different one and every
+# visitor was counted as the proxy, in one rate limit.
 #
 # This is the only place proxy headers are interpreted. Uvicorn's own
 # --proxy-headers rewriting is turned off in the Dockerfile: it runs before this
