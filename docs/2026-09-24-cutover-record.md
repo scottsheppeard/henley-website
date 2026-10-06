@@ -7,9 +7,11 @@ are AEST; Gravity Forms `date_created` values are UTC.
 **Outcome.** Since about 09:25 on 2026-09-24 `thehenley.com.au` is served by
 the replica (`henley-website-prod`) from export `57c96d6`, and enquiries go to
 `henley-website-forms-prod`. `wp-prod-henley` was stopped at 09:38.
-`db-prod-henley` is still running and `DB_*` is still set, because the drain is
-not finished. `dev.thehenley.com.au` still serves the nonprod replica until the
-redesign needs it.
+At the switch `db-prod-henley` was still running and `DB_*` still set, because
+the drain was not finished. Both have changed since: `DB_HOST` was cleared at
+09:56 that day, and drain step 5c stopped `db-prod-henley`, with restart policy
+`no`, on 2026-10-06 at 10:36 (see "Still open"). `dev.thehenley.com.au` still
+serves the nonprod replica until the redesign needs it.
 
 ## Preparation, 2026-09-23
 
