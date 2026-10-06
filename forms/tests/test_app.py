@@ -994,6 +994,11 @@ def test_an_empty_trusted_proxy_list_is_a_warning_not_a_default(tmp_path, monkey
 
     assert reloaded.TRUSTED_PROXY_NETWORKS == []
     assert "TRUSTED_PROXY_IPS is empty" in caplog.text
+    # The subnet, not the proxy's address: that address is what a reboot moved.
+    assert (
+        "Set it to this Docker network's subnet (see deploy/.env.example) and "
+        "recreate this container." in caplog.text
+    )
 
 
 def test_an_entry_that_is_not_an_address_stops_the_receiver_starting(tmp_path, monkeypatch):

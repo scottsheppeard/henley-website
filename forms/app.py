@@ -481,8 +481,9 @@ async def lifespan(app: FastAPI):
         # proxy, so the per-IP limit becomes a site-wide limit of three an hour.
         logger.warning(
             "TRUSTED_PROXY_IPS is empty. X-Forwarded-For will be ignored and every "
-            "request through a proxy shares one rate-limit bucket. Set it to the "
-            "proxy's address on this network and recreate this container."
+            "request through a proxy shares one rate-limit bucket. Set it to this "
+            "Docker network's subnet (see deploy/.env.example) and recreate this "
+            "container."
         )
     yield
 
