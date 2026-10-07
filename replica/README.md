@@ -104,6 +104,11 @@ Only these changes are intended; `tests/test_export.py` pins them.
   number. `?sent=1` is still removed from the address but no longer counts as
   proof. `tests/thank-you-event.test.mjs` runs the page's own script;
   `docs/decisions.md`, "Enquiry conversions", has the reasoning.
+- Added after cutover (2026-10-07, edited directly in `site/`): two
+  paragraphs in `/privacy-policy/` saying that Google Analytics and Google Ads
+  are used, and that a hashed email address and phone number are shared with
+  Google when an enquiry is sent. They had to be there before the Ads
+  conversion tag was published.
 - Replaced after cutover (2026-09-24): the Village Comparison Document. The
   23 September 2026 revision is at
   `wp-content/uploads/2026/09/Henley-Form-3-VCD-23-September-2026.pdf` and
