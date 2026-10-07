@@ -119,7 +119,6 @@ if not ads:
 wanted = {
     "orderId": template("orderId", "{{%s}}" % VAR_REF),
     "enableEnhancedConversion": boolean("enableEnhancedConversion", True),
-    "enableEnhancedConversionsCheckbox": boolean("enableEnhancedConversionsCheckbox", True),
     "cssProvidedEnhancedConversionValue": template("cssProvidedEnhancedConversionValue", "{{%s}}" % VAR_USER),
 }
 parameters = [p for p in ads.get("parameter", []) if p["key"] not in wanted] + list(wanted.values())
