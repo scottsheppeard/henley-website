@@ -189,8 +189,17 @@ Compose files and `forms/README.md` now say subnet; the reasoning is in
   2026-09-27). Reworked 2026-10-07 (`37c0786`, on production the same day):
   the event now needs the receiver's cookie, and carries a reference and
   hashed email and phone; see `docs/decisions.md`, "Enquiry conversions".
-  Still open: applying `scripts/google/gtm_enquiry.py` and
-  `ga_settings.py`, the privacy policy wording before the Ads tag is
-  published, the `GTM-M3MV9VG` decision, and the CSP check once Pup's tags
-  are in GTM Preview.
+  Both `scripts/google` scripts were applied and the container published as
+  version 3 the same day; the privacy policy says what is shared (`bdef80c`).
+  **Fault found 2026-10-07**: the replica's Content-Security-Policy blocked
+  the Ads conversion tag's fetch and image reports to
+  `www.googleadservices.com` on every conversion since cutover, while a
+  secondary report to `www.google.com` got through. Fixed in `ef0088d`, on
+  production 13:40, confirmed before and after in a test browser for the
+  phone-link click and the enquiry event. The page-load console check could
+  not have seen it: it never clicks a link or fires a conversion.
+  Still open: a repeatable conversion check in the repo (the browser tests
+  were run from scratch files), Pup's access and the email to them, the
+  `GTM-M3MV9VG` decision, and the CSP check when call forwarding is in GTM
+  Preview.
 - The "After" list in the runbook.

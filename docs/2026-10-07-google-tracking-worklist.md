@@ -21,8 +21,8 @@ Most of this file was overtaken within hours, and no browser session ran it.
   login and `alex@pupdigital.com.au` (Publish).
 - Part B1 to B4 are `scripts/google/ga_settings.py`. Part C2 is
   `scripts/google/gtm_enquiry.py`, and the website side changed with it: see
-  `docs/decisions.md`, "Enquiry conversions (2026-10-07)". Both scripts need
-  `--apply`, run by Scott.
+  `docs/decisions.md`, "Enquiry conversions (2026-10-07)". Scott applied both
+  and the container was published as version 3 that afternoon.
 - Still as written here: B0 (Pup's access, held until the Tag Manager build
   is applied), B5 (Search Console by DNS), C1, C3, C4, C5 and the Google Ads
   questions in A4.

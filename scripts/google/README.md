@@ -25,3 +25,13 @@ make the changes.
 
 Google Ads has no script here: its API needs a developer token Google approves
 separately, and the campaigns are run by the marketing partner.
+
+Version 3 of the container ("Enquiry conversion (7 Oct 2026)") was published
+on 2026-10-07 through the same API (`workspaces.create_version`, then
+`versions.publish`), once Scott had given the service account Publish.
+
+After publishing anything that reports to a new Google host, fire it on the
+live site in a browser and look for Content-Security-Policy violations. The
+conversion tags were blocked for a fortnight without a single error anyone
+saw; `deploy/security-headers.replica.conf` has the story.
+
