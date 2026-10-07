@@ -153,6 +153,8 @@ status, headers = post(submission)
 check(status == 303, f"a real submission is accepted (303, got {status})")
 check(headers.get("location") == "/thank-you/?sent=1",
       f"it redirects to /thank-you/?sent=1 (got {headers.get('location')})")
+check((headers.get("set-cookie") or "").startswith("henley_enquiry=v1."),
+      "it sets the conversion marker the thank-you page counts")
 
 # ── A browser holding a cached copy of the old page ──────────────────────────
 stale = dict(submission, email="cached@example.com",

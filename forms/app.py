@@ -22,11 +22,13 @@ enquiry and answered with the success redirect anyway. See docs/decisions.md.
 
 from __future__ import annotations
 
+import hashlib
 import html
 import ipaddress
 import logging
 import os
 import re
+import secrets
 import sqlite3
 import time
 from collections import deque
@@ -62,6 +64,35 @@ SCHEMA_PATH = Path(os.environ.get("SCHEMA_PATH", Path(__file__).with_name("schem
 
 SITE_ORIGIN = os.environ.get("SITE_ORIGIN", "https://thehenley.com.au")
 THANK_YOU_PATH = "/thank-you/?sent=1"
+
+# Set on the redirect for a stored enquiry, and only then. The thank-you page
+# is static and cannot know whether the visitor in front of it submitted
+# anything: `?sent=1` is in the address of a honeypot hit and of anyone who
+# types it, so on its own it counted spam and curiosity as leads. The cookie is
+# the receiver saying "this one was stored", it is scoped to that one page, and
+# the page deletes it as it reads it. Ten minutes covers a slow redirect, not a
+# returning visitor.
+#
+# Readable by script on purpose (no HttpOnly): the page's script is its only
+# consumer. It holds nothing a visitor did not just type, and never in the
+# clear — see conversion_marker().
+CONVERSION_COOKIE = "henley_enquiry"
+CONVERSION_COOKIE_PATH = "/thank-you/"
+CONVERSION_COOKIE_MAX_AGE = 600
+
+# Cookies the Google tags on the site set on our own domain, read here from the
+# form post so the click that led to an enquiry is stored beside it. No form
+# field is involved, so this works with JavaScript off in the form itself.
+#   _gcl_aw  the Google Ads click (gclid), written by the Conversion Linker
+#   _gcl_gb  the iOS app/web equivalents (gbraid, wbraid)
+#   _ga      the Google Analytics client id
+CLICK_COOKIES = ("_gcl_aw", "_gcl_gb", "_ga")
+CLICK_COOKIE_MAX = 300
+
+# `GCL.<unix time>.<gclid>` is the long-standing shape of _gcl_aw. Google has
+# changed cookie formats before, so the raw value is stored as well and this is
+# only a convenience: a value that does not match leaves gclid empty, not wrong.
+GCLID_RE = re.compile(r"^GCL\.\d+\.([A-Za-z0-9_-]{10,200})$")
 
 CONTACT_PHONE = os.environ.get("CONTACT_PHONE", "07 5591 2111")
 CONTACT_EMAIL = os.environ.get("CONTACT_EMAIL", "info@thehenley.com.au")
@@ -264,6 +295,77 @@ def checked(value: str | None) -> bool:
     return bool(value) and value.lower() not in {"0", "false", "off", "no"}
 
 
+# ── Conversion measurement ───────────────────────────────────────────────────
+#
+# What Google Ads is told about an enquiry, and what is kept to tell it more
+# later. Reasoning in docs/decisions.md, "Enquiry conversions".
+
+
+def hashed_email(email: str) -> str | None:
+    """SHA-256 of the address as Google normalises it, or None.
+
+    Lower-cased with whitespace removed; for gmail.com and googlemail.com the
+    dots in the local part are dropped as well, because Google treats those as
+    one mailbox and will not match the hash otherwise.
+    """
+    address = "".join(email.split()).lower()
+    local, at, domain = address.rpartition("@")
+    if not at or not local or not domain:
+        return None
+    if domain in {"gmail.com", "googlemail.com"}:
+        local = local.replace(".", "")
+    return hashlib.sha256(f"{local}@{domain}".encode()).hexdigest()
+
+
+def hashed_phone(phone: str | None) -> str | None:
+    """SHA-256 of the number in E.164, or None if it cannot be put in E.164.
+
+    People type Australian numbers nationally ("0400 000 000", "07 5591 2111"),
+    so a leading 0 becomes +61. Anything that does not come out as a plausible
+    international number is left out: a hash of the wrong number matches nobody
+    and says nothing went wrong.
+    """
+    if not phone:
+        return None
+    international = phone.strip().startswith("+")
+    digits = re.sub(r"\D", "", phone)
+    if international:
+        pass
+    elif digits.startswith("0011"):
+        digits = digits[4:]
+    elif digits.startswith("61") and len(digits) == 11:
+        pass
+    elif digits.startswith("0") and len(digits) == 10:
+        digits = "61" + digits[1:]
+    else:
+        return None
+    if not 8 <= len(digits) <= 15 or digits.startswith("0"):
+        return None
+    return hashlib.sha256(f"+{digits}".encode()).hexdigest()
+
+
+def conversion_marker(reference: str, email: str, phone: str | None) -> str:
+    """The cookie value the thank-you page turns into its dataLayer event.
+
+    `v1.<reference>.<email hash>.<phone hash>`, either hash possibly empty. The
+    reference is a random token, not the enquiry id: the id is sequential and is
+    the Salesforce key, and neither a visitor nor Google has any use for knowing
+    how many enquiries there have been.
+    """
+    return ".".join(("v1", reference, hashed_email(email) or "", hashed_phone(phone) or ""))
+
+
+def click_cookies(request: Request) -> dict[str, str | None]:
+    """The Google click and client cookies that arrived with the form post."""
+    found = {
+        name: (request.cookies.get(name) or "").strip()[:CLICK_COOKIE_MAX] or None
+        for name in CLICK_COOKIES
+    }
+    match = GCLID_RE.match(found["_gcl_aw"] or "")
+    found["gclid"] = match.group(1) if match else None
+    return found
+
+
 # ── Rate limiting ────────────────────────────────────────────────────────────
 
 _recent: dict[str, Deque[float]] = {}
@@ -329,10 +431,26 @@ def _reset_rate_limits() -> None:
 # ── Responses ────────────────────────────────────────────────────────────────
 
 
-def accepted() -> RedirectResponse:
+def accepted(marker: str | None = None) -> RedirectResponse:
+    """The success redirect, carrying the conversion marker for a stored enquiry.
+
+    Called without a marker for a honeypot hit: the same redirect, so the form
+    still looks as though it worked, and nothing for the page to count.
+    """
     # 303, not 302: the browser must follow with GET, so a refresh on the
     # thank-you page cannot resubmit the enquiry.
-    return RedirectResponse(THANK_YOU_PATH, status_code=303)
+    response = RedirectResponse(THANK_YOU_PATH, status_code=303)
+    if marker:
+        response.set_cookie(
+            CONVERSION_COOKIE,
+            marker,
+            max_age=CONVERSION_COOKIE_MAX_AGE,
+            path=CONVERSION_COOKIE_PATH,
+            secure=True,
+            httponly=False,
+            samesite="lax",
+        )
+    return response
 
 
 def problem(message: str, status: int) -> HTMLResponse:
@@ -585,4 +703,23 @@ async def enquiry(
         return problem("Something went wrong at our end and your enquiry was not saved.", status=500)
 
     logger.info("enquiry %s stored from %s", cursor.lastrowid, ip)
-    return accepted()
+
+    # After the enquiry is safely stored, and never able to undo that: a lead
+    # without its attribution is still a lead.
+    reference = secrets.token_urlsafe(12)
+    clicks = click_cookies(request)
+    try:
+        with connect() as connection:
+            connection.execute(
+                """
+                INSERT INTO enquiry_attribution
+                    (enquiry_id, conversion_ref, gclid, gcl_aw, gcl_gb, ga_client)
+                VALUES (?, ?, ?, ?, ?, ?)
+                """,
+                (cursor.lastrowid, reference, clicks["gclid"],
+                 clicks["_gcl_aw"], clicks["_gcl_gb"], clicks["_ga"]),
+            )
+    except sqlite3.Error as error:
+        logger.error("could not store attribution for enquiry %s: %s", cursor.lastrowid, error)
+
+    return accepted(conversion_marker(reference, email_value, clean(phone, "phone")))

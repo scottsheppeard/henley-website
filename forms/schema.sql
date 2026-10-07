@@ -56,6 +56,30 @@ CREATE TABLE IF NOT EXISTS enquiries (
 -- The nightly reader takes a 7-day window over created_at.
 CREATE INDEX IF NOT EXISTS enquiries_created_at ON enquiries (created_at);
 
+-- What Google Ads needs to be told about an enquiry later, kept beside it.
+--
+-- A separate table, not more columns on `enquiries`: that table's shape is the
+-- contract with henley-utils, and this one is nobody's contract yet. Being
+-- CREATE IF NOT EXISTS, it also appears in a store that already has enquiries
+-- the next time the receiver starts, which new columns would not.
+--
+-- conversion_ref is the random reference the thank-you page hands Google with
+-- the conversion (its "order id"). To report later which enquiries became real
+-- leads, upload against the click id here, or against the enquirer's hashed
+-- email; the reference ties that upload to the conversion already counted.
+--
+-- The raw cookies are kept as well as the parsed gclid because Google has
+-- changed their formats before. ON DELETE CASCADE so that deleting a test
+-- enquiry, as the runbook does, takes its row here with it.
+CREATE TABLE IF NOT EXISTS enquiry_attribution (
+  enquiry_id     INTEGER PRIMARY KEY REFERENCES enquiries (id) ON DELETE CASCADE,
+  conversion_ref TEXT    NOT NULL UNIQUE,
+  gclid          TEXT,
+  gcl_aw         TEXT,
+  gcl_gb         TEXT,
+  ga_client      TEXT
+);
+
 -- Start ids at 100000.
 --
 -- henley-utils de-duplicates against the *full set* of ids it has already

@@ -390,3 +390,47 @@ reads it, and nothing does.
 stacked mark, no favicon. A monogram derived from the wordmark's "H" lives in
 this repo, *not* in the brand kit, and is flagged for Scott as a brand decision
 rather than treated as an addition to the canonical kit.
+
+## Enquiry conversions (2026-10-07)
+
+What Google Ads and Analytics are told when somebody sends an enquiry, and what
+is kept so they can be told more later. Scott approved all three parts on
+2026-10-07. The marketing partner asked on 2026-09-23 for conversions on
+completed enquiries rather than on clicks.
+
+**The event is proved by a cookie, not by the address.** From 2026-09-24 the
+thank-you page pushed `enquiry_submitted` whenever its address carried
+`?sent=1`. The receiver sends a honeypot hit to that same address on purpose, so
+spam was counted, and so was anyone who opened the link. Now the receiver sets
+`henley_enquiry` on its redirect only after it has stored the enquiry. The
+cookie lasts ten minutes, is scoped to `/thank-you/`, and the page deletes it as
+it reads it. No cookie, no event. A page-view trigger on `/thank-you/`, which is
+what the unpublished 2024 tag in the container used, has the same fault as
+`?sent=1` and also counts every reload.
+
+A honeypot hit gets the redirect without the cookie. A bot that compared
+response headers could tell the two apart; none of the ones we see do, and the
+alternative was training Google's bidding on spam.
+
+**The event carries a reference and two hashes.** `enquiry_ref` is a random
+token, used as the conversion's order id so Google can de-duplicate. It is not
+the enquiry id, which is sequential and is the Salesforce key.
+`enquiry_user_data` holds SHA-256 hashes of the email address and, when it can
+be put in E.164, the phone number. This is Google's "enhanced conversions for
+leads": it lets Google match a conversion to a signed-in user when the click
+cookie is missing, and it is what a later upload of qualified leads matches on.
+The receiver hashes; the typed values never reach the page or the cookie. The
+privacy policy has to say that a hashed identifier is shared with Google for
+advertising measurement.
+
+**The click is stored beside the enquiry.** The receiver reads the `_gcl_aw`,
+`_gcl_gb` and `_ga` cookies from the form post and writes them, with the
+reference, to `enquiry_attribution`. They are read from cookies rather than
+hidden form fields so that the form still needs no script. The table is separate from `enquiries` because that table's
+shape is the contract with henley-utils.
+
+Nothing reads `enquiry_attribution` yet. It exists so that Henley can later
+tell Google which enquiries became real leads, which is the measurement the
+bidding should eventually optimise for: the form event still fires for an
+enquiry the classifier later marks as a sales pitch.
+

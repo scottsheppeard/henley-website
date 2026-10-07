@@ -35,6 +35,10 @@ INTAKE_DB_PATH=/tmp/intake.sqlite .venv/bin/uvicorn app:app --reload
 
 - `POST /api/enquiry` — form-encoded. 303 to `/thank-you/?sent=1` on success,
   which for a legitimate submission means the row is stored.
+  A stored enquiry's redirect also sets the `henley_enquiry` cookie, which is
+  what the thank-you page counts as a conversion, and writes the Google click
+  cookies that came with the post to `enquiry_attribution`. A honeypot hit gets
+  the redirect and neither. See `docs/decisions.md`, "Enquiry conversions".
 - `GET /healthz` — `{"status": "ok", "enquiries": n}`, or 503 if the store is unreadable.
 
 No `/docs`, `/redoc` or `/openapi.json`: nothing public should describe its own

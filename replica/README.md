@@ -96,10 +96,14 @@ Only these changes are intended; `tests/test_export.py` pins them.
   links; emoji script and style; generator and Site Kit meta tags; Gravity Forms
   JavaScript and its AJAX iframe.
 - Replaced: the Gravity Form on `/contact/` with `form.html`.
-- Added after cutover (2026-09-24, edited directly in `site/`): the
-  `enquiry_submitted` dataLayer event on `/thank-you/`, pushed once when the
-  receiver's `?sent=1` is present. That parameter is then removed from the
-  address. `tests/thank-you-event.test.mjs` runs the page's own script.
+- Added after cutover (2026-09-24, edited directly in `site/`; reworked
+  2026-10-07): the `enquiry_submitted` dataLayer event on `/thank-you/`. It is
+  pushed once, and only when the receiver's `henley_enquiry` cookie is
+  present, which the receiver sets only for an enquiry it stored. The event
+  carries a random reference and SHA-256 hashes of the email address and phone
+  number. `?sent=1` is still removed from the address but no longer counts as
+  proof. `tests/thank-you-event.test.mjs` runs the page's own script;
+  `docs/decisions.md`, "Enquiry conversions", has the reasoning.
 - Replaced after cutover (2026-09-24): the Village Comparison Document. The
   23 September 2026 revision is at
   `wp-content/uploads/2026/09/Henley-Form-3-VCD-23-September-2026.pdf` and

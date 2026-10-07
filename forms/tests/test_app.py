@@ -12,6 +12,7 @@ format, and a reader being able to see rows while the writer holds the file.
 from __future__ import annotations
 
 import asyncio
+import hashlib
 import importlib
 import re
 import sqlite3
@@ -64,6 +65,22 @@ def rows(app_module):
     with sqlite3.connect(app_module.DB_PATH) as connection:
         connection.row_factory = sqlite3.Row
         return [dict(r) for r in connection.execute("SELECT * FROM enquiries ORDER BY id")]
+
+
+def attribution(app_module):
+    with sqlite3.connect(app_module.DB_PATH) as connection:
+        connection.row_factory = sqlite3.Row
+        return [dict(r) for r in connection.execute(
+            "SELECT * FROM enquiry_attribution ORDER BY enquiry_id")]
+
+
+def marker(response):
+    """The conversion cookie on a response, as (attributes, value parts)."""
+    header = response.headers["set-cookie"]
+    value, _, attributes = header.partition(";")
+    name, _, value = value.partition("=")
+    assert name == "henley_enquiry"
+    return attributes, value.strip('"').split(".")
 
 
 # ── The contract with henley-utils ───────────────────────────────────────────
@@ -221,6 +238,20 @@ def test_honeypot_is_dropped_but_answered_as_success(receiver):
 
     assert response.status_code == 303
     assert rows(app_module) == []
+
+
+def test_honeypot_gets_the_redirect_but_nothing_for_the_page_to_count(receiver):
+    """The thank-you page counts a lead only when the receiver's cookie arrives.
+
+    A spam-trap hit must look like success and must not be a conversion: counted
+    in Google Ads, it teaches the bidding to go and find more of them.
+    """
+    client, app_module = receiver
+    response = submit(client, company="Acme Pty Ltd")
+
+    assert response.headers["location"] == "/thank-you/?sent=1"
+    assert "set-cookie" not in response.headers
+    assert attribution(app_module) == []
 
 
 # The minimum-fill-time check is gone. It subtracted the visitor's clock from
@@ -1159,3 +1190,181 @@ def test_the_service_exposes_no_api_documentation(receiver):
     client, _ = receiver
     for path in ("/docs", "/redoc", "/openapi.json"):
         assert client.get(path).status_code == 404
+
+
+# ── Conversion measurement ───────────────────────────────────────────────────
+
+
+def test_a_stored_enquiry_sets_the_marker_the_thank_you_page_counts(receiver):
+    client, app_module = receiver
+    response = submit(client, email="Margaret@Example.com ", phone="0400 000 000")
+
+    attributes, parts = marker(response)
+    stored = attribution(app_module)[0]
+
+    assert parts[0] == "v1"
+    assert parts[1] == stored["conversion_ref"]
+    assert stored["enquiry_id"] == rows(app_module)[0]["id"]
+    assert parts[2] == hashlib.sha256(b"margaret@example.com").hexdigest()
+    assert parts[3] == hashlib.sha256(b"+61400000000").hexdigest()
+
+
+def test_the_marker_is_short_lived_scoped_to_the_page_and_readable_by_it(receiver):
+    client, _ = receiver
+    attributes, _ = marker(submit(client))
+    attributes = attributes.lower()
+
+    assert "max-age=600" in attributes
+    assert "path=/thank-you/" in attributes
+    assert "secure" in attributes
+    assert "samesite=lax" in attributes
+    # The page's script is the only consumer, so it has to be able to read it.
+    assert "httponly" not in attributes
+
+
+def test_the_marker_never_carries_what_the_visitor_typed(receiver):
+    client, _ = receiver
+    response = submit(client, name="Margaret Hale", email="margaret@example.com",
+                      phone="0400 000 000")
+
+    header = response.headers["set-cookie"].lower()
+    for typed in ("margaret", "example.com", "0400", "61400000000", "100000"):
+        assert typed not in header
+
+
+def test_the_reference_is_random_not_the_enquiry_id(receiver):
+    """The id is sequential and is the Salesforce key; neither belongs with Google."""
+    client, app_module = receiver
+    references = [marker(submit(client, email=f"m{n}@example.com"))[1][1] for n in range(3)]
+
+    assert len(set(references)) == 3
+    assert all(re.fullmatch(r"[A-Za-z0-9_-]{16}", r) for r in references)
+    assert [a["conversion_ref"] for a in attribution(app_module)] == references
+
+
+@pytest.mark.parametrize("typed, e164", [
+    ("0400 000 000", "+61400000000"),
+    ("(07) 5591 2111", "+61755912111"),
+    ("+61 400 000 000", "+61400000000"),
+    ("61400000000", "+61400000000"),
+    ("0011 44 20 7946 0958", "+442079460958"),
+    ("+44 20 7946 0958", "+442079460958"),
+])
+def test_phone_numbers_are_hashed_in_e164(receiver, typed, e164):
+    _, app_module = receiver
+    assert app_module.hashed_phone(typed) == hashlib.sha256(e164.encode()).hexdigest()
+
+
+@pytest.mark.parametrize("typed", [None, "", "call me", "5591 2111", "12345", "0" * 20])
+def test_a_number_that_cannot_be_put_in_e164_is_left_out(receiver, typed):
+    """A hash of the wrong number matches nobody and looks like success."""
+    _, app_module = receiver
+    assert app_module.hashed_phone(typed) is None
+
+
+def test_an_enquiry_without_a_usable_phone_still_gets_its_email_hash(receiver):
+    client, _ = receiver
+    _, parts = marker(submit(client, phone="after 5pm please"))
+
+    assert len(parts) == 4
+    assert re.fullmatch(r"[0-9a-f]{64}", parts[2])
+    assert parts[3] == ""
+
+
+@pytest.mark.parametrize("typed, normalised", [
+    ("  Margaret@Example.COM ", "margaret@example.com"),
+    ("m.hale@gmail.com", "mhale@gmail.com"),
+    ("M.Hale@GoogleMail.com", "mhale@googlemail.com"),
+    ("m.hale@example.com", "m.hale@example.com"),
+])
+def test_email_is_hashed_as_google_normalises_it(receiver, typed, normalised):
+    _, app_module = receiver
+    assert app_module.hashed_email(typed) == hashlib.sha256(normalised.encode()).hexdigest()
+
+
+def test_the_google_click_is_stored_beside_the_enquiry(receiver):
+    """Read from the cookies the Google tags set, so the form needs no field for it."""
+    client, app_module = receiver
+    client.cookies.set("_gcl_aw", "GCL.1790000000.Cj0KCQjw-test_GCLID123")
+    client.cookies.set("_gcl_gb", "GCL.1790000000.0AAAAAtestGBRAID")
+    client.cookies.set("_ga", "GA1.1.1234567890.1790000000")
+    submit(client)
+
+    stored = attribution(app_module)[0]
+    assert stored["gclid"] == "Cj0KCQjw-test_GCLID123"
+    assert stored["gcl_aw"] == "GCL.1790000000.Cj0KCQjw-test_GCLID123"
+    assert stored["gcl_gb"] == "GCL.1790000000.0AAAAAtestGBRAID"
+    assert stored["ga_client"] == "GA1.1.1234567890.1790000000"
+
+
+def test_an_enquiry_with_no_google_cookies_is_stored_all_the_same(receiver):
+    client, app_module = receiver
+    assert submit(client).status_code == 303
+
+    stored = attribution(app_module)[0]
+    assert (stored["gclid"], stored["gcl_aw"], stored["gcl_gb"], stored["ga_client"]) == (None,) * 4
+
+
+def test_a_click_cookie_in_a_shape_we_do_not_know_is_kept_raw_and_not_guessed(receiver):
+    client, app_module = receiver
+    client.cookies.set("_gcl_aw", "2.1.k1$i1790000000$u12345")
+    submit(client)
+
+    stored = attribution(app_module)[0]
+    assert stored["gcl_aw"] == "2.1.k1$i1790000000$u12345"
+    assert stored["gclid"] is None
+
+
+def test_an_oversized_click_cookie_is_truncated(receiver):
+    client, app_module = receiver
+    client.cookies.set("_ga", "x" * 2000)
+    submit(client)
+
+    assert len(attribution(app_module)[0]["ga_client"]) == 300
+
+
+def test_attribution_failing_never_costs_the_enquiry_or_the_conversion(receiver):
+    """A lead without its attribution is still a lead, and still a conversion."""
+    client, app_module = receiver
+    with sqlite3.connect(app_module.DB_PATH) as connection:
+        connection.execute("DROP TABLE enquiry_attribution")
+
+    response = submit(client)
+
+    assert response.status_code == 303
+    assert len(rows(app_module)) == 1
+    assert marker(response)[1][0] == "v1"
+
+
+def test_the_attribution_table_appears_in_a_store_that_already_has_enquiries(receiver):
+    """The live stores predate this table; starting the receiver must add it."""
+    client, app_module = receiver
+    submit(client)
+    with sqlite3.connect(app_module.DB_PATH) as connection:
+        connection.execute("DROP TABLE enquiry_attribution")
+
+    app_module.initialise()
+    submit(client, email="second@example.com")
+
+    assert [r["id"] for r in rows(app_module)] == [100000, 100001]
+    assert [a["enquiry_id"] for a in attribution(app_module)] == [100001]
+
+
+def test_the_enquiries_table_keeps_the_shape_henley_utils_reads(receiver):
+    """Attribution lives in its own table precisely so this one does not change."""
+    _, app_module = receiver
+    with sqlite3.connect(app_module.DB_PATH) as connection:
+        columns = [r[1] for r in connection.execute("PRAGMA table_info(enquiries)")]
+
+    assert columns == ["id", "created_at", "name", "email", "phone", "referral_source",
+                       "interest_apartment", "interest_aged_care", "enquiry_text",
+                       "remote_ip", "user_agent", "page_path"]
+
+
+def test_deleting_a_test_enquiry_takes_its_attribution_with_it(receiver):
+    client, app_module = receiver
+    submit(client)
+    with app_module.connect() as connection:
+        connection.execute("DELETE FROM enquiries")
+
+    assert attribution(app_module) == []
