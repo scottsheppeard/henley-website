@@ -9,6 +9,26 @@ Written from the server-side session after reviewing ten screenshots Scott
 took on 7 October 2026, decoding the tag container Google currently serves
 for the site, and reading the September email thread with Pup Digital.
 
+## Status, 7 October 2026 (later the same day)
+
+Most of this file was overtaken within hours, and no browser session ran it.
+
+- A service account (`scripts/google/README.md`) now reads Analytics and Tag
+  Manager from the server, which answered Part A except for Google Ads and
+  Search Console. The findings: the four GA4 key events measure views of the
+  Location page and a `/thanks/` page that does not exist; only Ads account
+  `751-464-6535` has traffic this year; the container's users are the Henley
+  login and `alex@pupdigital.com.au` (Publish).
+- Part B1 to B4 are `scripts/google/ga_settings.py`. Part C2 is
+  `scripts/google/gtm_enquiry.py`, and the website side changed with it: see
+  `docs/decisions.md`, "Enquiry conversions (2026-10-07)". Both scripts need
+  `--apply`, run by Scott.
+- Still as written here: B0 (Pup's access, held until the Tag Manager build
+  is applied), B5 (Search Console by DNS), C1, C3, C4, C5 and the Google Ads
+  questions in A4.
+- The email to Pup Digital is on the Review Desk, To send:
+  `pup-2026-10-07-enquiry-conversion-setup`.
+
 ## How to work through this file
 
 1. Do Part A first. It is read-only: look, and write down what you find in a

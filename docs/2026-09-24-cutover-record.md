@@ -186,6 +186,11 @@ Compose files and `forms/README.md` now say subnet; the reasoning is in
   address.
 - **Google Ads tracking** for the marketing partner: the `enquiry_submitted`
   event on the thank-you page is live (`7e23bd5`, checked on production
-  2026-09-27). Still open: the `GTM-M3MV9VG` decision, and the CSP check for
-  call tracking once their tag is in GTM Preview.
+  2026-09-27). Reworked 2026-10-07 (`37c0786`, on production the same day):
+  the event now needs the receiver's cookie, and carries a reference and
+  hashed email and phone; see `docs/decisions.md`, "Enquiry conversions".
+  Still open: applying `scripts/google/gtm_enquiry.py` and
+  `ga_settings.py`, the privacy policy wording before the Ads tag is
+  published, the `GTM-M3MV9VG` decision, and the CSP check once Pup's tags
+  are in GTM Preview.
 - The "After" list in the runbook.
