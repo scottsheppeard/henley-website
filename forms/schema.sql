@@ -69,8 +69,12 @@ CREATE INDEX IF NOT EXISTS enquiries_created_at ON enquiries (created_at);
 -- email; the reference ties that upload to the conversion already counted.
 --
 -- The raw cookies are kept as well as the parsed gclid because Google has
--- changed their formats before. ON DELETE CASCADE so that deleting a test
--- enquiry, as the runbook does, takes its row here with it.
+-- changed their formats before.
+--
+-- ON DELETE CASCADE takes this row with a deleted enquiry, but only on a
+-- connection that has run PRAGMA foreign_keys=ON, which the receiver's does
+-- and the sqlite3 command line does not. Deleting a test enquiry by hand:
+-- delete its row here first, or turn the pragma on.
 CREATE TABLE IF NOT EXISTS enquiry_attribution (
   enquiry_id     INTEGER PRIMARY KEY REFERENCES enquiries (id) ON DELETE CASCADE,
   conversion_ref TEXT    NOT NULL UNIQUE,

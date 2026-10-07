@@ -1249,13 +1249,25 @@ def test_the_reference_is_random_not_the_enquiry_id(receiver):
     ("61400000000", "+61400000000"),
     ("0011 44 20 7946 0958", "+442079460958"),
     ("+44 20 7946 0958", "+442079460958"),
+    ("+61 (0)400 000 000", "+61400000000"),
+    ("+61 0400 000 000", "+61400000000"),
+    ("+61 (07) 5591 2111", "+61755912111"),
+    ("+44 (0)20 7946 0958", "+442079460958"),
+    ("07-5591.2111", "+61755912111"),
 ])
 def test_phone_numbers_are_hashed_in_e164(receiver, typed, e164):
     _, app_module = receiver
     assert app_module.hashed_phone(typed) == hashlib.sha256(e164.encode()).hexdigest()
 
 
-@pytest.mark.parametrize("typed", [None, "", "call me", "5591 2111", "12345", "0" * 20])
+@pytest.mark.parametrize("typed", [
+    None, "", "call me", "5591 2111", "12345", "0" * 20,
+    "+61 400 000 000 x2",          # an extension is not part of the number
+    "0400 000 000 after 5pm",
+    "+\u0666\u0661\u0664\u0660\u0660\u0660\u0660\u0660\u0660\u0660\u0660",  # not ASCII digits
+    "0500 000 000",                # not an Australian area or mobile prefix
+    "+61 400 000 00",              # an Australian number is nine digits after 61
+])
 def test_a_number_that_cannot_be_put_in_e164_is_left_out(receiver, typed):
     """A hash of the wrong number matches nobody and looks like success."""
     _, app_module = receiver
@@ -1362,6 +1374,11 @@ def test_the_enquiries_table_keeps_the_shape_henley_utils_reads(receiver):
 
 
 def test_deleting_a_test_enquiry_takes_its_attribution_with_it(receiver):
+    """Through the receiver's own connection, which turns foreign keys on.
+
+    The sqlite3 command line does not, so a delete by hand has to remove the
+    attribution row itself; schema.sql says so.
+    """
     client, app_module = receiver
     submit(client)
     with app_module.connect() as connection:

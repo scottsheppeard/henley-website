@@ -321,23 +321,32 @@ def hashed_phone(phone: str | None) -> str | None:
     """SHA-256 of the number in E.164, or None if it cannot be put in E.164.
 
     People type Australian numbers nationally ("0400 000 000", "07 5591 2111"),
-    so a leading 0 becomes +61. Anything that does not come out as a plausible
-    international number is left out: a hash of the wrong number matches nobody
-    and says nothing went wrong.
+    so a leading 0 becomes +61, and "+61 (0)400 000 000" loses the 0 it should
+    not have. Anything that does not come out as a plausible number is left
+    out, including one followed by an extension or a note: a hash of the wrong
+    number matches nobody and says nothing went wrong.
     """
     if not phone:
         return None
-    international = phone.strip().startswith("+")
-    digits = re.sub(r"\D", "", phone)
-    if international:
+    typed = phone.strip()
+    # Digits, spaces and the punctuation people put in a number. A letter means
+    # an extension or a note, and guessing where the number stops is a guess.
+    if not re.fullmatch(r"\+?[0-9 ()./-]+", typed):
+        return None
+    digits = re.sub(r"[^0-9]", "", typed.replace("(0)", ""))
+    if typed.startswith("+"):
         pass
     elif digits.startswith("0011"):
         digits = digits[4:]
     elif digits.startswith("61") and len(digits) == 11:
         pass
-    elif digits.startswith("0") and len(digits) == 10:
+    elif re.fullmatch(r"0[23478][0-9]{8}", digits):
         digits = "61" + digits[1:]
     else:
+        return None
+    if digits.startswith("610"):
+        digits = "61" + digits[3:]
+    if digits.startswith("61") and not re.fullmatch(r"61[23478][0-9]{8}", digits):
         return None
     if not 8 <= len(digits) <= 15 or digits.startswith("0"):
         return None
