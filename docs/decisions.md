@@ -379,7 +379,7 @@ untrusted peer again, and every visitor shares one bucket.
 Two other fixes were rejected. Pinning NPM's address with `ipv4_address` means
 recreating NPM, which interrupts every site it fronts, and a pinned address is
 not reserved from Docker's dynamic pool, so another container can take it
-first. Resolving the name `npm-attachment` at runtime trusts whatever a cached
+first. Resolving the proxy's container name (`npm-attachment` then, `npm` since 2026-10-07) at runtime trusts whatever a cached
 lookup said until its TTL runs out. And nothing else needs NPM's address:
 henley-aws, keystone, vertex and henley-utils were searched for anything that
 reads it, and nothing does.

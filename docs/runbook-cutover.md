@@ -247,8 +247,8 @@ the WordPress reader, and what was actually built reads both sources.
    cd /mnt/persistent/dev/henley-website
    # Attach it live: no NPM restart, so no blip for every other site, and
    # the addresses NPM already holds on other networks do not change.
-   docker network connect henley-website-prod-net npm-attachment
-   # Then add henley-website-prod-net to npm-attachment's networks (and the
+   docker network connect henley-website-prod-net npm
+   # Then add henley-website-prod-net to the `npm` service's networks (and the
    # top-level networks: block) in /home/admin/henley-aws/docker-compose.yml,
    # or the next NPM recreation drops the network and the site with it.
    # Create the store as admin: left to Docker, the bind mount is created

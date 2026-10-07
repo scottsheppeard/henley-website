@@ -21,7 +21,7 @@
 #
 #   docker network create henley-website-prod-net
 #   # add it to /home/admin/henley-aws/docker-compose.yml under the
-#   # npm-attachment service and the networks: block, then recreate NPM
+#   # npm service and the networks: block, then recreate NPM
 #
 # At cutover, the apex host 5 (thehenley.com.au) moves to
 # henley-website-prod:8080 and keeps TWO extra locations. `www` is already a
